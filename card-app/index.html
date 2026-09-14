@@ -5,163 +5,262 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>DuoCards Core</title>
+  <title>MyCards V3</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { overscroll-behavior-y: none; } /* Отключаем резинку браузера при свайпах */
+    body { overscroll-behavior-y: none; }
     .perspective-1000 { perspective: 1000px; }
     .preserve-3d { transform-style: preserve-3d; }
     .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
     .rotate-y-180 { transform: rotateY(180deg); }
-    
-    /* Плавный возврат карточки, если свайп не завершен */
     .snap-back { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    /* Анимация переворота */
-    .flip-anim { transition: transform 0.5s ease-in-out; }
+    .flip-anim { transition: transform 0.4s ease-in-out; }
+    /* Анимация уведомлений */
+    .toast-enter { transform: translateY(100%); opacity: 0; }
+    .toast-active { transform: translateY(0); opacity: 1; transition: all 0.3s ease; }
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 h-screen overflow-hidden flex flex-col font-sans select-none">
 
   <!-- ================= NAV BAR ================= -->
   <nav class="pt-12 pb-4 px-6 flex justify-between items-center bg-slate-900 border-b border-slate-800 z-10">
-    <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+    <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400 cursor-pointer" onclick="goHome()">
       MyCards
     </h1>
-    <div class="flex gap-4 text-sm font-semibold">
-      <button onclick="switchTab('home')" id="nav-home" class="text-indigo-400">Домой</button>
-      <button onclick="switchTab('add')" id="nav-add" class="text-slate-500">Добавить</button>
+    <div id="nav-actions" class="text-sm font-semibold text-indigo-400">
+      <!-- Динамические кнопки -->
     </div>
   </nav>
 
-  <!-- ================= HOME / DASHBOARD ================= -->
-  <main id="view-home" class="flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative">
-    <div class="bg-slate-800 rounded-2xl p-6 mb-6 shadow-lg border border-slate-700">
-      <h2 class="text-sm text-slate-400 uppercase tracking-wider mb-1">Колода</h2>
-      <h3 class="text-2xl font-bold text-white mb-4">Немецкий B1</h3>
-      
-      <div class="flex justify-between items-center bg-slate-900 rounded-xl p-4 border border-slate-700/50">
-        <div>
-          <p class="text-3xl font-black text-indigo-400" id="due-count">0</p>
-          <p class="text-xs text-slate-400">Ждут повторения</p>
-        </div>
-        <button onclick="startStudy()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg active:scale-95 transition-all">
-          Учить
-        </button>
-      </div>
-    </div>
+  <!-- ================= TOAST NOTIFICATION ================= -->
+  <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 text-white px-6 py-3 rounded-full shadow-2xl z-[100] toast-enter pointer-events-none flex items-center gap-2">
+    <span id="toast-icon">✨</span>
+    <span id="toast-msg" class="text-sm font-medium">Уведомление</span>
+  </div>
 
-    <div class="mt-4">
-      <h3 class="text-sm font-semibold text-slate-400 mb-3">СТАТИСТИКА</h3>
-      <div class="grid grid-cols-2 gap-4 text-center">
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-          <p class="text-xl font-bold text-white" id="total-count">0</p>
-          <p class="text-xs text-slate-400">Всего карточек</p>
+  <!-- ================= VIEW: DECKS (HOME) ================= -->
+  <main id="view-home" class="flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold">Мои колоды</h2>
+      <button onclick="createNewDeck()" class="text-indigo-400 text-sm font-bold bg-indigo-500/10 px-4 py-2 rounded-xl active:bg-indigo-500/20">
+        + Создать
+      </button>
+    </div>
+    <div id="decks-container" class="space-y-4 pb-20">
+      <!-- Список колод рендерится здесь -->
+    </div>
+  </main>
+
+  <!-- ================= VIEW: DECK DETAILS ================= -->
+  <main id="view-deck" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto">
+    <div class="bg-slate-800 rounded-2xl p-6 mb-6 border border-slate-700">
+      <h2 class="text-sm text-slate-400 uppercase tracking-wider mb-1">Колода</h2>
+      <h3 id="deck-title" class="text-2xl font-bold text-white mb-4">Название</h3>
+      
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-slate-900 rounded-xl p-4 border border-slate-700/50">
+          <p class="text-2xl font-black text-indigo-400" id="deck-due">0</p>
+          <p class="text-[10px] text-slate-400 uppercase font-bold">Для повторения</p>
         </div>
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-          <p class="text-xl font-bold text-emerald-400" id="mastered-count">0</p>
-          <p class="text-xs text-slate-400">Выучено (4+ дня)</p>
+        <div class="bg-slate-900 rounded-xl p-4 border border-slate-700/50">
+          <p class="text-2xl font-black text-emerald-400" id="deck-total">0</p>
+          <p class="text-[10px] text-slate-400 uppercase font-bold">Всего карточек</p>
         </div>
+      </div>
+
+      <div class="space-y-3">
+        <button onclick="startStudy(false)" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-[0.98] transition-all">
+          Учить новые / по плану
+        </button>
+        <button onclick="startStudy(true)" class="w-full bg-slate-700 text-slate-300 font-bold py-3.5 rounded-xl border border-slate-600 active:scale-[0.98] transition-all">
+          Повторить ВСЁ (Cram mode)
+        </button>
       </div>
     </div>
   </main>
 
-  <!-- ================= ADD CARD VIEW ================= -->
+  <!-- ================= VIEW: ADD CARD ================= -->
   <main id="view-add" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto">
     <h2 class="text-2xl font-bold mb-6">Новая карточка</h2>
     <div class="space-y-4">
       <div>
-        <label class="text-xs text-slate-400 uppercase">Слово / Фраза (на немецком)</label>
-        <input id="input-front" type="text" class="w-full mt-1 p-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500 text-lg">
+        <div class="flex justify-between items-end mb-1">
+          <label class="text-xs text-slate-400 uppercase">Слово / Фраза (DE)</label>
+          <button onclick="autoTranslate()" id="btn-translate" class="text-[10px] font-bold bg-slate-800 text-indigo-400 px-3 py-1 rounded-lg border border-slate-700 active:bg-slate-700">
+            🪄 Перевести
+          </button>
+        </div>
+        <input id="input-front" type="text" class="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500 text-lg">
       </div>
       <div>
-        <label class="text-xs text-slate-400 uppercase">Перевод</label>
+        <label class="text-xs text-slate-400 uppercase">Перевод (RU)</label>
         <input id="input-back" type="text" class="w-full mt-1 p-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500 text-lg">
       </div>
       <div>
-        <label class="text-xs text-slate-400 uppercase">Пример использования (необязательно)</label>
+        <label class="text-xs text-slate-400 uppercase">Пример (необязательно)</label>
         <textarea id="input-example" rows="2" class="w-full mt-1 p-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"></textarea>
       </div>
-      <button onclick="saveNewCard()" class="w-full py-4 mt-4 bg-indigo-600 active:bg-indigo-700 rounded-xl font-bold text-white shadow-lg">
-        Сохранить карточку
+      <button onclick="saveNewCard()" class="w-full py-4 mt-4 bg-indigo-600 active:bg-indigo-700 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-[0.98]">
+        Добавить в колоду
       </button>
     </div>
   </main>
 
-  <!-- ================= STUDY VIEW (TINDER SWIPE) ================= -->
+  <!-- ================= VIEW: STUDY (TINDER) ================= -->
   <main id="view-study" class="hidden fixed inset-0 z-50 bg-slate-900 flex flex-col pt-12 pb-8 px-6">
-    <!-- Header Study -->
     <div class="flex justify-between items-center mb-8">
-      <button onclick="exitStudy()" class="text-slate-400 font-bold px-4 py-2 bg-slate-800 rounded-full active:bg-slate-700">Отмена</button>
-      <div class="text-sm font-bold text-slate-300" id="study-counter">Осталось: 0</div>
+      <button onclick="exitStudy()" class="text-slate-400 font-bold px-4 py-2 bg-slate-800 rounded-full active:bg-slate-700 border border-slate-700">Завершить</button>
+      <div class="text-sm font-bold text-slate-300 bg-slate-800 px-4 py-2 rounded-full border border-slate-700" id="study-counter">0 / 0</div>
     </div>
 
-    <!-- Card Stack Area -->
     <div class="flex-1 relative flex justify-center items-center perspective-1000 w-full max-w-sm mx-auto" id="card-area">
-      <!-- Outer container for Swiping mechanics -->
       <div id="swipe-container" class="w-full h-96 absolute cursor-grab active:cursor-grabbing z-10">
-        <!-- Inner container for Flipping (3D) -->
         <div id="flip-container" class="w-full h-full relative preserve-3d flip-anim shadow-2xl">
-          
-          <!-- FRONT PAGE -->
+          <!-- FRONT -->
           <div class="absolute inset-0 bg-slate-800 rounded-3xl border border-slate-700 p-6 flex flex-col justify-center items-center backface-hidden">
-            <p class="text-xs text-slate-400 uppercase tracking-widest absolute top-6">Немецкий</p>
+            <p id="study-mode-badge" class="text-[10px] bg-indigo-500/20 text-indigo-300 uppercase tracking-widest absolute top-6 px-3 py-1 rounded-full border border-indigo-500/30">Обучение</p>
             <h2 id="study-front" class="text-3xl font-bold text-white text-center"></h2>
-            <p class="text-sm text-slate-500 absolute bottom-6 flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
-              Нажми, чтобы перевернуть
-            </p>
+            <p class="text-sm text-slate-500 absolute bottom-6 flex items-center gap-2">Нажми, чтобы перевернуть</p>
           </div>
-
-          <!-- BACK PAGE -->
+          <!-- BACK -->
           <div class="absolute inset-0 bg-indigo-950 rounded-3xl border border-indigo-700/50 p-6 flex flex-col justify-center items-center backface-hidden rotate-y-180">
-            <p class="text-xs text-indigo-300 uppercase tracking-widest absolute top-6">Перевод</p>
+            <p class="text-xs text-indigo-300 uppercase tracking-widest absolute top-6 font-bold">Перевод</p>
             <h2 id="study-back" class="text-2xl font-semibold text-white text-center mb-4"></h2>
             <div id="study-example-container" class="w-full bg-slate-900/50 p-4 rounded-xl border border-indigo-500/30 text-center">
-              <p class="text-xs text-indigo-400 mb-1 uppercase">Пример</p>
               <p id="study-example" class="text-sm text-slate-300 italic"></p>
             </div>
-            <!-- Swipe Hints -->
             <div class="absolute bottom-6 w-full px-6 flex justify-between text-xs font-bold uppercase tracking-wider">
               <span class="text-rose-400">← Не помню</span>
               <span class="text-emerald-400">Помню →</span>
             </div>
           </div>
-
         </div>
       </div>
     </div>
   </main>
 
-  <!-- ================= SCRIPTS ================= -->
   <script>
-    // --- ДАННЫЕ И SRS АЛГОРИТМ ---
-    // Уровни SRS в минутах: 1 мин, 10 мин, 1 день (1440), 4 дня (5760).
+    // --- ДАННЫЕ И СТРУКТУРА ---
+    let decks = JSON.parse(localStorage.getItem('mydecks_v3')) || [{ id: 'default', name: 'Мои слова' }];
+    let cards = JSON.parse(localStorage.getItem('mycards_v3')) || [];
+    
     const SRS_INTERVALS = [1, 10, 1440, 5760]; 
-    let cards = JSON.parse(localStorage.getItem('mycards_v2')) || [];
+    let currentDeckId = null;
     let studyQueue = [];
+    let initialQueueLength = 0;
     let currentStudyCard = null;
     let isFlipped = false;
+    let isCramMode = false; // Режим зубрежки без влияния на прогресс
 
-    // --- UI ИНИЦИАЛИЗАЦИЯ ---
-    function updateDashboard() {
-      const now = Date.now();
-      const dueCards = cards.filter(c => c.nextReview <= now);
-      const mastered = cards.filter(c => c.srsLevel >= 3); // Те, кто дошел до 4 дней
-
-      document.getElementById('total-count').innerText = cards.length;
-      document.getElementById('due-count').innerText = dueCards.length;
-      document.getElementById('mastered-count').innerText = mastered.length;
+    // --- УВЕДОМЛЕНИЯ (TOAST) ---
+    let toastTimeout;
+    function showToast(msg, icon = '✨') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      document.getElementById('toast-icon').innerText = icon;
+      toast.classList.remove('toast-enter');
+      toast.classList.add('toast-active');
+      
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('toast-active');
+        toast.classList.add('toast-enter');
+      }, 2500);
     }
 
-    function switchTab(tab) {
-      document.getElementById('view-home').classList.add('hidden');
-      document.getElementById('view-add').classList.add('hidden');
-      document.getElementById(`view-${tab}`).classList.remove('hidden');
+    // --- НАВИГАЦИЯ ---
+    function hideAllViews() {
+      ['view-home', 'view-deck', 'view-add', 'view-study'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById('nav-actions').innerHTML = '';
+    }
+
+    function goHome() {
+      hideAllViews();
+      document.getElementById('view-home').classList.remove('hidden');
+      renderDecks();
+    }
+
+    function openDeck(id) {
+      currentDeckId = id;
+      hideAllViews();
+      document.getElementById('view-deck').classList.remove('hidden');
       
-      document.getElementById('nav-home').className = tab === 'home' ? 'text-indigo-400' : 'text-slate-500';
-      document.getElementById('nav-add').className = tab === 'add' ? 'text-indigo-400' : 'text-slate-500';
+      const deck = decks.find(d => d.id === id);
+      const deckCards = cards.filter(c => c.deckId === id);
+      const dueCards = deckCards.filter(c => c.nextReview <= Date.now());
+
+      document.getElementById('deck-title').innerText = deck.name;
+      document.getElementById('deck-due').innerText = dueCards.length;
+      document.getElementById('deck-total').innerText = deckCards.length;
+
+      document.getElementById('nav-actions').innerHTML = `
+        <button onclick="openAddCard()" class="px-3 py-1 bg-slate-800 rounded-lg active:bg-slate-700">+ Карточка</button>
+      `;
+    }
+
+    function openAddCard() {
+      hideAllViews();
+      document.getElementById('view-add').classList.remove('hidden');
+      document.getElementById('nav-actions').innerHTML = `
+        <button onclick="openDeck('${currentDeckId}')" class="text-slate-400">Назад</button>
+      `;
+    }
+
+    // --- ЛОГИКА КОЛОД ---
+    function renderDecks() {
+      const container = document.getElementById('decks-container');
+      container.innerHTML = '';
       
-      if(tab === 'home') updateDashboard();
+      decks.forEach(deck => {
+        const deckCards = cards.filter(c => c.deckId === deck.id);
+        const dueCount = deckCards.filter(c => c.nextReview <= Date.now()).length;
+        
+        container.innerHTML += `
+          <div onclick="openDeck('${deck.id}')" class="bg-slate-800 border border-slate-700 rounded-2xl p-5 flex justify-between items-center cursor-pointer active:scale-[0.98] transition-transform shadow-lg">
+            <div>
+              <h3 class="text-lg font-bold text-white">${deck.name}</h3>
+              <p class="text-xs text-slate-400 mt-1">${deckCards.length} слов</p>
+            </div>
+            ${dueCount > 0 ? `<div class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full">${dueCount} ждет</div>` : ''}
+          </div>
+        `;
+      });
+    }
+
+    function createNewDeck() {
+      const name = prompt("Название новой колоды:");
+      if (name && name.trim()) {
+        const newDeck = { id: Date.now().toString(), name: name.trim() };
+        decks.push(newDeck);
+        localStorage.setItem('mydecks_v3', JSON.stringify(decks));
+        renderDecks();
+        showToast('Колода создана', '📁');
+      }
+    }
+
+    // --- ЛОГИКА КАРТОЧЕК ---
+    async function autoTranslate() {
+      const inputFront = document.getElementById('input-front');
+      const btn = document.getElementById('btn-translate');
+      const word = inputFront.value.trim();
+      
+      if (!word) return showToast('Сначала введите слово', '⚠️');
+      
+      btn.innerText = '⏳...';
+      try {
+        // Бесплатный API для перевода без ключа
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=de|ru`);
+        const data = await res.json();
+        if (data && data.responseData && data.responseData.translatedText) {
+          document.getElementById('input-back').value = data.responseData.translatedText;
+          showToast('Переведено!', '✅');
+        }
+      } catch (e) {
+        showToast('Ошибка перевода', '❌');
+      }
+      btn.innerText = '🪄 Перевести';
     }
 
     function saveNewCard() {
@@ -169,61 +268,72 @@
       const back = document.getElementById('input-back').value.trim();
       const example = document.getElementById('input-example').value.trim();
 
-      if (!front || !back) return alert('Введите слово и перевод!');
+      if (!front || !back) return showToast('Заполните слово и перевод', '⚠️');
 
-      const newCard = {
+      cards.push({
         id: Date.now().toString(),
+        deckId: currentDeckId,
         front, back, example,
-        srsLevel: 0, // Начинаем с 0 (1 мин)
-        nextReview: Date.now() // Учить прямо сейчас
-      };
-
-      cards.push(newCard);
-      localStorage.setItem('mycards_v2', JSON.stringify(cards));
+        srsLevel: 0,
+        nextReview: Date.now()
+      });
+      localStorage.setItem('mycards_v3', JSON.stringify(cards));
       
       document.getElementById('input-front').value = '';
       document.getElementById('input-back').value = '';
       document.getElementById('input-example').value = '';
       
-      switchTab('home');
+      showToast('Добавлено в колоду', '🃏');
+      openDeck(currentDeckId);
     }
 
-    // --- ЛОГИКА ОБУЧЕНИЯ (STUDY MODE) ---
-    function startStudy() {
-      const now = Date.now();
-      // Берем карточки, которым пришло время (сортируем старые первыми)
-      studyQueue = cards.filter(c => c.nextReview <= now).sort((a,b) => a.nextReview - b.nextReview);
-      
-      if (studyQueue.length === 0) return alert('Пока нет слов для повторения! Отличная работа.');
+    // --- РЕЖИМ ОБУЧЕНИЯ И СВАЙПЫ ---
+    function startStudy(cramMode) {
+      const deckCards = cards.filter(c => c.deckId === currentDeckId);
+      isCramMode = cramMode;
 
-      document.getElementById('view-home').classList.add('hidden');
+      if (isCramMode) {
+        studyQueue = [...deckCards].sort(() => Math.random() - 0.5); // Перемешать всё
+      } else {
+        const now = Date.now();
+        studyQueue = deckCards.filter(c => c.nextReview <= now).sort((a,b) => a.nextReview - b.nextReview);
+      }
+      
+      if (studyQueue.length === 0) return showToast('Нет карточек для повторения', '🎉');
+
+      initialQueueLength = studyQueue.length;
+      hideAllViews();
       document.getElementById('view-study').classList.remove('hidden');
+      
+      const badge = document.getElementById('study-mode-badge');
+      badge.innerText = isCramMode ? 'Повторение (Cram)' : 'По плану (SRS)';
+      badge.className = isCramMode ? 'text-[10px] bg-amber-500/20 text-amber-300 uppercase tracking-widest absolute top-6 px-3 py-1 rounded-full border border-amber-500/30' 
+                                   : 'text-[10px] bg-indigo-500/20 text-indigo-300 uppercase tracking-widest absolute top-6 px-3 py-1 rounded-full border border-indigo-500/30';
+      
       loadNextCard();
     }
 
     function exitStudy() {
-      document.getElementById('view-study').classList.add('hidden');
-      switchTab('home');
+      openDeck(currentDeckId);
     }
 
     function loadNextCard() {
       if (studyQueue.length === 0) {
-        alert('Сессия окончена!');
+        showToast('Сессия окончена!', '🎓');
         return exitStudy();
       }
 
       currentStudyCard = studyQueue[0];
       isFlipped = false;
       
-      // Сбрасываем визуал карточки
       const flipCont = document.getElementById('flip-container');
       const swipeCont = document.getElementById('swipe-container');
       flipCont.classList.remove('rotate-y-180');
       swipeCont.style.transform = '';
       swipeCont.style.opacity = '1';
 
-      // Заполняем данные
-      document.getElementById('study-counter').innerText = `Осталось: ${studyQueue.length}`;
+      const currentNum = initialQueueLength - studyQueue.length + 1;
+      document.getElementById('study-counter').innerText = `${currentNum} / ${initialQueueLength}`;
       document.getElementById('study-front').innerText = currentStudyCard.front;
       document.getElementById('study-back').innerText = currentStudyCard.back;
       
@@ -237,94 +347,73 @@
     }
 
     function processSwipeResult(direction) {
-      // Ищем карточку в общей базе
-      const cardIndex = cards.findIndex(c => c.id === currentStudyCard.id);
-      if (cardIndex === -1) return;
-
-      if (direction === 'right') {
-        // Помню -> Повышаем уровень
-        cards[cardIndex].srsLevel = Math.min(cards[cardIndex].srsLevel + 1, SRS_INTERVALS.length - 1);
-      } else {
-        // Не помню -> Сброс на уровень 0 (1 мин)
-        cards[cardIndex].srsLevel = 0;
+      if (!isCramMode) {
+        const cardIndex = cards.findIndex(c => c.id === currentStudyCard.id);
+        if (cardIndex !== -1) {
+          if (direction === 'right') {
+            cards[cardIndex].srsLevel = Math.min(cards[cardIndex].srsLevel + 1, SRS_INTERVALS.length - 1);
+          } else {
+            cards[cardIndex].srsLevel = 0;
+          }
+          const intervalMinutes = SRS_INTERVALS[cards[cardIndex].srsLevel];
+          cards[cardIndex].nextReview = Date.now() + (intervalMinutes * 60 * 1000);
+          localStorage.setItem('mycards_v3', JSON.stringify(cards));
+        }
       }
 
-      // Устанавливаем следующее время
-      const intervalMinutes = SRS_INTERVALS[cards[cardIndex].srsLevel];
-      cards[cardIndex].nextReview = Date.now() + (intervalMinutes * 60 * 1000);
-      
-      localStorage.setItem('mycards_v2', JSON.stringify(cards));
-
-      // Удаляем из текущей очереди
       studyQueue.shift();
       
-      // Анимация улетания карточки перед загрузкой следующей
       const swipeCont = document.getElementById('swipe-container');
       swipeCont.style.transition = 'transform 0.3s ease, opacity 0.3s';
       swipeCont.style.transform = `translateX(${direction === 'right' ? 300 : -300}px) rotate(${direction === 'right' ? 20 : -20}deg)`;
       swipeCont.style.opacity = '0';
       
       setTimeout(() => {
-        swipeCont.style.transition = ''; // Убираем транзишн для мгновенного возврата
+        swipeCont.style.transition = '';
         loadNextCard();
       }, 300);
     }
 
-    // --- ФИЗИКА СВАЙПОВ (TINDER EFFECT) ---
+    // Обработчики свайпов (Tinder Effect)
     const swipeCont = document.getElementById('swipe-container');
     const flipCont = document.getElementById('flip-container');
-    
-    let startX = 0;
-    let currentX = 0;
-    let isDragging = false;
+    let startX = 0, currentX = 0, isDragging = false;
 
-    // Переворот по клику
     swipeCont.addEventListener('click', (e) => {
-      // Если мы просто тапнули (а не тащили), переворачиваем
       if (Math.abs(currentX) < 5) {
         isFlipped = !isFlipped;
         flipCont.classList.toggle('rotate-y-180', isFlipped);
       }
     });
 
-    // Начало касания
     swipeCont.addEventListener('touchstart', e => {
       startX = e.touches[0].clientX;
       isDragging = true;
       swipeCont.classList.remove('snap-back');
     });
 
-    // Движение пальца
     swipeCont.addEventListener('touchmove', e => {
       if (!isDragging) return;
       currentX = e.touches[0].clientX - startX;
-      
-      // Двигаем и немного наклоняем
-      const rotate = currentX * 0.05;
-      swipeCont.style.transform = `translateX(${currentX}px) rotate(${rotate}deg)`;
+      swipeCont.style.transform = `translateX(${currentX}px) rotate(${currentX * 0.05}deg)`;
     });
 
-    // Конец касания
     swipeCont.addEventListener('touchend', e => {
       isDragging = false;
-      const threshold = 100; // Сколько пикселей нужно протащить для свайпа
-
+      const threshold = 100;
       if (currentX > threshold && isFlipped) {
-        // Свайп вправо (Знаю) - работает ТОЛЬКО если карточка перевернута
         processSwipeResult('right');
       } else if (currentX < -threshold && isFlipped) {
-        // Свайп влево (Не знаю)
         processSwipeResult('left');
       } else {
-        // Вернуть на место (если не дотянул или карточка еще не перевернута)
         swipeCont.classList.add('snap-back');
         swipeCont.style.transform = 'translateX(0) rotate(0deg)';
       }
       currentX = 0;
     });
 
-    // Запуск начального экрана
-    updateDashboard();
+    // Инициализация
+    goHome();
   </script>
 </body>
 </html>
