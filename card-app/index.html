@@ -8,7 +8,6 @@
   <title>HankeCards</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* ================= ТЕМЫ ================= */
     :root {
       --bg-color: #0f172a; --text-color: #f1f5f9; --text-muted: #94a3b8;
       --card-bg: #1e293b; --card-border: #334155; --accent: #6366f1; --accent-hover: #4f46e5;
@@ -44,11 +43,11 @@
 <body class="h-screen overflow-hidden flex flex-col font-sans select-none" data-theme="dark">
 
   <!-- ================= NAV BAR ================= -->
-  <nav class="pt-12 pb-4 px-6 flex justify-between items-center z-10 theme-card border-b relative shadow-sm">
-    <h1 class="text-xl font-bold theme-accent-text cursor-pointer flex items-center gap-2" onclick="goHome()">
-      🪴 HankeCards
+  <nav class="pt-14 pb-4 px-6 flex items-center justify-between z-10 theme-card border-b shadow-sm relative">
+    <h1 class="text-xl font-bold theme-accent-text cursor-pointer flex items-center justify-center gap-2" onclick="goHome()">
+      <span class="text-2xl mt-[-2px]">🪴</span> <span>HankeCards</span>
     </h1>
-    <div id="nav-actions" class="text-sm font-semibold flex gap-3 items-center"></div>
+    <div id="nav-actions" class="text-sm font-semibold flex gap-3 items-center justify-end"></div>
   </nav>
 
   <!-- ================= TOAST ================= -->
@@ -85,6 +84,24 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: EDIT CARD ================= -->
+  <div id="edit-card-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] hidden flex-col justify-end">
+    <div class="theme-card w-full max-w-md mx-auto rounded-t-3xl border-t p-6 transform transition-transform shadow-2xl">
+      <h3 class="text-lg font-bold mb-4">Редактировать слово</h3>
+      <label class="text-xs theme-text-muted font-bold uppercase mb-1 block">Слово (DE)</label>
+      <input id="edit-front" type="text" class="w-full p-4 mb-3 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500">
+      
+      <label class="text-xs theme-text-muted font-bold uppercase mb-1 block">Перевод (RU)</label>
+      <input id="edit-back" type="text" class="w-full p-4 mb-4 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500">
+      
+      <div class="flex gap-3 mb-4">
+        <button onclick="closeEditCard()" class="flex-1 py-4 theme-card border rounded-xl font-bold active:scale-[0.98]">Отмена</button>
+        <button onclick="saveEditedCard()" class="flex-1 py-4 theme-accent rounded-xl font-bold active:scale-[0.98]">Сохранить</button>
+      </div>
+      <button onclick="deleteCard()" class="w-full py-3 text-rose-500 font-bold border border-rose-500/30 rounded-xl active:bg-rose-500/10">🗑️ Удалить карточку</button>
+    </div>
+  </div>
+
   <!-- ================= VIEW: MASTERED ================= -->
   <main id="view-mastered" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
     <h2 class="text-xl font-bold mb-2">Выученные слова 🏆</h2>
@@ -92,7 +109,7 @@
     <div id="mastered-container" class="space-y-3"></div>
   </main>
 
-  <!-- ================= VIEW: SETTINGS (THEMES + SYNC) ================= -->
+  <!-- ================= VIEW: SETTINGS ================= -->
   <main id="view-settings" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
     <h2 class="text-xl font-bold mb-6">Оформление 🎨</h2>
     <div class="space-y-3 mb-10">
@@ -106,20 +123,17 @@
         <span class="font-bold">🍑 Персиковая</span>
       </div>
     </div>
-
     <h2 class="text-xl font-bold mb-6">Данные (Файлы) 📁</h2>
     <div class="space-y-4">
       <button onclick="exportToFile()" class="w-full theme-card border py-4 rounded-xl font-bold flex justify-center items-center gap-2 active:scale-[0.98]">
         <span>📤</span> Скачать резервную копию
       </button>
-      
       <div class="relative">
         <input type="file" id="file-import" accept=".json" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="importFromFile(event)">
         <button class="w-full theme-accent py-4 rounded-xl font-bold shadow-lg flex justify-center items-center gap-2 pointer-events-none">
           <span>📥</span> Загрузить из файла
         </button>
       </div>
-      <p class="text-xs theme-text-muted text-center mt-2">Экспортируйте файл на ПК и передайте на телефон, чтобы загрузить прогресс.</p>
     </div>
   </main>
 
@@ -147,6 +161,13 @@
         </button>
       </div>
     </div>
+
+    <!-- Список слов колоды -->
+    <div class="mt-2 mb-4 flex justify-between items-center px-1">
+      <h4 class="font-bold text-lg">Словарь колоды</h4>
+      <span id="deck-vocab-count" class="text-xs theme-text-muted font-bold">0 слов</span>
+    </div>
+    <div id="deck-vocab-list" class="space-y-3"></div>
   </main>
 
   <!-- ================= VIEW: ADD CARD ================= -->
@@ -155,15 +176,15 @@
     <div class="space-y-4">
       <div>
         <div class="flex justify-between items-end mb-1">
-          <label class="text-xs theme-text-muted uppercase font-bold">Слово (DE)</label>
+          <label class="text-xs theme-text-muted uppercase font-bold">Слово (Можно на русском)</label>
           <button onclick="autoTranslate()" id="btn-translate" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-lg active:opacity-70">
-            🪄 Перевести
+            🪄 Умный перевод
           </button>
         </div>
-        <input id="input-front" type="text" class="w-full p-4 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium">
+        <input id="input-front" type="text" class="w-full p-4 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium" placeholder="Например: Haus или Дом">
       </div>
       <div>
-        <label class="text-xs theme-text-muted uppercase font-bold">Перевод (RU)</label>
+        <label class="text-xs theme-text-muted uppercase font-bold">Перевод</label>
         <input id="input-back" type="text" class="w-full mt-1 p-4 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium">
       </div>
       <button onclick="saveNewCard()" class="w-full py-4 mt-2 theme-accent rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98]">
@@ -178,14 +199,11 @@
       <button onclick="openDeck(currentDeckId)" class="font-bold theme-text-muted active:opacity-70">Отмена</button>
       <div class="text-sm font-bold theme-card border px-4 py-2 rounded-full" id="spell-counter">0/0</div>
     </div>
-    
     <div class="flex-1 flex flex-col items-center mt-10">
       <p class="text-sm theme-text-muted uppercase tracking-widest mb-2 font-bold">Напиши по-немецки:</p>
       <h2 id="spell-prompt" class="text-3xl font-bold text-center mb-10">Перевод</h2>
       <input id="spell-input" type="text" class="w-full p-4 rounded-xl bg-transparent theme-card border text-center text-xl font-bold mb-4 focus:outline-none focus:border-indigo-500" placeholder="Введи слово..." autocomplete="off">
-      <button onclick="checkSpelling()" class="w-full theme-accent py-4 rounded-xl font-bold shadow-lg active:scale-[0.98]">
-        Проверить
-      </button>
+      <button onclick="checkSpelling()" class="w-full theme-accent py-4 rounded-xl font-bold shadow-lg active:scale-[0.98]">Проверить</button>
     </div>
   </main>
 
@@ -195,16 +213,13 @@
       <button onclick="openDeck(currentDeckId)" class="font-bold theme-text-muted border theme-card px-4 py-2 rounded-full active:scale-95">Завершить</button>
       <div class="text-sm font-bold border theme-card px-4 py-2 rounded-full shadow-sm" id="study-counter">0 / 0</div>
     </div>
-
     <div class="flex-1 relative flex justify-center items-center perspective-1000 w-full max-w-sm mx-auto" id="card-area">
       <div id="swipe-container" class="w-full h-96 absolute cursor-grab active:cursor-grabbing z-10">
         <div id="flip-container" class="w-full h-full relative preserve-3d flip-anim shadow-2xl rounded-3xl">
-          <!-- FRONT -->
           <div class="absolute inset-0 theme-card rounded-3xl border p-6 flex flex-col justify-center items-center backface-hidden">
             <h2 id="study-front" class="text-3xl font-bold text-center"></h2>
             <p class="text-sm theme-text-muted absolute bottom-6 font-medium">Нажми, чтобы вспомнить</p>
           </div>
-          <!-- BACK -->
           <div class="absolute inset-0 theme-card rounded-3xl border p-6 flex flex-col justify-center items-center backface-hidden rotate-y-180">
             <p class="text-xs theme-accent-text uppercase tracking-widest absolute top-6 font-bold">Перевод</p>
             <h2 id="study-back" class="text-2xl font-semibold text-center mb-4"></h2>
@@ -219,62 +234,46 @@
   </main>
 
   <script>
-    // --- ДАННЫЕ И ТЕМЫ ---
-    let decks = JSON.parse(localStorage.getItem('mydecks_v5')) || [{ id: 'default', name: 'Мои слова' }];
-    let cards = JSON.parse(localStorage.getItem('mycards_v5')) || [];
-    const SRS_INTERVALS = [1, 10, 1440, 5760]; // 1м, 10м, 1д, 4д
-    
-    let currentDeckId = null, currentMenuDeckId = null;
+    let decks = JSON.parse(localStorage.getItem('mydecks_v6')) || [{ id: 'default', name: 'Мои слова' }];
+    let cards = JSON.parse(localStorage.getItem('mycards_v6')) || [];
+    const SRS_INTERVALS = [1, 10, 1440, 5760]; 
+    let currentDeckId = null, currentMenuDeckId = null, currentEditCardId = null;
     let studyQueue = [], initialQueueLength = 0, currentStudyCard = null, isFlipped = false;
     
-    // Применяем тему без уведомления при загрузке страницы
     setTheme(localStorage.getItem('mytheme') || 'dark', true);
-
     function setTheme(themeName, isInit = false) {
       document.body.setAttribute('data-theme', themeName);
       localStorage.setItem('mytheme', themeName);
       if(!isInit) showToast('Тема обновлена 🎨');
     }
 
-    // --- УВЕДОМЛЕНИЯ ---
     let toastTimeout;
     function showToast(msg, icon = '✨') {
       const toast = document.getElementById('toast');
       document.getElementById('toast-msg').innerText = msg;
       document.getElementById('toast-icon').innerText = icon;
-      toast.classList.remove('toast-enter');
-      toast.classList.add('toast-active');
+      toast.classList.remove('toast-enter'); toast.classList.add('toast-active');
       clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        toast.classList.remove('toast-active');
-        toast.classList.add('toast-enter');
-      }, 2500);
+      toastTimeout = setTimeout(() => { toast.classList.remove('toast-active'); toast.classList.add('toast-enter'); }, 2500);
     }
 
-    // --- НАВИГАЦИЯ ---
     function hideAllViews() {
       ['view-home', 'view-mastered', 'view-settings', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
       document.getElementById('nav-actions').innerHTML = '';
     }
-
     function switchMainTab(tab) {
-      hideAllViews();
-      document.getElementById(`view-${tab}`).classList.remove('hidden');
-      if(tab === 'home') renderDecks();
-      if(tab === 'mastered') renderMastered();
+      hideAllViews(); document.getElementById(`view-${tab}`).classList.remove('hidden');
+      if(tab === 'home') renderDecks(); if(tab === 'mastered') renderMastered();
     }
     function goHome() { switchMainTab('home'); }
 
-    // --- ЛОГИКА КОЛОД ---
     function renderDecks() {
-      const container = document.getElementById('decks-container');
-      container.innerHTML = '';
+      const container = document.getElementById('decks-container'); container.innerHTML = '';
       decks.forEach(deck => {
         const deckCards = cards.filter(c => c.deckId === deck.id && c.srsLevel < 4);
         const dueCount = deckCards.filter(c => c.nextReview <= Date.now()).length;
-        
         container.innerHTML += `
           <div class="theme-card border rounded-2xl p-4 flex justify-between items-center shadow-sm relative">
             <div onclick="openDeck('${deck.id}')" class="flex-1 cursor-pointer">
@@ -285,173 +284,155 @@
               ${dueCount > 0 ? `<div class="theme-accent text-xs font-bold px-3 py-1 rounded-full">${dueCount} ждет</div>` : ''}
               <button onclick="openDeckMenu('${deck.id}', '${deck.name}')" class="text-xl px-2 py-1 theme-text-muted active:text-white">⋮</button>
             </div>
-          </div>
-        `;
+          </div>`;
       });
     }
 
-    // --- МЕНЮ КОЛОДЫ (ТРИ ТОЧКИ) ---
     function openDeckMenu(id, name) {
-      currentMenuDeckId = id;
-      document.getElementById('menu-deck-title').innerText = name;
-      document.getElementById('deck-menu-modal').classList.remove('hidden');
-      document.getElementById('deck-menu-modal').classList.add('flex');
+      currentMenuDeckId = id; document.getElementById('menu-deck-title').innerText = name;
+      document.getElementById('deck-menu-modal').classList.remove('hidden'); document.getElementById('deck-menu-modal').classList.add('flex');
     }
-    function closeDeckMenu() {
-      document.getElementById('deck-menu-modal').classList.add('hidden');
-      document.getElementById('deck-menu-modal').classList.remove('flex');
-    }
+    function closeDeckMenu() { document.getElementById('deck-menu-modal').classList.add('hidden'); document.getElementById('deck-menu-modal').classList.remove('flex'); }
     function renameDeck() {
       const deck = decks.find(d => d.id === currentMenuDeckId);
       const newName = prompt("Новое название:", deck.name);
-      if(newName && newName.trim()) {
-        deck.name = newName.trim();
-        saveData(); renderDecks(); closeDeckMenu();
-        showToast('Колода переименована ✏️');
-      }
+      if(newName && newName.trim()) { deck.name = newName.trim(); saveData(); renderDecks(); closeDeckMenu(); showToast('Переименовано ✏️'); }
     }
     function deleteDeck() {
-      if(confirm("Удалить колоду и ВСЕ слова внутри? Это нельзя отменить.")) {
-        decks = decks.filter(d => d.id !== currentMenuDeckId);
-        cards = cards.filter(c => c.deckId !== currentMenuDeckId);
-        saveData(); renderDecks(); closeDeckMenu();
-        showToast('Колода удалена 🗑️');
+      if(confirm("Удалить колоду и ВСЕ слова внутри?")) {
+        decks = decks.filter(d => d.id !== currentMenuDeckId); cards = cards.filter(c => c.deckId !== currentMenuDeckId);
+        saveData(); renderDecks(); closeDeckMenu(); showToast('Колода удалена 🗑️');
       }
     }
-
     function createNewDeck() {
       const name = prompt("Название новой колоды:");
-      if (name && name.trim()) {
-        decks.push({ id: Date.now().toString(), name: name.trim() });
-        saveData(); renderDecks(); showToast('Колода создана 📁');
-      }
+      if (name && name.trim()) { decks.push({ id: Date.now().toString(), name: name.trim() }); saveData(); renderDecks(); showToast('Создано 📁'); }
     }
 
-    // --- ОТКРЫТИЕ КОЛОДЫ ---
     function openDeck(id) {
-      currentDeckId = id;
-      hideAllViews();
-      document.getElementById('view-deck').classList.remove('hidden');
-      
+      currentDeckId = id; hideAllViews(); document.getElementById('view-deck').classList.remove('hidden');
       const deck = decks.find(d => d.id === id);
       const deckCards = cards.filter(c => c.deckId === id && c.srsLevel < 4);
       const dueCards = deckCards.filter(c => c.nextReview <= Date.now());
+      document.getElementById('deck-title').innerText = deck.name; document.getElementById('deck-due').innerText = dueCards.length; document.getElementById('deck-total').innerText = deckCards.length;
+      document.getElementById('nav-actions').innerHTML = `<button onclick="openAddCard()" class="px-3 py-1 theme-card border rounded-lg font-bold">+ Добавить</button>`;
+      renderDeckVocab();
+    }
+    function openAddCard() { hideAllViews(); document.getElementById('view-add').classList.remove('hidden'); document.getElementById('nav-actions').innerHTML = `<button onclick="openDeck('${currentDeckId}')" class="font-bold">Назад</button>`; }
 
-      document.getElementById('deck-title').innerText = deck.name;
-      document.getElementById('deck-due').innerText = dueCards.length;
-      document.getElementById('deck-total').innerText = deckCards.length;
-
-      document.getElementById('nav-actions').innerHTML = `
-        <button onclick="openAddCard()" class="px-3 py-1 theme-card border rounded-lg font-bold">+ Добавить</button>
-      `;
+    // --- СЛОВАРЬ И РЕДАКТИРОВАНИЕ КАРТОЧЕК ---
+    function renderDeckVocab() {
+      const list = document.getElementById('deck-vocab-list');
+      const deckCards = cards.filter(c => c.deckId === currentDeckId);
+      document.getElementById('deck-vocab-count').innerText = `${deckCards.length} слов`;
+      list.innerHTML = '';
+      deckCards.forEach(c => {
+        list.innerHTML += `
+          <div class="theme-card border p-3 rounded-xl flex justify-between items-center shadow-sm">
+            <div class="truncate pr-2">
+              <p class="font-bold truncate">${c.front}</p>
+              <p class="text-xs theme-text-muted truncate">${c.back}</p>
+            </div>
+            <button onclick="openEditCard('${c.id}')" class="p-2 theme-text-muted active:text-white">✏️</button>
+          </div>`;
+      });
     }
 
-    function openAddCard() {
-      hideAllViews();
-      document.getElementById('view-add').classList.remove('hidden');
-      document.getElementById('nav-actions').innerHTML = `<button onclick="openDeck('${currentDeckId}')" class="font-bold">Назад</button>`;
+    function openEditCard(id) {
+      currentEditCardId = id; const card = cards.find(c => c.id === id);
+      document.getElementById('edit-front').value = card.front; document.getElementById('edit-back').value = card.back;
+      document.getElementById('edit-card-modal').classList.remove('hidden'); document.getElementById('edit-card-modal').classList.add('flex');
+    }
+    function closeEditCard() { document.getElementById('edit-card-modal').classList.add('hidden'); document.getElementById('edit-card-modal').classList.remove('flex'); }
+    
+    function saveEditedCard() {
+      const front = document.getElementById('edit-front').value.trim(), back = document.getElementById('edit-back').value.trim();
+      if(!front || !back) return showToast('Заполни поля', '⚠️');
+      const card = cards.find(c => c.id === currentEditCardId);
+      card.front = front; card.back = back;
+      saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Сохранено ✅');
+    }
+    function deleteCard() {
+      if(confirm('Удалить эту карточку?')) {
+        cards = cards.filter(c => c.id !== currentEditCardId);
+        saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Удалено 🗑️');
+      }
     }
 
-    // --- ПЕРЕВОД (ИСПРАВЛЕНО!) ---
+    // --- УМНЫЙ ПЕРЕВОД (АВТООПРЕДЕЛЕНИЕ) ---
     async function autoTranslate() {
-      const inputFront = document.getElementById('input-front');
+      const inputFront = document.getElementById('input-front'), inputBack = document.getElementById('input-back');
       const btn = document.getElementById('btn-translate');
-      let word = inputFront.value.trim();
-      
-      if (!word) return showToast('Напиши слово!', '⚠️');
+      let text = inputFront.value.trim();
+      if (!text) return showToast('Напиши слово!', '⚠️');
       
       btn.innerText = '⏳ Перевод...';
       try {
-        const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=de|ru`);
+        const isRussian = /[а-яА-ЯёЁ]/.test(text); // Проверка на русский язык
+        const langPair = isRussian ? 'ru|de' : 'de|ru';
+        
+        const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
         const transData = await transRes.json();
         
         if (transData.responseData?.translatedText) {
-          document.getElementById('input-back').value = transData.responseData.translatedText;
+          const translated = transData.responseData.translatedText;
+          if (isRussian) {
+            inputBack.value = text;         // Русский уходит вниз
+            inputFront.value = translated;  // Немецкий прыгает наверх
+          } else {
+            inputBack.value = translated;   // Немецкий остается, русский падает вниз
+          }
           showToast('Переведено!', '✅');
-        } else {
-          showToast('Не найдено 😕', '⚠️');
-        }
-      } catch (e) {
-        showToast('Ошибка сети API', '❌');
-      }
-      btn.innerText = '🪄 Перевести';
+        } else { showToast('Не найдено 😕', '⚠️'); }
+      } catch (e) { showToast('Ошибка сети API', '❌'); }
+      btn.innerText = '🪄 Умный перевод';
     }
 
     function saveNewCard() {
-      const front = document.getElementById('input-front').value.trim();
-      const back = document.getElementById('input-back').value.trim();
+      const front = document.getElementById('input-front').value.trim(), back = document.getElementById('input-back').value.trim();
       if (!front || !back) return showToast('Заполни поля', '⚠️');
-
       cards.push({ id: Date.now().toString(), deckId: currentDeckId, front, back, srsLevel: 0, nextReview: Date.now() });
-      saveData();
-      document.getElementById('input-front').value = ''; document.getElementById('input-back').value = '';
-      showToast('Добавлено в колоду 🃏');
-      openDeck(currentDeckId);
+      saveData(); document.getElementById('input-front').value = ''; document.getElementById('input-back').value = '';
+      showToast('Добавлено! 🃏'); openDeck(currentDeckId);
     }
 
-    // --- РЕЖИМ ОБУЧЕНИЯ И СВАЙПЫ ---
     function startStudy() {
       const deckCards = cards.filter(c => c.deckId === currentDeckId && c.srsLevel < 4);
       studyQueue = deckCards.filter(c => c.nextReview <= Date.now()).sort((a,b) => a.nextReview - b.nextReview);
       if (studyQueue.length === 0) return showToast('Всё повторено! Отдохни 🍵');
-      
-      initialQueueLength = studyQueue.length;
-      hideAllViews();
-      document.getElementById('view-study').classList.remove('hidden');
-      loadNextCard();
+      initialQueueLength = studyQueue.length; hideAllViews(); document.getElementById('view-study').classList.remove('hidden'); loadNextCard();
     }
-
     function loadNextCard() {
-      if (studyQueue.length === 0) {
-        showToast('Сессия пройдена! Ура! 🎉');
-        return openDeck(currentDeckId);
-      }
-      currentStudyCard = studyQueue[0];
-      isFlipped = false;
+      if (studyQueue.length === 0) { showToast('Ура! 🎉'); return openDeck(currentDeckId); }
+      currentStudyCard = studyQueue[0]; isFlipped = false;
       const flipCont = document.getElementById('flip-container'), swipeCont = document.getElementById('swipe-container');
-      flipCont.classList.remove('rotate-y-180');
-      swipeCont.style.transform = ''; swipeCont.style.opacity = '1';
-
+      flipCont.classList.remove('rotate-y-180'); swipeCont.style.transform = ''; swipeCont.style.opacity = '1';
       document.getElementById('study-counter').innerText = `Осталось: ${studyQueue.length}`;
-      document.getElementById('study-front').innerText = currentStudyCard.front;
-      document.getElementById('study-back').innerText = currentStudyCard.back;
+      document.getElementById('study-front').innerText = currentStudyCard.front; document.getElementById('study-back').innerText = currentStudyCard.back;
     }
-
     function processSwipeResult(direction) {
       const cardIndex = cards.findIndex(c => c.id === currentStudyCard.id);
-      
       if (direction === 'right') {
         cards[cardIndex].srsLevel++;
-        if(cards[cardIndex].srsLevel < 4) {
-           cards[cardIndex].nextReview = Date.now() + (SRS_INTERVALS[cards[cardIndex].srsLevel] * 60 * 1000);
-        }
+        if(cards[cardIndex].srsLevel < 4) cards[cardIndex].nextReview = Date.now() + (SRS_INTERVALS[cards[cardIndex].srsLevel] * 60 * 1000);
         studyQueue.shift();
         if(cards[cardIndex].srsLevel >= 4) showToast('Выучено! 🌟');
       } else {
-        cards[cardIndex].srsLevel = 0;
-        cards[cardIndex].nextReview = Date.now();
-        studyQueue.push(studyQueue.shift()); 
-        showToast('Повторим еще раз 🔄');
+        cards[cardIndex].srsLevel = 0; cards[cardIndex].nextReview = Date.now();
+        studyQueue.push(studyQueue.shift()); showToast('Повторим еще раз 🔄');
       }
       saveData();
-      
       const swipeCont = document.getElementById('swipe-container');
       swipeCont.style.transition = 'transform 0.3s ease, opacity 0.3s';
       swipeCont.style.transform = `translateX(${direction === 'right' ? 300 : -300}px) rotate(${direction === 'right' ? 20 : -20}deg)`;
       swipeCont.style.opacity = '0';
       setTimeout(() => { swipeCont.style.transition = ''; loadNextCard(); }, 300);
     }
-
     const swipeCont = document.getElementById('swipe-container'), flipCont = document.getElementById('flip-container');
     let startX = 0, currentX = 0, isDragging = false;
-    swipeCont.addEventListener('click', () => {
-      if (Math.abs(currentX) < 5) { isFlipped = !isFlipped; flipCont.classList.toggle('rotate-y-180', isFlipped); }
-    });
+    swipeCont.addEventListener('click', () => { if (Math.abs(currentX) < 5) { isFlipped = !isFlipped; flipCont.classList.toggle('rotate-y-180', isFlipped); } });
     swipeCont.addEventListener('touchstart', e => { startX = e.touches[0].clientX; isDragging = true; swipeCont.classList.remove('snap-back'); });
-    swipeCont.addEventListener('touchmove', e => {
-      if (!isDragging) return; currentX = e.touches[0].clientX - startX;
-      swipeCont.style.transform = `translateX(${currentX}px) rotate(${currentX * 0.05}deg)`;
-    });
+    swipeCont.addEventListener('touchmove', e => { if (!isDragging) return; currentX = e.touches[0].clientX - startX; swipeCont.style.transform = `translateX(${currentX}px) rotate(${currentX * 0.05}deg)`; });
     swipeCont.addEventListener('touchend', () => {
       isDragging = false;
       if (currentX > 100 && isFlipped) processSwipeResult('right');
@@ -460,7 +441,6 @@
       currentX = 0;
     });
 
-    // --- РЕЖИМ ПИСЬМА ---
     let spellQueue = [], currentSpellCard = null;
     function startSpellingMode() {
       spellQueue = cards.filter(c => c.deckId === currentDeckId).sort(() => Math.random() - 0.5);
@@ -476,65 +456,29 @@
     }
     function checkSpelling() {
       const input = document.getElementById('spell-input').value.trim().toLowerCase();
-      if(input === currentSpellCard.front.toLowerCase()) {
-        showToast('Идеально! ✅'); spellQueue.shift(); loadNextSpell();
-      } else {
-        showToast(`Правильно: ${currentSpellCard.front}`, '❌');
-        spellQueue.push(spellQueue.shift()); loadNextSpell();
-      }
+      if(input === currentSpellCard.front.toLowerCase()) { showToast('Идеально! ✅'); spellQueue.shift(); loadNextSpell(); } 
+      else { showToast(`Правильно: ${currentSpellCard.front}`, '❌'); spellQueue.push(spellQueue.shift()); loadNextSpell(); }
     }
 
-    // --- ДАННЫЕ, ИМПОРТ И ЭКСПОРТ (ФАЙЛЫ) ---
-    function saveData() {
-      localStorage.setItem('mydecks_v5', JSON.stringify(decks));
-      localStorage.setItem('mycards_v5', JSON.stringify(cards));
-    }
-
+    function saveData() { localStorage.setItem('mydecks_v6', JSON.stringify(decks)); localStorage.setItem('mycards_v6', JSON.stringify(cards)); }
     function renderMastered() {
-      const container = document.getElementById('mastered-container');
-      const masteredCards = cards.filter(c => c.srsLevel >= 4);
+      const container = document.getElementById('mastered-container'); const masteredCards = cards.filter(c => c.srsLevel >= 4);
       container.innerHTML = '';
-      if(masteredCards.length === 0) return container.innerHTML = '<p class="text-sm theme-text-muted">Пока тут пусто. Продолжай учить!</p>';
-      masteredCards.forEach(c => {
-        container.innerHTML += `
-          <div class="theme-card border p-4 rounded-xl flex justify-between items-center shadow-sm">
-            <div><p class="font-bold">${c.front}</p><p class="text-xs theme-text-muted">${c.back}</p></div>
-            <span class="text-2xl">🌟</span>
-          </div>`;
-      });
+      if(masteredCards.length === 0) return container.innerHTML = '<p class="text-sm theme-text-muted">Пока тут пусто.</p>';
+      masteredCards.forEach(c => { container.innerHTML += `<div class="theme-card border p-4 rounded-xl flex justify-between items-center shadow-sm"><div><p class="font-bold">${c.front}</p><p class="text-xs theme-text-muted">${c.back}</p></div><span class="text-2xl">🌟</span></div>`; });
     }
-
-    // Скачивание файла .json
     function exportToFile() {
-      const data = JSON.stringify({ decks, cards });
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; 
-      a.download = `HankeCards_Backup_${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Файл скачан! 📁');
+      const blob = new Blob([JSON.stringify({ decks, cards })], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = `HankeCards_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.click(); URL.revokeObjectURL(url); showToast('Файл скачан! 📁');
     }
-
-    // Чтение файла .json
     function importFromFile(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
+      const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
       reader.onload = function(e) {
-        try {
-          const parsed = JSON.parse(e.target.result);
-          if (parsed.decks && parsed.cards) {
-            decks = parsed.decks; cards = parsed.cards; saveData();
-            showToast('Данные загружены! 🚀');
-          } else throw new Error('Bad format');
-        } catch (err) { showToast('Ошибка формата файла ❌'); }
-        event.target.value = ''; // Сброс инпута
-      };
-      reader.readAsText(file);
+        try { const parsed = JSON.parse(e.target.result); if (parsed.decks && parsed.cards) { decks = parsed.decks; cards = parsed.cards; saveData(); showToast('Данные загружены! 🚀'); } else throw new Error(); } 
+        catch (err) { showToast('Ошибка формата файла ❌'); } event.target.value = '';
+      }; reader.readAsText(file);
     }
-
     switchMainTab('home');
   </script>
 </body>
