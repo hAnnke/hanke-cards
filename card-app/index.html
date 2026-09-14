@@ -5,143 +5,326 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Cards">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3898/3898083.png">
-  <link rel="manifest" href="manifest.json">
-  <title>Flashcards</title>
+  <title>DuoCards Core</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .perspective { perspective: 1000px; }
-    .transform-style-3d { transform-style: preserve-3d; }
+    body { overscroll-behavior-y: none; } /* Отключаем резинку браузера при свайпах */
+    .perspective-1000 { perspective: 1000px; }
+    .preserve-3d { transform-style: preserve-3d; }
     .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
     .rotate-y-180 { transform: rotateY(180deg); }
+    
+    /* Плавный возврат карточки, если свайп не завершен */
+    .snap-back { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    /* Анимация переворота */
+    .flip-anim { transition: transform 0.5s ease-in-out; }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-6 select-none font-sans">
+<body class="bg-slate-900 text-slate-100 h-screen overflow-hidden flex flex-col font-sans select-none">
 
-  <!-- Header -->
-  <header class="w-full max-w-sm flex justify-between items-center pt-8 pb-4">
-    <div class="text-xs uppercase tracking-widest text-slate-400 font-bold" id="card-counter">1 / 1</div>
-    <button onclick="toggleModal()" class="bg-indigo-600 active:scale-95 transition-all text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg shadow-indigo-600/30">
-      + Слово
-    </button>
-  </header>
+  <!-- ================= NAV BAR ================= -->
+  <nav class="pt-12 pb-4 px-6 flex justify-between items-center bg-slate-900 border-b border-slate-800 z-10">
+    <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+      MyCards
+    </h1>
+    <div class="flex gap-4 text-sm font-semibold">
+      <button onclick="switchTab('home')" id="nav-home" class="text-indigo-400">Домой</button>
+      <button onclick="switchTab('add')" id="nav-add" class="text-slate-500">Добавить</button>
+    </div>
+  </nav>
 
-  <!-- Card Container -->
-  <main class="w-full max-w-sm flex-1 flex flex-col justify-center items-center perspective">
-    <div id="card" onclick="flipCard()" class="w-full h-80 relative transition-transform duration-500 transform-style-3d cursor-pointer">
+  <!-- ================= HOME / DASHBOARD ================= -->
+  <main id="view-home" class="flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative">
+    <div class="bg-slate-800 rounded-2xl p-6 mb-6 shadow-lg border border-slate-700">
+      <h2 class="text-sm text-slate-400 uppercase tracking-wider mb-1">Колода</h2>
+      <h3 class="text-2xl font-bold text-white mb-4">Немецкий B1</h3>
       
-      <!-- Front (Немецкий) -->
-      <div class="absolute inset-0 bg-slate-800 border border-slate-700 rounded-3xl p-6 flex flex-col justify-between items-center backface-hidden shadow-2xl">
-        <div class="w-full flex justify-end">
-          <button onclick="speakCurrent(event)" class="p-2 rounded-full bg-slate-700/60 active:bg-slate-600 text-indigo-400">
-            🔊
-          </button>
+      <div class="flex justify-between items-center bg-slate-900 rounded-xl p-4 border border-slate-700/50">
+        <div>
+          <p class="text-3xl font-black text-indigo-400" id="due-count">0</p>
+          <p class="text-xs text-slate-400">Ждут повторения</p>
         </div>
-        <div class="text-center px-4">
-          <h2 id="card-front" class="text-2xl font-bold tracking-tight text-white mb-2"></h2>
-          <p class="text-xs text-slate-400 uppercase tracking-wider">Нажми, чтобы перевернуть</p>
+        <button onclick="startStudy()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg active:scale-95 transition-all">
+          Учить
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <h3 class="text-sm font-semibold text-slate-400 mb-3">СТАТИСТИКА</h3>
+      <div class="grid grid-cols-2 gap-4 text-center">
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+          <p class="text-xl font-bold text-white" id="total-count">0</p>
+          <p class="text-xs text-slate-400">Всего карточек</p>
         </div>
-        <div class="h-6"></div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+          <p class="text-xl font-bold text-emerald-400" id="mastered-count">0</p>
+          <p class="text-xs text-slate-400">Выучено (4+ дня)</p>
+        </div>
       </div>
-
-      <!-- Back (Перевод) -->
-      <div class="absolute inset-0 bg-indigo-950 border border-indigo-700/50 rounded-3xl p-6 flex flex-col justify-center items-center backface-hidden rotate-y-180 shadow-2xl text-center">
-        <p class="text-xs text-indigo-300 uppercase tracking-wider mb-2 font-semibold">Перевод</p>
-        <h2 id="card-back" class="text-xl font-medium text-white"></h2>
-      </div>
-
     </div>
   </main>
 
-  <!-- Action Controls -->
-  <footer class="w-full max-w-sm flex gap-4 pb-6">
-    <button onclick="nextCard(false)" class="flex-1 py-4 bg-slate-800 active:bg-rose-950 active:border-rose-700 border border-slate-700 text-rose-400 font-semibold rounded-2xl shadow-lg transition-all active:scale-98">
-      Повторить
-    </button>
-    <button onclick="nextCard(true)" class="flex-1 py-4 bg-slate-800 active:bg-emerald-950 active:border-emerald-700 border border-slate-700 text-emerald-400 font-semibold rounded-2xl shadow-lg transition-all active:scale-98">
-      Знаю
-    </button>
-  </footer>
+  <!-- ================= ADD CARD VIEW ================= -->
+  <main id="view-add" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto">
+    <h2 class="text-2xl font-bold mb-6">Новая карточка</h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-xs text-slate-400 uppercase">Слово / Фраза (на немецком)</label>
+        <input id="input-front" type="text" class="w-full mt-1 p-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500 text-lg">
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 uppercase">Перевод</label>
+        <input id="input-back" type="text" class="w-full mt-1 p-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500 text-lg">
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 uppercase">Пример использования (необязательно)</label>
+        <textarea id="input-example" rows="2" class="w-full mt-1 p-4 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"></textarea>
+      </div>
+      <button onclick="saveNewCard()" class="w-full py-4 mt-4 bg-indigo-600 active:bg-indigo-700 rounded-xl font-bold text-white shadow-lg">
+        Сохранить карточку
+      </button>
+    </div>
+  </main>
 
-  <!-- Modal: Добавить слово -->
-  <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-end hidden z-50">
-    <div class="bg-slate-800 w-full max-w-md p-6 rounded-t-3xl border-t border-slate-700 space-y-4">
-      <h3 class="text-lg font-bold text-white">Новая карточка</h3>
-      <input id="new-front" placeholder="Немецкое слово / фраза (с артиклем)" class="w-full p-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
-      <input id="new-back" placeholder="Перевод" class="w-full p-3.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
-      <div class="flex gap-3 pt-2">
-        <button onclick="toggleModal()" class="flex-1 py-3 bg-slate-700 rounded-xl font-semibold text-slate-300">Отмена</button>
-        <button onclick="saveCard()" class="flex-1 py-3 bg-indigo-600 rounded-xl font-semibold text-white">Сохранить</button>
+  <!-- ================= STUDY VIEW (TINDER SWIPE) ================= -->
+  <main id="view-study" class="hidden fixed inset-0 z-50 bg-slate-900 flex flex-col pt-12 pb-8 px-6">
+    <!-- Header Study -->
+    <div class="flex justify-between items-center mb-8">
+      <button onclick="exitStudy()" class="text-slate-400 font-bold px-4 py-2 bg-slate-800 rounded-full active:bg-slate-700">Отмена</button>
+      <div class="text-sm font-bold text-slate-300" id="study-counter">Осталось: 0</div>
+    </div>
+
+    <!-- Card Stack Area -->
+    <div class="flex-1 relative flex justify-center items-center perspective-1000 w-full max-w-sm mx-auto" id="card-area">
+      <!-- Outer container for Swiping mechanics -->
+      <div id="swipe-container" class="w-full h-96 absolute cursor-grab active:cursor-grabbing z-10">
+        <!-- Inner container for Flipping (3D) -->
+        <div id="flip-container" class="w-full h-full relative preserve-3d flip-anim shadow-2xl">
+          
+          <!-- FRONT PAGE -->
+          <div class="absolute inset-0 bg-slate-800 rounded-3xl border border-slate-700 p-6 flex flex-col justify-center items-center backface-hidden">
+            <p class="text-xs text-slate-400 uppercase tracking-widest absolute top-6">Немецкий</p>
+            <h2 id="study-front" class="text-3xl font-bold text-white text-center"></h2>
+            <p class="text-sm text-slate-500 absolute bottom-6 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+              Нажми, чтобы перевернуть
+            </p>
+          </div>
+
+          <!-- BACK PAGE -->
+          <div class="absolute inset-0 bg-indigo-950 rounded-3xl border border-indigo-700/50 p-6 flex flex-col justify-center items-center backface-hidden rotate-y-180">
+            <p class="text-xs text-indigo-300 uppercase tracking-widest absolute top-6">Перевод</p>
+            <h2 id="study-back" class="text-2xl font-semibold text-white text-center mb-4"></h2>
+            <div id="study-example-container" class="w-full bg-slate-900/50 p-4 rounded-xl border border-indigo-500/30 text-center">
+              <p class="text-xs text-indigo-400 mb-1 uppercase">Пример</p>
+              <p id="study-example" class="text-sm text-slate-300 italic"></p>
+            </div>
+            <!-- Swipe Hints -->
+            <div class="absolute bottom-6 w-full px-6 flex justify-between text-xs font-bold uppercase tracking-wider">
+              <span class="text-rose-400">← Не помню</span>
+              <span class="text-emerald-400">Помню →</span>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 
+  <!-- ================= SCRIPTS ================= -->
   <script>
-    const defaultCards = [
-      { front: "das Vorstellungsgespräch", back: "собеседование" },
-      { front: "die Erfahrung", back: "опыт" },
-      { front: "sich bewerben um", back: "подавать заявку на (вакансию)" }
-    ];
-
-    let cards = JSON.parse(localStorage.getItem('my_cards')) || defaultCards;
-    let currentIndex = 0;
+    // --- ДАННЫЕ И SRS АЛГОРИТМ ---
+    // Уровни SRS в минутах: 1 мин, 10 мин, 1 день (1440), 4 дня (5760).
+    const SRS_INTERVALS = [1, 10, 1440, 5760]; 
+    let cards = JSON.parse(localStorage.getItem('mycards_v2')) || [];
+    let studyQueue = [];
+    let currentStudyCard = null;
     let isFlipped = false;
 
-    const cardEl = document.getElementById('card');
-    const frontEl = document.getElementById('card-front');
-    const backEl = document.getElementById('card-back');
-    const counterEl = document.getElementById('card-counter');
+    // --- UI ИНИЦИАЛИЗАЦИЯ ---
+    function updateDashboard() {
+      const now = Date.now();
+      const dueCards = cards.filter(c => c.nextReview <= now);
+      const mastered = cards.filter(c => c.srsLevel >= 3); // Те, кто дошел до 4 дней
 
-    function renderCard() {
-      if (cards.length === 0) return;
+      document.getElementById('total-count').innerText = cards.length;
+      document.getElementById('due-count').innerText = dueCards.length;
+      document.getElementById('mastered-count').innerText = mastered.length;
+    }
+
+    function switchTab(tab) {
+      document.getElementById('view-home').classList.add('hidden');
+      document.getElementById('view-add').classList.add('hidden');
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      
+      document.getElementById('nav-home').className = tab === 'home' ? 'text-indigo-400' : 'text-slate-500';
+      document.getElementById('nav-add').className = tab === 'add' ? 'text-indigo-400' : 'text-slate-500';
+      
+      if(tab === 'home') updateDashboard();
+    }
+
+    function saveNewCard() {
+      const front = document.getElementById('input-front').value.trim();
+      const back = document.getElementById('input-back').value.trim();
+      const example = document.getElementById('input-example').value.trim();
+
+      if (!front || !back) return alert('Введите слово и перевод!');
+
+      const newCard = {
+        id: Date.now().toString(),
+        front, back, example,
+        srsLevel: 0, // Начинаем с 0 (1 мин)
+        nextReview: Date.now() // Учить прямо сейчас
+      };
+
+      cards.push(newCard);
+      localStorage.setItem('mycards_v2', JSON.stringify(cards));
+      
+      document.getElementById('input-front').value = '';
+      document.getElementById('input-back').value = '';
+      document.getElementById('input-example').value = '';
+      
+      switchTab('home');
+    }
+
+    // --- ЛОГИКА ОБУЧЕНИЯ (STUDY MODE) ---
+    function startStudy() {
+      const now = Date.now();
+      // Берем карточки, которым пришло время (сортируем старые первыми)
+      studyQueue = cards.filter(c => c.nextReview <= now).sort((a,b) => a.nextReview - b.nextReview);
+      
+      if (studyQueue.length === 0) return alert('Пока нет слов для повторения! Отличная работа.');
+
+      document.getElementById('view-home').classList.add('hidden');
+      document.getElementById('view-study').classList.remove('hidden');
+      loadNextCard();
+    }
+
+    function exitStudy() {
+      document.getElementById('view-study').classList.add('hidden');
+      switchTab('home');
+    }
+
+    function loadNextCard() {
+      if (studyQueue.length === 0) {
+        alert('Сессия окончена!');
+        return exitStudy();
+      }
+
+      currentStudyCard = studyQueue[0];
       isFlipped = false;
-      cardEl.classList.remove('rotate-y-180');
-      frontEl.innerText = cards[currentIndex].front;
-      backEl.innerText = cards[currentIndex].back;
-      counterEl.innerText = `${currentIndex + 1} / ${cards.length}`;
-    }
+      
+      // Сбрасываем визуал карточки
+      const flipCont = document.getElementById('flip-container');
+      const swipeCont = document.getElementById('swipe-container');
+      flipCont.classList.remove('rotate-y-180');
+      swipeCont.style.transform = '';
+      swipeCont.style.opacity = '1';
 
-    function flipCard() {
-      isFlipped = !isFlipped;
-      cardEl.classList.toggle('rotate-y-180', isFlipped);
-    }
-
-    function nextCard() {
-      currentIndex = (currentIndex + 1) % cards.length;
-      renderCard();
-    }
-
-    function speakCurrent(e) {
-      e.stopPropagation();
-      const utterance = new SpeechSynthesisUtterance(cards[currentIndex].front);
-      utterance.lang = 'de-DE';
-      window.speechSynthesis.speak(utterance);
-    }
-
-    function toggleModal() {
-      document.getElementById('modal').classList.toggle('hidden');
-    }
-
-    function saveCard() {
-      const front = document.getElementById('new-front').value.trim();
-      const back = document.getElementById('new-back').value.trim();
-      if (front && back) {
-        cards.push({ front, back });
-        localStorage.setItem('my_cards', JSON.stringify(cards));
-        document.getElementById('new-front').value = '';
-        document.getElementById('new-back').value = '';
-        toggleModal();
-        currentIndex = cards.length - 1;
-        renderCard();
+      // Заполняем данные
+      document.getElementById('study-counter').innerText = `Осталось: ${studyQueue.length}`;
+      document.getElementById('study-front').innerText = currentStudyCard.front;
+      document.getElementById('study-back').innerText = currentStudyCard.back;
+      
+      const exCont = document.getElementById('study-example-container');
+      if (currentStudyCard.example) {
+        exCont.style.display = 'block';
+        document.getElementById('study-example').innerText = currentStudyCard.example;
+      } else {
+        exCont.style.display = 'none';
       }
     }
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
+    function processSwipeResult(direction) {
+      // Ищем карточку в общей базе
+      const cardIndex = cards.findIndex(c => c.id === currentStudyCard.id);
+      if (cardIndex === -1) return;
+
+      if (direction === 'right') {
+        // Помню -> Повышаем уровень
+        cards[cardIndex].srsLevel = Math.min(cards[cardIndex].srsLevel + 1, SRS_INTERVALS.length - 1);
+      } else {
+        // Не помню -> Сброс на уровень 0 (1 мин)
+        cards[cardIndex].srsLevel = 0;
+      }
+
+      // Устанавливаем следующее время
+      const intervalMinutes = SRS_INTERVALS[cards[cardIndex].srsLevel];
+      cards[cardIndex].nextReview = Date.now() + (intervalMinutes * 60 * 1000);
+      
+      localStorage.setItem('mycards_v2', JSON.stringify(cards));
+
+      // Удаляем из текущей очереди
+      studyQueue.shift();
+      
+      // Анимация улетания карточки перед загрузкой следующей
+      const swipeCont = document.getElementById('swipe-container');
+      swipeCont.style.transition = 'transform 0.3s ease, opacity 0.3s';
+      swipeCont.style.transform = `translateX(${direction === 'right' ? 300 : -300}px) rotate(${direction === 'right' ? 20 : -20}deg)`;
+      swipeCont.style.opacity = '0';
+      
+      setTimeout(() => {
+        swipeCont.style.transition = ''; // Убираем транзишн для мгновенного возврата
+        loadNextCard();
+      }, 300);
     }
 
-    renderCard();
+    // --- ФИЗИКА СВАЙПОВ (TINDER EFFECT) ---
+    const swipeCont = document.getElementById('swipe-container');
+    const flipCont = document.getElementById('flip-container');
+    
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+
+    // Переворот по клику
+    swipeCont.addEventListener('click', (e) => {
+      // Если мы просто тапнули (а не тащили), переворачиваем
+      if (Math.abs(currentX) < 5) {
+        isFlipped = !isFlipped;
+        flipCont.classList.toggle('rotate-y-180', isFlipped);
+      }
+    });
+
+    // Начало касания
+    swipeCont.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      isDragging = true;
+      swipeCont.classList.remove('snap-back');
+    });
+
+    // Движение пальца
+    swipeCont.addEventListener('touchmove', e => {
+      if (!isDragging) return;
+      currentX = e.touches[0].clientX - startX;
+      
+      // Двигаем и немного наклоняем
+      const rotate = currentX * 0.05;
+      swipeCont.style.transform = `translateX(${currentX}px) rotate(${rotate}deg)`;
+    });
+
+    // Конец касания
+    swipeCont.addEventListener('touchend', e => {
+      isDragging = false;
+      const threshold = 100; // Сколько пикселей нужно протащить для свайпа
+
+      if (currentX > threshold && isFlipped) {
+        // Свайп вправо (Знаю) - работает ТОЛЬКО если карточка перевернута
+        processSwipeResult('right');
+      } else if (currentX < -threshold && isFlipped) {
+        // Свайп влево (Не знаю)
+        processSwipeResult('left');
+      } else {
+        // Вернуть на место (если не дотянул или карточка еще не перевернута)
+        swipeCont.classList.add('snap-back');
+        swipeCont.style.transform = 'translateX(0) rotate(0deg)';
+      }
+      currentX = 0;
+    });
+
+    // Запуск начального экрана
+    updateDashboard();
   </script>
 </body>
 </html>
