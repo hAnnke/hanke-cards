@@ -211,17 +211,90 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
+
+    /* Stage 3 · internal screens */
+    .app-brand {
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      white-space:nowrap; font-size:16px; letter-spacing:-.035em;
+    }
+    .app-nav-actions { position:absolute; right:22px; top:50%; transform:translateY(-50%); max-width:38%; }
+    .screen-heading { padding:10px 2px 22px; }
+    .form-panel, .spell-panel {
+      border-radius:28px; padding:22px; box-shadow:var(--glass-shadow);
+      -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%);
+    }
+    .form-panel { display:flex; flex-direction:column; gap:23px; }
+    .form-field { min-width:0; }
+    .form-label { color:var(--text-muted); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    .form-input {
+      display:block; width:100%; min-height:58px; padding:0 17px; border-radius:17px;
+      color:var(--text-color); background:color-mix(in srgb, var(--card-bg) 78%, transparent);
+      border:1px solid var(--card-border); font-size:16px; font-weight:600;
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.035);
+    }
+    .form-input::placeholder { color:var(--text-muted); opacity:.72; font-weight:450; }
+    .form-hint { margin-top:-8px; color:var(--text-muted); font-size:12px; line-height:1.55; }
+    .form-submit { min-height:54px; border-radius:18px; }
+    .translate-button { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap; }
+    .icon-button {
+      width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center;
+      border-radius:13px; color:var(--text-muted); border:1px solid var(--card-border);
+      background:color-mix(in srgb, var(--card-bg) 80%, transparent);
+      transition:background .2s ease, transform .18s ease, color .2s ease;
+    }
+    .icon-button:active { transform:scale(.94); color:var(--accent); }
+    .modal-action {
+      display:flex; align-items:center; gap:13px; width:100%; min-height:52px;
+      padding:0 8px; text-align:left; color:var(--text-color); font-size:14px; font-weight:600;
+      border-bottom:1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
+    }
+    .modal-action svg { color:var(--text-muted); }
+    .modal-action.danger, .modal-action.danger svg { color:#e47783; }
+    .study-count-pill {
+      border:1px solid var(--card-border); border-radius:999px; padding:9px 14px;
+      background:var(--card-bg); color:var(--text-muted); font-size:12px; font-weight:750;
+      -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
+    }
+    .study-progress-track { width:100%; height:4px; border-radius:99px; overflow:hidden; background:color-mix(in srgb, var(--text-muted) 18%, transparent); }
+    .study-progress-fill { width:0%; height:100%; border-radius:inherit; background:var(--accent); transition:width .3s ease; }
+    .study-hint { display:inline-flex; align-items:center; gap:5px; padding:7px 9px; border-radius:10px; background:rgba(0,0,0,.08); }
+    [data-theme="dark"] .study-hint { background:rgba(255,255,255,.07); }
+    .study-hint-muted { color:var(--text-muted); }
+    .study-hint-good { color:var(--text-color); }
+    #view-study #card-area { min-height:0; }
+    #view-study #swipe-container { height:min(420px, 58vh); max-height:520px; }
+    #view-study #flip-container { border-radius:30px; }
+    #study-card-front-bg, #flip-container > div:last-child { border-radius:30px; }
+    #study-front { font-size:clamp(28px, 7vw, 38px); line-height:1.2; overflow-wrap:anywhere; }
+    #study-back { font-size:clamp(24px, 6vw, 32px); line-height:1.25; overflow-wrap:anywhere; }
+    .spell-panel { width:100%; margin:auto 0; display:flex; flex-direction:column; align-items:stretch; text-align:center; }
+    #view-spell { gap:10px; }
+    #view-spell .spell-panel { max-width:440px; align-self:center; }
+    #view-spell #spell-prompt { overflow-wrap:anywhere; }
+    #deck-menu-modal > div, #edit-card-modal > div {
+      border-radius:30px 30px 0 0; padding:24px;
+      padding-bottom:calc(24px + var(--safe-bottom));
+    }
+    #edit-card-modal input { min-height:54px; border-radius:16px; }
+    @media (min-width:700px) {
+      .app-brand { font-size:17px; }
+      .form-panel, .spell-panel { padding:28px; }
+      #view-study #swipe-container { height:420px; }
+    }
+    @media (max-width:380px) {
+      .app-nav-actions { right:14px; }
+      .app-brand { font-size:15px; }
+      .form-panel, .spell-panel { padding:18px; border-radius:24px; }
+    }
+
   </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
 
   <!-- ================= APP HEADER ================= -->
-  <nav class="app-nav px-6 pb-4 flex items-center justify-between z-10 relative">
-    <h1 class="text-base font-extrabold cursor-pointer flex items-center gap-3 tracking-tight" onclick="goHome()">
-      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V7.5A2.5 2.5 0 0 1 7.5 5h9A2.5 2.5 0 0 1 19 7.5V19"/><path d="M8 9h8M8 13h5M8 17h8"/></svg></span>
-      <span>HankeCards</span>
-    </h1>
-    <div id="nav-actions" class="text-sm font-semibold flex gap-2 items-center"></div>
+  <nav class="app-nav px-6 pb-4 flex items-center justify-center z-10 relative">
+    <h1 class="app-brand text-base font-extrabold cursor-pointer tracking-tight" onclick="goHome()">Hanke Cards</h1>
+    <div id="nav-actions" class="app-nav-actions text-sm font-semibold flex gap-2 items-center"></div>
   </nav>
 
   <!-- ================= TOAST ================= -->
@@ -279,10 +352,16 @@
   <div id="deck-menu-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] hidden flex-col justify-end">
     <div class="theme-card w-full max-w-md mx-auto rounded-t-3xl border-t p-6 transform transition-transform shadow-2xl">
       <h3 id="menu-deck-title" class="text-lg font-bold mb-4 border-b border-black/10 dark:border-white/10 pb-4">Опции колоды</h3>
-      <button onclick="renameDeck()" class="w-full text-left py-3.5 font-medium text-base active:opacity-70">✏️ Переименовать</button>
-      <button onclick="exportSingleDeck()" class="w-full text-left py-3.5 font-medium text-base text-emerald-500 active:opacity-70">Экспорт колоды</button>
-      <button onclick="deleteDeck()" class="w-full text-left py-3.5 font-medium text-base text-rose-500 active:opacity-70">Удалить колоду</button>
-      <button onclick="closeDeckMenu()" class="w-full mt-2 py-3.5 theme-card border rounded-2xl font-bold active:scale-[0.98]">Отмена</button>
+      <button onclick="renameDeck()" class="modal-action">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4.2-.9L19 8.3a2.1 2.1 0 0 0-3-3L5.2 16.1 4 20Z"/></svg>Переименовать
+      </button>
+      <button onclick="exportSingleDeck()" class="modal-action">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 17v3h14v-3"/></svg>Экспорт колоды
+      </button>
+      <button onclick="deleteDeck()" class="modal-action danger">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>Удалить колоду
+      </button>
+      <button onclick="closeDeckMenu()" class="w-full mt-3 btn-secondary">Отмена</button>
     </div>
   </div>
 
@@ -363,7 +442,7 @@
           <p class="text-[10px] theme-text-muted uppercase font-bold mt-1 tracking-wider">Ждут повтора</p>
         </div>
         <div class="bg-black/5 dark:bg-white/5 rounded-2xl p-4 border theme-card">
-          <p class="text-2xl font-black text-emerald-500" id="deck-total">0</p>
+          <p class="text-2xl font-black" id="deck-total">0</p>
           <p class="text-[10px] theme-text-muted uppercase font-bold mt-1 tracking-wider">В процессе</p>
         </div>
       </div>
@@ -387,44 +466,57 @@
 
   <!-- ================= VIEW: ADD CARD ================= -->
   <main id="view-add" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto pb-32">
-    <h2 class="text-2xl font-black tracking-tight mb-6 pt-2">Добавить слово</h2>
-    <div class="space-y-4">
-      <div>
-        <div class="flex justify-between items-end mb-1">
-          <label class="text-xs theme-text-muted uppercase font-bold tracking-wider">Слово или фраза</label>
-          <button onclick="autoTranslate('input-front', 'input-back')" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-xl active:opacity-70">Умный перевод</button>
+    <section class="screen-heading">
+      <p class="home-eyebrow mb-2">Wortschatz erweitern</p>
+      <h2 class="text-2xl font-black tracking-tight">Новое слово</h2>
+      <p class="text-sm theme-text-muted mt-2">Добавь слово и его перевод в текущую колоду.</p>
+    </section>
+    <section class="form-panel theme-card border">
+      <div class="form-field">
+        <div class="flex justify-between items-center gap-3 mb-2">
+          <label for="input-front" class="form-label">Слово или фраза</label>
+          <button onclick="autoTranslate('input-front', 'input-back')" class="btn-soft translate-button">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h8M8 3v2c0 5-2 8-5 10M5 9c1 2 3 4 5 5M14 6h6M17 4v2m-3 12 3-8 3 8m-5-3h4"/></svg>
+            Умный перевод
+          </button>
         </div>
-        <input id="input-front" type="text" class="w-full p-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium" placeholder="Например: Stuhl">
+        <input id="input-front" type="text" class="form-input" placeholder="Например: der Stuhl" autocomplete="off">
       </div>
-      <div>
-        <label class="text-xs theme-text-muted uppercase font-bold tracking-wider">Перевод</label>
-        <input id="input-back" type="text" class="w-full mt-1 p-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium">
+      <div class="form-field">
+        <label for="input-back" class="form-label block mb-2">Перевод</label>
+        <input id="input-back" type="text" class="form-input" placeholder="Например: стул" autocomplete="off">
       </div>
-      <button onclick="saveNewCard()" class="w-full btn-primary mt-2">
-        Сохранить в колоду
+      <div class="form-hint">Подсказка: для существительных указывай артикль, чтобы легче запоминать род.</div>
+      <button onclick="saveNewCard()" class="w-full btn-primary form-submit">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Сохранить слово
       </button>
-    </div>
+    </section>
   </main>
 
   <!-- ================= VIEW: SPELLING MODE ================= -->
-  <main id="view-spell" class="hidden flex-1 flex flex-col p-6 w-full max-w-md mx-auto pt-16">
+  <main id="view-spell" class="hidden flex-1 flex flex-col p-6 w-full max-w-md mx-auto pt-8 pb-32">
     <div class="flex justify-between items-center mb-8">
-      <button onclick="openDeck(currentDeckId)" class="font-bold theme-text-muted active:opacity-70">Отмена</button>
-      <div class="text-sm font-bold theme-card border px-4 py-2 rounded-full" id="spell-counter">0/0</div>
+      <button onclick="openDeck(currentDeckId)" class="btn-soft px-3">Отмена</button>
+      <div class="study-count-pill" id="spell-counter">0/0</div>
     </div>
-    <div class="flex-1 flex flex-col items-center mt-10">
-      <p class="text-sm theme-text-muted uppercase tracking-widest mb-2 font-bold">Напиши по-немецки (с артиклем):</p>
-      <h2 id="spell-prompt" class="text-3xl font-bold text-center mb-10">Перевод</h2>
-      <input id="spell-input" type="text" class="w-full p-4 rounded-2xl bg-transparent theme-card border text-center text-xl font-bold mb-4 focus:outline-none focus:border-indigo-500" placeholder="Введи слово..." autocomplete="off">
-      <button onclick="checkSpelling()" class="w-full btn-primary">Проверить</button>
-    </div>
+    <section class="spell-panel theme-card border">
+      <p class="home-eyebrow mb-4">Schreibtraining</p>
+      <p class="text-sm theme-text-muted font-semibold mb-3">Напиши по-немецки, с артиклем</p>
+      <h2 id="spell-prompt" class="text-3xl font-bold text-center mb-9">Перевод</h2>
+      <input id="spell-input" type="text" class="form-input text-center text-xl font-bold mb-4" placeholder="Введи слово..." autocomplete="off" autocapitalize="none">
+      <button onclick="checkSpelling()" class="w-full btn-primary form-submit">Проверить ответ</button>
+    </section>
   </main>
 
   <!-- ================= VIEW: STUDY (TINDER) ================= -->
-  <main id="view-study" class="hidden fixed inset-0 z-50 flex flex-col pt-12 pb-8 px-6" style="background: var(--bg-color)">
-    <div class="flex justify-between items-center mb-8 max-w-md mx-auto w-full">
-      <button onclick="openDeck(currentDeckId)" class="font-bold theme-text-muted border theme-card px-4 py-2 rounded-2xl active:scale-95">Завершить</button>
-      <div class="text-sm font-bold border theme-card px-4 py-2 rounded-2xl shadow-sm" id="study-counter">0 / 0</div>
+  <main id="view-study" class="hidden fixed inset-0 z-50 flex flex-col pt-8 pb-8 px-6" style="background: var(--bg-color)">
+    <div class="max-w-md mx-auto w-full">
+      <div class="flex justify-between items-center mb-5">
+        <button onclick="openDeck(currentDeckId)" class="btn-soft px-3">Завершить</button>
+        <div class="study-count-pill" id="study-counter">Осталось: 0</div>
+      </div>
+      <div class="study-progress-track"><div id="study-progress-fill" class="study-progress-fill"></div></div>
     </div>
     <div class="flex-1 relative flex justify-center items-center perspective-1000 w-full max-w-sm mx-auto" id="card-area">
       <div id="swipe-container" class="w-full h-96 absolute cursor-grab active:cursor-grabbing z-10">
@@ -437,15 +529,15 @@
             <div class="text-center">
               <h2 id="study-front" class="text-3xl font-bold text-center mb-2"></h2>
             </div>
-            <p class="text-sm theme-text-muted font-medium">Нажми, чтобы вспомнить</p>
+            <p class="text-xs theme-text-muted font-semibold tracking-wide">Нажми на карточку, чтобы увидеть перевод</p>
           </div>
           <!-- Обратная сторона -->
           <div class="absolute inset-0 theme-card rounded-3xl border p-6 flex flex-col justify-center items-center backface-hidden rotate-y-180">
             <p class="text-xs theme-accent-text uppercase tracking-widest absolute top-6 font-bold">Перевод</p>
             <h2 id="study-back" class="text-2xl font-semibold text-center mb-4"></h2>
-            <div class="absolute bottom-6 w-full px-6 flex justify-between text-xs font-bold uppercase tracking-wider">
-              <span class="text-rose-500">← Забыл</span>
-              <span class="text-emerald-500">Помню →</span>
+            <div class="absolute bottom-6 w-full px-6 flex justify-between text-xs font-semibold tracking-wide">
+              <span class="study-hint study-hint-muted">← Ещё повторить</span>
+              <span class="study-hint study-hint-good">Помню →</span>
             </div>
           </div>
         </div>
@@ -469,7 +561,10 @@
     let toastTimeout;
     function showToast(msg, icon = '•') {
       const toast = document.getElementById('toast');
-      document.getElementById('toast-msg').innerText = msg; document.getElementById('toast-icon').innerText = icon;
+      document.getElementById('toast-msg').innerText = msg;
+      const toastIcon = document.getElementById('toast-icon');
+      toastIcon.innerText = '';
+      toastIcon.className = 'w-2 h-2 rounded-full bg-current opacity-60';
       toast.classList.remove('toast-enter'); toast.classList.add('toast-active');
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => { toast.classList.remove('toast-active'); toast.classList.add('toast-enter'); }, 2500);
@@ -549,7 +644,7 @@
     function closeDeckMenu() { document.getElementById('deck-menu-modal').classList.add('hidden'); document.getElementById('deck-menu-modal').classList.remove('flex'); }
     function renameDeck() {
       const deck = decks.find(d => d.id === currentMenuDeckId), newName = prompt("Новое название:", deck.name);
-      if(newName && newName.trim()) { deck.name = newName.trim(); saveData(); renderDecks(); closeDeckMenu(); showToast('Переименовано ✏️'); }
+      if(newName && newName.trim()) { deck.name = newName.trim(); saveData(); renderDecks(); closeDeckMenu(); showToast('Переименовано '); }
     }
     function deleteDeck() {
       if(confirm("Удалить колоду и ВСЕ слова внутри?")) {
@@ -589,7 +684,9 @@
 
         list.innerHTML += `<div class="theme-card border p-4 rounded-2xl flex justify-between items-center shadow-sm ${cardClass}">
           <div class="truncate pr-2"><p class="font-bold truncate">${c.front}</p><p class="text-xs theme-text-muted truncate">${c.back}</p></div>
-          <button onclick="openEditCard('${c.id}')" class="p-2 theme-text-muted active:text-white">✏️</button></div>`;
+          <button onclick="openEditCard('${c.id}')" class="icon-button" aria-label="Редактировать карточку">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4.2-.9L19 8.3a2.1 2.1 0 0 0-3-3L5.2 16.1 4 20Z"/></svg>
+          </button></div>`;
       });
     }
 
@@ -606,7 +703,7 @@
       card.front = front; 
       card.back = back;
       card.gender = parseGender(front);
-      saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Сохранено ✅');
+      saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Сохранено ');
     }
     function deleteCard() {
       if(confirm('Удалить эту карточку?')) { cards = cards.filter(c => c.id !== currentEditCardId); saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Удалено '); }
@@ -627,9 +724,9 @@
           } else { 
             inputBack.value = translated; 
           }
-          showToast('Переведено!', '✅');
+          showToast('Переведено!', '');
         } else { showToast('Не найдено ', ''); }
-      } catch (e) { showToast('Ошибка сети API', '❌'); }
+      } catch (e) { showToast('Ошибка сети API', ''); }
     }
     function autoTranslateEdit() { autoTranslate('edit-front', 'edit-back'); }
 
@@ -655,6 +752,11 @@
       const flipCont = document.getElementById('flip-container'), swipeCont = document.getElementById('swipe-container');
       flipCont.classList.remove('rotate-y-180'); swipeCont.style.transform = ''; swipeCont.style.opacity = '1';
       document.getElementById('study-counter').innerText = `Осталось: ${studyQueue.length}`;
+      const progressFill = document.getElementById('study-progress-fill');
+      if (progressFill) {
+        const completed = Math.max(0, initialQueueLength - studyQueue.length);
+        progressFill.style.width = `${initialQueueLength ? (completed / initialQueueLength) * 100 : 0}%`;
+      }
       document.getElementById('study-front').innerText = currentStudyCard.front; 
       document.getElementById('study-back').innerText = currentStudyCard.back;
 
@@ -713,14 +815,14 @@
       hideAllViews(); document.getElementById('view-spell').classList.remove('hidden'); loadNextSpell();
     }
     function loadNextSpell() {
-      if(spellQueue.length === 0) { showToast('Письмо окончено! ✍️'); return openDeck(currentDeckId); }
+      if(spellQueue.length === 0) { showToast('Письмо окончено! '); return openDeck(currentDeckId); }
       currentSpellCard = spellQueue[0]; document.getElementById('spell-counter').innerText = spellQueue.length;
       document.getElementById('spell-prompt').innerText = currentSpellCard.back; document.getElementById('spell-input').value = ''; document.getElementById('spell-input').focus();
     }
     function checkSpelling() {
       const input = document.getElementById('spell-input').value.trim().toLowerCase();
-      if(input === currentSpellCard.front.toLowerCase()) { showToast('Идеально! ✅'); spellQueue.shift(); loadNextSpell(); } 
-      else { showToast(`Правильно: ${currentSpellCard.front}`, '❌'); spellQueue.push(spellQueue.shift()); loadNextSpell(); }
+      if(input === currentSpellCard.front.toLowerCase()) { showToast('Идеально! '); spellQueue.shift(); loadNextSpell(); } 
+      else { showToast(`Правильно: ${currentSpellCard.front}`, ''); spellQueue.push(spellQueue.shift()); loadNextSpell(); }
     }
 
     function saveData() { localStorage.setItem('mydecks_v7', JSON.stringify(decks)); localStorage.setItem('mycards_v7', JSON.stringify(cards)); }
@@ -754,7 +856,7 @@
             saveData(); renderDecks();
           } else throw new Error(); 
         } 
-        catch (err) { showToast('Ошибка формата файла ❌'); } event.target.value = '';
+        catch (err) { showToast('Ошибка формата файла '); } event.target.value = '';
       }; reader.readAsText(file);
     }
     switchMainTab('home');
