@@ -394,9 +394,15 @@
     #view-mastered > p,
     #view-settings > h2,
     #view-settings > p { text-align:center; }
-    #view-home .home-intro > div { position:relative; display:block; text-align:center; }
+    #view-home .home-intro > div {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:16px; text-align:center;
+    }
     #view-home .home-intro > div > div { width:100%; text-align:center; }
-    #view-home .home-intro > div > button { position:absolute; right:0; top:50%; transform:translateY(-50%); }
+    #view-home .home-intro > div > button {
+      position:static; transform:none; align-self:center; margin:0 auto;
+      min-width:180px; justify-content:center;
+    }
     .card-description { white-space:pre-wrap; line-height:1.5; overflow-wrap:anywhere; }
     .app-tabbar { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
     .app-tabbar::-webkit-scrollbar { display:none; }
@@ -444,6 +450,9 @@
     <button onclick="switchMainTab('games')" id="tab-games" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">🎮</span><span class="nav-label">Игры</span>
     </button>
+    <button onclick="switchMainTab('statistics')" id="tab-statistics" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+      <span class="nav-emoji" aria-hidden="true">📊</span><span class="nav-label">Статистика</span>
+    </button>
     <button onclick="switchMainTab('mastered')" id="tab-mastered" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">⭐</span><span class="nav-label">Выучено</span>
     </button>
@@ -475,16 +484,6 @@
       <div class="home-stat">
         <p class="text-[10px] font-bold theme-text-muted uppercase tracking-widest">К повторению</p>
         <p id="home-due" class="text-2xl font-black tracking-tight mt-2 theme-accent-text">0</p>
-      </div>
-    </section>
-    <section class="home-stat flex items-center justify-between mb-6">
-      <div>
-        <p class="text-[10px] font-bold theme-text-muted uppercase tracking-widest">Сегодня потренировано</p>
-        <p class="text-xl font-black tracking-tight mt-1"><span id="home-today-count">0</span> <span class="text-xs font-semibold theme-text-muted">ответов</span></p>
-      </div>
-      <div class="text-right">
-        <p class="text-[10px] font-bold theme-text-muted uppercase tracking-widest">Точность</p>
-        <p id="home-today-accuracy" class="text-xl font-black tracking-tight mt-1">–</p>
       </div>
     </section>
     <div class="flex items-center justify-between mb-4 px-1">
@@ -557,19 +556,6 @@
         <span class="block font-bold text-sm mt-3">Слабые слова</span><span id="practice-weak-count" class="block text-xs theme-text-muted mt-1">Слова с ошибками</span>
       </button>
     </div>
-    <section class="mb-5">
-      <div class="flex items-end justify-between mb-3"><div><h3 class="text-lg font-bold">Твоя статистика</h3><p class="text-xs theme-text-muted mt-1">История занятий на этом устройстве</p></div><span class="text-[10px] theme-text-muted uppercase tracking-wider font-bold">30 дней</span></div>
-      <div class="grid grid-cols-3 gap-2 mb-4">
-        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Ответы</p><p id="stats-30-total" class="text-xl font-black mt-1">0</p></div>
-        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Верно</p><p id="stats-30-correct" class="text-xl font-black mt-1">0</p></div>
-        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Точность</p><p id="stats-30-accuracy" class="text-xl font-black mt-1">–</p></div>
-      </div>
-      <div class="home-stat p-4">
-        <div class="flex items-center justify-between mb-4"><h4 class="font-bold text-sm">Последние 7 дней</h4><span class="text-[10px] theme-text-muted">Ответы в день</span></div>
-        <div id="stats-week-chart" class="stats-week-chart" aria-label="График ответов за последние семь дней"></div>
-        <div id="stats-week-summary" class="text-xs theme-text-muted mt-4">Пока нет истории занятий.</div>
-      </div>
-    </section>
   </main>
 
   <!-- ================= MODAL: DECK OPTIONS ================= -->
@@ -643,6 +629,47 @@
       <button onclick="deleteCard()" class="w-full py-3 text-rose-500 font-bold border border-rose-500/30 rounded-2xl active:bg-rose-500/10">Удалить карточку</button>
     </div>
   </div>
+
+  <!-- ================= VIEW: STATISTICS ================= -->
+  <main id="view-statistics" class="hidden flex-1 flex flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
+    <section class="screen-heading text-center mb-6">
+      <p class="home-eyebrow mb-2">Dein Fortschritt</p>
+      <h2 class="text-3xl font-black tracking-tight">Статистика 📊</h2>
+      <p class="text-sm theme-text-muted mt-2">Твой прогресс и история занятий в Hanke Cards.</p>
+    </section>
+
+    <section class="mb-5">
+      <h3 class="font-bold text-base mb-3">Сегодня</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase tracking-wider">Ответы</p><p id="stats-today-count" class="text-2xl font-black mt-2">0</p></div>
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase tracking-wider">Точность</p><p id="stats-today-accuracy" class="text-2xl font-black mt-2">–</p></div>
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <div class="flex items-end justify-between mb-3"><h3 class="font-bold text-base">За последние 30 дней</h3><span class="text-[10px] theme-text-muted uppercase tracking-wider font-bold">30 дней</span></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Ответы</p><p id="stats-30-total" class="text-xl font-black mt-1">0</p></div>
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Верно</p><p id="stats-30-correct" class="text-xl font-black mt-1">0</p></div>
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Точность</p><p id="stats-30-accuracy" class="text-xl font-black mt-1">–</p></div>
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <h3 class="font-bold text-base mb-3">За последние 180 дней</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Всего ответов</p><p id="stats-total-answers" class="text-2xl font-black mt-2">0</p></div>
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Дней подряд</p><p id="stats-study-streak" class="text-2xl font-black mt-2">0</p></div>
+      </div>
+    </section>
+
+    <section class="home-stat p-4">
+      <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm">Последние 7 дней</h3><span class="text-[10px] theme-text-muted">Ответы в день</span></div>
+      <div id="stats-week-chart" class="stats-week-chart" aria-label="График ответов за последние семь дней"></div>
+      <div id="stats-week-summary" class="text-xs theme-text-muted mt-4">Пока нет истории занятий.</div>
+    </section>
+    <p class="text-[10px] theme-text-muted text-center mt-4">История хранится на этом устройстве. В текущей версии сохраняются данные за последние 180 дней.</p>
+  </main>
 
   <!-- ================= VIEW: MASTERED ================= -->
   <main id="view-mastered" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
@@ -1025,6 +1052,7 @@
       localStorage.setItem(DAILY_STATS_KEY, JSON.stringify({ date: today, ...history[today] }));
       renderDailyStats();
       renderPracticeHub();
+      if (!document.getElementById('view-statistics').classList.contains('hidden')) renderStatistics();
     }
 
     function getLearningTotals() {
@@ -1122,8 +1150,8 @@
       const stats = getDailyStats();
       const total = stats.correct + stats.wrong;
       const accuracy = total ? Math.round(stats.correct / total * 100) + '%' : '–';
-      const count = document.getElementById('home-today-count');
-      const accuracyEl = document.getElementById('home-today-accuracy');
+      const count = document.getElementById('stats-today-count');
+      const accuracyEl = document.getElementById('stats-today-accuracy');
       if (count) count.innerText = total;
       if (accuracyEl) accuracyEl.innerText = accuracy;
     }
@@ -1142,14 +1170,17 @@
       if (genderEl) genderEl.innerText = `${genderCount} ${genderCount === 1 ? 'слово' : 'слов'} с артиклем`;
       if (listeningEl) listeningEl.innerText = `${listeningCount} ${listeningCount === 1 ? 'карточка' : 'карточек'} доступно`;
       if (dictationEl) dictationEl.innerText = `${listeningCount} ${listeningCount === 1 ? 'карточка' : 'карточек'} для диктанта`;
+    }
+
+    function renderStatistics() {
+      renderDailyStats();
       const history = getStatsHistory();
       const today = new Date();
       const days = [];
       for (let offset = 6; offset >= 0; offset--) {
         const date = new Date(today);
         date.setDate(today.getDate() - offset);
-        const key = localDateKey(date);
-        const item = history[key] || { correct: 0, wrong: 0 };
+        const item = history[localDateKey(date)] || { correct: 0, wrong: 0 };
         days.push({ label: date.toLocaleDateString('ru-RU', { weekday: 'short' }).replace('.', ''), correct: Number(item.correct) || 0, wrong: Number(item.wrong) || 0 });
       }
       const last30 = [];
@@ -1166,6 +1197,9 @@
       setText('stats-30-total', total);
       setText('stats-30-correct', totalCorrect);
       setText('stats-30-accuracy', total ? `${Math.round(totalCorrect / total * 100)}%` : '–');
+      const lifetime = getLearningTotals();
+      setText('stats-total-answers', lifetime.total);
+      setText('stats-study-streak', getStudyStreak());
       const chart = document.getElementById('stats-week-chart');
       if (chart) {
         const max = Math.max(1, ...days.map(day => day.correct + day.wrong));
@@ -1216,7 +1250,7 @@
     }
 
     function hideAllViews() {
-      ['view-home', 'view-quick', 'view-practice', 'view-mastered', 'view-settings', 'view-achievements', 'view-games', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+      ['view-home', 'view-quick', 'view-practice', 'view-achievements', 'view-games', 'view-statistics', 'view-mastered', 'view-settings', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
       document.getElementById('nav-actions').innerHTML = '';
     }
 
@@ -1224,7 +1258,7 @@
       hideAllViews(); 
       document.getElementById(`view-${tab}`).classList.remove('hidden');
       
-      ['home', 'quick', 'practice', 'achievements', 'games', 'mastered', 'settings'].forEach(t => {
+      ['home', 'quick', 'practice', 'achievements', 'games', 'statistics', 'mastered', 'settings'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if (!btn) return;
         btn.classList.toggle('active-tab', t === tab);
@@ -1235,6 +1269,7 @@
       if(tab === 'mastered') renderMastered();
       if(tab === 'achievements') renderAchievements();
       if(tab === 'games') renderGames();
+      if(tab === 'statistics') renderStatistics();
     }
     function goHome() { switchMainTab('home'); }
 
