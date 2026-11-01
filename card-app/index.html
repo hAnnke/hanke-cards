@@ -472,6 +472,10 @@
         <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5h12M8 12h12M8 19h12"/><path d="m3 5 1.5 1.5L7 4M3 12l1.5 1.5L7 11"/></svg></span>
         <span class="block font-bold text-sm mt-3">Тест с вариантами</span><span class="block text-xs theme-text-muted mt-1">Выбери немецкое слово</span>
       </button>
+      <button onclick="startGenderQuiz('all')" class="practice-tile text-left">
+        <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h16"/><path d="M8 2v6M16 9v6M8 16v6"/></svg></span>
+        <span class="block font-bold text-sm mt-3">Артикли der / die / das</span><span id="practice-gender-count" class="block text-xs theme-text-muted mt-1">Тренировка рода существительных</span>
+      </button>
       <button onclick="startFreePractice('all')" class="practice-tile text-left">
         <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 1 4 16.5z"/><path d="M4 7h12M8 11h8M8 15h5"/></svg></span>
         <span class="block font-bold text-sm mt-3">Случайная практика</span><span class="block text-xs theme-text-muted mt-1">Все слова без изменения SRS</span>
@@ -777,6 +781,7 @@
     let practiceMode = false, practiceReturnView = 'deck';
     let practiceScope = 'deck';
     let quizMode = false, quizCorrectCount = 0, quizAnsweredCount = 0, quizAwaitingNext = false;
+    let quizType = 'choice';
 
     const DAILY_STATS_KEY = 'hankecards_daily_stats_v1';
     const STATS_HISTORY_KEY = 'hankecards_stats_history_v1';
@@ -828,10 +833,13 @@
     function renderPracticeHub() {
       const dueCount = cards.filter(card => Number(card.srsLevel) < 4 && Number(card.nextReview || 0) <= Date.now()).length;
       const weakCount = cards.filter(card => (Number(card.weakCount) || 0) > 0).length;
+      const genderCount = cards.filter(card => ['der', 'die', 'das'].includes(card.gender || parseGender(card.front))).length;
       const dueEl = document.getElementById('practice-due-count');
       const weakEl = document.getElementById('practice-weak-count');
+      const genderEl = document.getElementById('practice-gender-count');
       if (dueEl) dueEl.innerText = `${dueCount} ${dueCount === 1 ? 'слово ждёт' : 'слов ждут'} повтора`;
       if (weakEl) weakEl.innerText = `${weakCount} ${weakCount === 1 ? 'слово' : 'слов'} с ошибками`;
+      if (genderEl) genderEl.innerText = `${genderCount} ${genderCount === 1 ? 'слово' : 'слов'} с артиклем`;
       const history = getStatsHistory();
       const today = new Date();
       const days = [];
@@ -1253,6 +1261,7 @@
       const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
       if (source.length < 2) return showToast('Для теста нужно хотя бы 2 слова');
       quizMode = true;
+      quizType = 'choice';
       practiceMode = 'quiz';
       practiceScope = scope;
       practiceReturnView = scope === 'all' ? 'practice' : 'deck';
@@ -1270,8 +1279,98 @@
       loadNextCard();
     }
 
-    function renderChoiceQuestion() {
+    function startGenderQuiz(scope = 'all') {
+      const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
+      const eligible = source.filter(card => ['der', 'die', 'das'].includes(card.gender || parseGender(card.front)));
+      if (!eligible.length) return showToast('Пока нет слов с указанным артиклем');
+      quizMode = true;
+      quizType = 'gender';
+      practiceMode = 'quiz';
+      practiceScope = scope;
+      practiceReturnView = scope === 'all' ? 'practice' : 'deck';
+      quizCorrectCount = 0;
+      quizAnsweredCount = 0;
+      studyQueue = [...eligible].sort(() => Math.random() - 0.5);
+      initialQueueLength = studyQueue.length;
+      hideAllViews();
+      document.getElementById('view-study').classList.remove('hidden');
+      document.getElementById('study-mode-label').innerText = 'Тест · Артикли';
+      document.getElementById('quiz-panel').classList.remove('hidden');
+      document.getElementById('quiz-panel').classList.add('flex');
+      document.getElementById('card-area').classList.add('hidden');
+      document.querySelector('.study-answer-actions').classList.add('hidden');
+      loadNextCard();
+    }
+
+    function renderGenderQuestion() {
       const card = currentStudyCard;
+      const optionsEl = document.getElementById('quiz-options');
+      const gender = card.gender || parseGender(card.front);
+      const noun = String(card.front || '').replace(/^(der|die|das)\\s+/i, '').trim();
+      document.getElementById('quiz-prompt').innerText = noun || card.front;
+      const promptLabel = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
+      const promptHint = document.querySelector('#quiz-panel .text-sm.theme-text-muted');
+      if (promptLabel) promptLabel.innerText = 'Выбери правильный артикль';
+      if (promptHint) promptHint.innerText = 'Какой артикль используется с этим словом?';
+      document.getElementById('quiz-feedback').classList.add('hidden');
+      document.getElementById('quiz-feedback').innerText = '';
+      document.getElementById('quiz-next-btn').classList.add('hidden');
+      quizAwaitingNext = false;
+      optionsEl.innerHTML = '';
+      ['der', 'die', 'das'].forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'quiz-option text-center text-xl';
+        button.dataset.gender = option;
+        button.innerText = option;
+        button.addEventListener('click', () => answerGenderQuiz(option, button, optionsEl, gender));
+        optionsEl.appendChild(button);
+      });
+      document.getElementById('study-counter').innerText = `Вопрос ${quizAnsweredCount + 1} из ${initialQueueLength}`;
+      const progressFill = document.getElementById('study-progress-fill');
+      if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
+    }
+
+    function answerGenderQuiz(selectedGender, selectedButton, optionsEl, correctGender) {
+      if (quizAwaitingNext || !currentStudyCard) return;
+      quizAwaitingNext = true;
+      const correct = selectedGender === correctGender;
+      const card = currentStudyCard;
+      [...optionsEl.querySelectorAll('button')].forEach(button => {
+        button.disabled = true;
+        if (button.dataset.gender === correctGender) button.classList.add('quiz-correct');
+      });
+      const feedback = document.getElementById('quiz-feedback');
+      feedback.classList.remove('hidden');
+      if (correct) {
+        quizCorrectCount++;
+        card.weakCount = Math.max(0, (Number(card.weakCount) || 0) - 1);
+        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-green-500/40 bg-green-500/10';
+        feedback.innerText = 'Верно! Запомни артикль вместе со словом.';
+      } else {
+        selectedButton.classList.add('quiz-wrong');
+        card.weakCount = (Number(card.weakCount) || 0) + 1;
+        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-rose-500/40 bg-rose-500/10';
+        feedback.innerText = `Неверно. Правильно: ${correctGender} ${String(card.front || '').replace(/^(der|die|das)\\s+/i, '').trim()}`;
+      }
+      recordAnswer(correct);
+      saveData();
+      quizAnsweredCount++;
+      studyQueue.shift();
+      document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
+      const progressFill = document.getElementById('study-progress-fill');
+      if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
+      document.getElementById('quiz-next-btn').classList.remove('hidden');
+      document.getElementById('quiz-next-btn').innerText = studyQueue.length ? 'Следующее слово' : 'Посмотреть результат';
+    }
+
+    function renderChoiceQuestion() {
+      if (quizType === 'gender') return renderGenderQuestion();
+      const card = currentStudyCard;
+      const promptLabel = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
+      const promptHint = document.querySelector('#quiz-panel .text-sm.theme-text-muted');
+      if (promptLabel) promptLabel.innerText = 'Выбери немецкий вариант';
+      if (promptHint) promptHint.innerText = 'Как это будет по-немецки?';
       const pool = cards.filter(item => item.id !== card.id && item.front !== card.front);
       const distractors = pool.sort(() => Math.random() - 0.5).slice(0, 3);
       const options = [card, ...distractors].sort(() => Math.random() - 0.5);
@@ -1342,6 +1441,7 @@
       const returnView = practiceReturnView;
       practiceMode = false;
       quizMode = false;
+      quizType = 'choice';
       document.getElementById('quiz-panel').classList.add('hidden');
       document.getElementById('card-area').classList.remove('hidden');
       document.querySelector('.study-answer-actions').classList.remove('hidden');
@@ -1358,6 +1458,7 @@
         const resultText = wasQuiz ? `Тест завершён: ${quizCorrectCount} из ${quizAnsweredCount} правильно (${quizAnsweredCount ? Math.round(quizCorrectCount / quizAnsweredCount * 100) : 0}%).` : 'Практика завершена!';
         practiceMode = false;
         quizMode = false;
+        quizType = 'choice';
         document.getElementById('quiz-panel').classList.add('hidden');
         document.getElementById('quiz-panel').classList.remove('flex');
         document.getElementById('card-area').classList.remove('hidden');
