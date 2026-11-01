@@ -28,6 +28,11 @@
     .theme-accent:active { background-color: var(--accent-hover); }
     .theme-accent-text { color: var(--accent); }
 
+    /* Нежное свечение карточек для родов */
+    .glow-der { box-shadow: 0 0 25px rgba(56, 189, 248, 0.35); border-color: rgba(56, 189, 248, 0.6) !important; }
+    .glow-die { box-shadow: 0 0 25px rgba(244, 63, 94, 0.35); border-color: rgba(244, 63, 94, 0.6) !important; }
+    .glow-das { box-shadow: 0 0 25px rgba(52, 211, 153, 0.35); border-color: rgba(52, 211, 153, 0.6) !important; }
+
     .perspective-1000 { perspective: 1000px; }
     .preserve-3d { transform-style: preserve-3d; }
     .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
@@ -90,7 +95,7 @@
       
       <div class="flex justify-between items-end mb-1">
         <label class="text-xs theme-text-muted font-bold uppercase block">Слово (с артиклем)</label>
-        <button onclick="autoTranslateEdit()" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-lg active:opacity-70">🪄 Перевести</button>
+        <button onclick="autoTranslateEdit()" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-lg active:opacity-70">🪄 Умный перевод</button>
       </div>
       <input id="edit-front" type="text" class="w-full p-4 mb-3 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500">
       
@@ -172,10 +177,10 @@
     <div class="space-y-4">
       <div>
         <div class="flex justify-between items-end mb-1">
-          <label class="text-xs theme-text-muted uppercase font-bold">Слово (например: der Tisch)</label>
+          <label class="text-xs theme-text-muted uppercase font-bold">Слово или фраза</label>
           <button onclick="autoTranslate('input-front', 'input-back')" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-lg active:opacity-70">🪄 Умный перевод</button>
         </div>
-        <input id="input-front" type="text" class="w-full p-4 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium" placeholder="der / die / das или фраза">
+        <input id="input-front" type="text" class="w-full p-4 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium" placeholder="Например: Stuhl">
       </div>
       <div>
         <label class="text-xs theme-text-muted uppercase font-bold">Перевод</label>
@@ -210,8 +215,8 @@
     <div class="flex-1 relative flex justify-center items-center perspective-1000 w-full max-w-sm mx-auto" id="card-area">
       <div id="swipe-container" class="w-full h-96 absolute cursor-grab active:cursor-grabbing z-10">
         <div id="flip-container" class="w-full h-full relative preserve-3d flip-anim shadow-2xl rounded-3xl">
-          <!-- Лицевая сторона с динамическим цветом рода -->
-          <div id="study-card-front-bg" class="absolute inset-0 theme-card rounded-3xl border-2 p-6 flex flex-col justify-between items-center backface-hidden transition-colors duration-300">
+          <!-- Лицевая сторона со свечением рода -->
+          <div id="study-card-front-bg" class="absolute inset-0 theme-card rounded-3xl border-2 p-6 flex flex-col justify-between items-center backface-hidden transition-all duration-300">
             <div class="w-full flex justify-end">
               <span id="study-gender-badge" class="text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider hidden"></span>
             </div>
@@ -333,12 +338,12 @@
       const list = document.getElementById('deck-vocab-list'), deckCards = cards.filter(c => c.deckId === currentDeckId);
       document.getElementById('deck-vocab-count').innerText = `${deckCards.length} слов`; list.innerHTML = '';
       deckCards.forEach(c => {
-        let genderBorder = 'border-slate-700';
-        if (c.gender === 'der') genderBorder = 'border-sky-500/80';
-        if (c.gender === 'die') genderBorder = 'border-rose-500/80';
-        if (c.gender === 'das') genderBorder = 'border-emerald-500/80';
+        let glowClass = '';
+        if (c.gender === 'der') glowClass = 'glow-der';
+        if (c.gender === 'die') glowClass = 'glow-die';
+        if (c.gender === 'das') glowClass = 'glow-das';
 
-        list.innerHTML += `<div class="theme-card border-2 ${genderBorder} p-3 rounded-xl flex justify-between items-center shadow-sm">
+        list.innerHTML += `<div class="theme-card border-2 p-3 rounded-xl flex justify-between items-center shadow-sm ${glowClass}">
           <div class="truncate pr-2"><p class="font-bold truncate">${c.front}</p><p class="text-xs theme-text-muted truncate">${c.back}</p></div>
           <button onclick="openEditCard('${c.id}')" class="p-2 theme-text-muted active:text-white">✏️</button></div>`;
       });
@@ -363,6 +368,7 @@
       if(confirm('Удалить эту карточку?')) { cards = cards.filter(c => c.id !== currentEditCardId); saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Удалено 🗑️'); }
     }
 
+    // Умный перевод: переводит и если вводится слово на русском, подтягивает немецкий эквивалент с авто-артиклем (если переводчик его дал), либо ты сам правишь
     async function autoTranslate(frontId, backId) {
       const inputFront = document.getElementById(frontId), inputBack = document.getElementById(backId);
       let text = inputFront.value.trim(); if (!text) return showToast('Напиши слово!', '⚠️'); showToast('Перевожу...', '⏳');
@@ -372,7 +378,13 @@
         const transData = await transRes.json();
         if (transData.responseData?.translatedText) {
           const translated = transData.responseData.translatedText;
-          if (isRussian) { inputBack.value = text; inputFront.value = translated; } else { inputBack.value = translated; }
+          if (isRussian) { 
+            // Переводим с русского на немецкий: ставим перевод в поле front (чтобы юзер мог проверить/поправить артикль)
+            inputBack.value = text; 
+            inputFront.value = translated; 
+          } else { 
+            inputBack.value = translated; 
+          }
           showToast('Переведено!', '✅');
         } else { showToast('Не найдено 😕', '⚠️'); }
       } catch (e) { showToast('Ошибка сети API', '❌'); }
@@ -404,22 +416,22 @@
       document.getElementById('study-front').innerText = currentStudyCard.front; 
       document.getElementById('study-back').innerText = currentStudyCard.back;
 
-      // Динамическая подсветка рамки и бейджа рода при учебе
+      // Нежное свечение карточки в зависимости от рода при учебе
       const frontBg = document.getElementById('study-card-front-bg');
       const badge = document.getElementById('study-gender-badge');
-      frontBg.className = "absolute inset-0 theme-card rounded-3xl border-2 p-6 flex flex-col justify-between items-center backface-hidden transition-colors duration-300";
+      frontBg.className = "absolute inset-0 theme-card rounded-3xl border-2 p-6 flex flex-col justify-between items-center backface-hidden transition-all duration-300";
       badge.classList.add('hidden');
 
       if (currentStudyCard.gender === 'der') {
-        frontBg.classList.add('border-sky-500');
+        frontBg.classList.add('glow-der');
         badge.innerText = 'der (m)';
         badge.className = "text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-sky-950 text-sky-400 border border-sky-800";
       } else if (currentStudyCard.gender === 'die') {
-        frontBg.classList.add('border-rose-500');
+        frontBg.classList.add('glow-die');
         badge.innerText = 'die (f)';
         badge.className = "text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-rose-950 text-rose-400 border border-rose-800";
       } else if (currentStudyCard.gender === 'das') {
-        frontBg.classList.add('border-emerald-500');
+        frontBg.classList.add('glow-das');
         badge.innerText = 'das (n)';
         badge.className = "text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-emerald-950 text-emerald-400 border border-emerald-800";
       } else {
