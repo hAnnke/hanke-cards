@@ -89,7 +89,7 @@
       <h3 class="text-lg font-bold mb-4">Редактировать слово</h3>
       
       <div class="flex justify-between items-end mb-1">
-        <label class="text-xs theme-text-muted font-bold uppercase block">Слово</label>
+        <label class="text-xs theme-text-muted font-bold uppercase block">Слово (с артиклем)</label>
         <button onclick="autoTranslateEdit()" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-lg active:opacity-70">🪄 Перевести</button>
       </div>
       <input id="edit-front" type="text" class="w-full p-4 mb-3 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500">
@@ -172,10 +172,10 @@
     <div class="space-y-4">
       <div>
         <div class="flex justify-between items-end mb-1">
-          <label class="text-xs theme-text-muted uppercase font-bold">Слово (Можно на русском)</label>
+          <label class="text-xs theme-text-muted uppercase font-bold">Слово (например: der Tisch)</label>
           <button onclick="autoTranslate('input-front', 'input-back')" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-lg active:opacity-70">🪄 Умный перевод</button>
         </div>
-        <input id="input-front" type="text" class="w-full p-4 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium">
+        <input id="input-front" type="text" class="w-full p-4 rounded-xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium" placeholder="der / die / das или фраза">
       </div>
       <div>
         <label class="text-xs theme-text-muted uppercase font-bold">Перевод</label>
@@ -194,7 +194,7 @@
       <div class="text-sm font-bold theme-card border px-4 py-2 rounded-full" id="spell-counter">0/0</div>
     </div>
     <div class="flex-1 flex flex-col items-center mt-10">
-      <p class="text-sm theme-text-muted uppercase tracking-widest mb-2 font-bold">Напиши по-немецки:</p>
+      <p class="text-sm theme-text-muted uppercase tracking-widest mb-2 font-bold">Напиши по-немецки (с артиклем):</p>
       <h2 id="spell-prompt" class="text-3xl font-bold text-center mb-10">Перевод</h2>
       <input id="spell-input" type="text" class="w-full p-4 rounded-xl bg-transparent theme-card border text-center text-xl font-bold mb-4 focus:outline-none focus:border-indigo-500" placeholder="Введи слово..." autocomplete="off">
       <button onclick="checkSpelling()" class="w-full theme-accent py-4 rounded-xl font-bold shadow-lg active:scale-[0.98]">Проверить</button>
@@ -210,10 +210,17 @@
     <div class="flex-1 relative flex justify-center items-center perspective-1000 w-full max-w-sm mx-auto" id="card-area">
       <div id="swipe-container" class="w-full h-96 absolute cursor-grab active:cursor-grabbing z-10">
         <div id="flip-container" class="w-full h-full relative preserve-3d flip-anim shadow-2xl rounded-3xl">
-          <div class="absolute inset-0 theme-card rounded-3xl border p-6 flex flex-col justify-center items-center backface-hidden">
-            <h2 id="study-front" class="text-3xl font-bold text-center"></h2>
-            <p class="text-sm theme-text-muted absolute bottom-6 font-medium">Нажми, чтобы вспомнить</p>
+          <!-- Лицевая сторона с динамическим цветом рода -->
+          <div id="study-card-front-bg" class="absolute inset-0 theme-card rounded-3xl border-2 p-6 flex flex-col justify-between items-center backface-hidden transition-colors duration-300">
+            <div class="w-full flex justify-end">
+              <span id="study-gender-badge" class="text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider hidden"></span>
+            </div>
+            <div class="text-center">
+              <h2 id="study-front" class="text-3xl font-bold text-center mb-2"></h2>
+            </div>
+            <p class="text-sm theme-text-muted font-medium">Нажми, чтобы вспомнить</p>
           </div>
+          <!-- Обратная сторона -->
           <div class="absolute inset-0 theme-card rounded-3xl border p-6 flex flex-col justify-center items-center backface-hidden rotate-y-180">
             <p class="text-xs theme-accent-text uppercase tracking-widest absolute top-6 font-bold">Перевод</p>
             <h2 id="study-back" class="text-2xl font-semibold text-center mb-4"></h2>
@@ -258,6 +265,15 @@
       if(tab === 'home') renderDecks(); if(tab === 'mastered') renderMastered();
     }
     function goHome() { switchMainTab('home'); }
+
+    // Автоматическое определение рода (der / die / das)
+    function parseGender(text) {
+      const lower = text.trim().toLowerCase();
+      if (lower.startsWith('der ')) return 'der';
+      if (lower.startsWith('die ')) return 'die';
+      if (lower.startsWith('das ')) return 'das';
+      return '';
+    }
 
     function renderDecks() {
       const container = document.getElementById('decks-container'); container.innerHTML = '';
@@ -317,7 +333,12 @@
       const list = document.getElementById('deck-vocab-list'), deckCards = cards.filter(c => c.deckId === currentDeckId);
       document.getElementById('deck-vocab-count').innerText = `${deckCards.length} слов`; list.innerHTML = '';
       deckCards.forEach(c => {
-        list.innerHTML += `<div class="theme-card border p-3 rounded-xl flex justify-between items-center shadow-sm">
+        let genderBorder = 'border-slate-700';
+        if (c.gender === 'der') genderBorder = 'border-sky-500/80';
+        if (c.gender === 'die') genderBorder = 'border-rose-500/80';
+        if (c.gender === 'das') genderBorder = 'border-emerald-500/80';
+
+        list.innerHTML += `<div class="theme-card border-2 ${genderBorder} p-3 rounded-xl flex justify-between items-center shadow-sm">
           <div class="truncate pr-2"><p class="font-bold truncate">${c.front}</p><p class="text-xs theme-text-muted truncate">${c.back}</p></div>
           <button onclick="openEditCard('${c.id}')" class="p-2 theme-text-muted active:text-white">✏️</button></div>`;
       });
@@ -332,7 +353,10 @@
     function saveEditedCard() {
       const front = document.getElementById('edit-front').value.trim(), back = document.getElementById('edit-back').value.trim();
       if(!front || !back) return showToast('Заполни поля', '⚠️');
-      const card = cards.find(c => c.id === currentEditCardId); card.front = front; card.back = back;
+      const card = cards.find(c => c.id === currentEditCardId); 
+      card.front = front; 
+      card.back = back;
+      card.gender = parseGender(front);
       saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Сохранено ✅');
     }
     function deleteCard() {
@@ -358,7 +382,8 @@
     function saveNewCard() {
       const front = document.getElementById('input-front').value.trim(), back = document.getElementById('input-back').value.trim();
       if (!front || !back) return showToast('Заполни поля', '⚠️');
-      cards.push({ id: Date.now().toString() + Math.floor(Math.random()*100), deckId: currentDeckId, front, back, srsLevel: 0, nextReview: Date.now() });
+      const gender = parseGender(front);
+      cards.push({ id: Date.now().toString() + Math.floor(Math.random()*100), deckId: currentDeckId, front, back, gender, srsLevel: 0, nextReview: Date.now() });
       saveData(); document.getElementById('input-front').value = ''; document.getElementById('input-back').value = '';
       showToast('Добавлено! 🃏'); openDeck(currentDeckId);
     }
@@ -369,14 +394,39 @@
       if (studyQueue.length === 0) return showToast('Всё повторено! Отдохни 🍵');
       initialQueueLength = studyQueue.length; hideAllViews(); document.getElementById('view-study').classList.remove('hidden'); loadNextCard();
     }
+    
     function loadNextCard() {
       if (studyQueue.length === 0) { showToast('Ура! 🎉'); return openDeck(currentDeckId); }
       currentStudyCard = studyQueue[0]; isFlipped = false;
       const flipCont = document.getElementById('flip-container'), swipeCont = document.getElementById('swipe-container');
       flipCont.classList.remove('rotate-y-180'); swipeCont.style.transform = ''; swipeCont.style.opacity = '1';
       document.getElementById('study-counter').innerText = `Осталось: ${studyQueue.length}`;
-      document.getElementById('study-front').innerText = currentStudyCard.front; document.getElementById('study-back').innerText = currentStudyCard.back;
+      document.getElementById('study-front').innerText = currentStudyCard.front; 
+      document.getElementById('study-back').innerText = currentStudyCard.back;
+
+      // Динамическая подсветка рамки и бейджа рода при учебе
+      const frontBg = document.getElementById('study-card-front-bg');
+      const badge = document.getElementById('study-gender-badge');
+      frontBg.className = "absolute inset-0 theme-card rounded-3xl border-2 p-6 flex flex-col justify-between items-center backface-hidden transition-colors duration-300";
+      badge.classList.add('hidden');
+
+      if (currentStudyCard.gender === 'der') {
+        frontBg.classList.add('border-sky-500');
+        badge.innerText = 'der (m)';
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-sky-950 text-sky-400 border border-sky-800";
+      } else if (currentStudyCard.gender === 'die') {
+        frontBg.classList.add('border-rose-500');
+        badge.innerText = 'die (f)';
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-rose-950 text-rose-400 border border-rose-800";
+      } else if (currentStudyCard.gender === 'das') {
+        frontBg.classList.add('border-emerald-500');
+        badge.innerText = 'das (n)';
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-emerald-950 text-emerald-400 border border-emerald-800";
+      } else {
+        frontBg.classList.add('border-slate-700');
+      }
     }
+
     function processSwipeResult(direction) {
       const cardIndex = cards.findIndex(c => c.id === currentStudyCard.id);
       if (direction === 'right') {
@@ -391,6 +441,7 @@
       swipeCont.style.transform = `translateX(${direction === 'right' ? 300 : -300}px) rotate(${direction === 'right' ? 20 : -20}deg)`; swipeCont.style.opacity = '0';
       setTimeout(() => { swipeCont.style.transition = ''; loadNextCard(); }, 300);
     }
+    
     const swipeCont = document.getElementById('swipe-container'), flipCont = document.getElementById('flip-container'); let startX = 0, currentX = 0, isDragging = false;
     swipeCont.addEventListener('click', () => { if (Math.abs(currentX) < 5) { isFlipped = !isFlipped; flipCont.classList.toggle('rotate-y-180', isFlipped); } });
     swipeCont.addEventListener('touchstart', e => { startX = e.touches[0].clientX; isDragging = true; swipeCont.classList.remove('snap-back'); });
