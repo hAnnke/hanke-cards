@@ -480,6 +480,10 @@
         <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>
         <span class="block font-bold text-sm mt-3">Аудирование</span><span id="practice-listening-count" class="block text-xs theme-text-muted mt-1">Угадай перевод на слух</span>
       </button>
+      <button onclick="startDictationQuiz('all')" class="practice-tile text-left">
+        <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 10h16M4 15h10M4 20h7"/><path d="m17 16 2 2 3-4"/></svg></span>
+        <span class="block font-bold text-sm mt-3">Диктант</span><span id="practice-dictation-count" class="block text-xs theme-text-muted mt-1">Услышь и напиши слово</span>
+      </button>
       <button onclick="startFreePractice('all')" class="practice-tile text-left">
         <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 1 4 16.5z"/><path d="M4 7h12M8 11h8M8 15h5"/></svg></span>
         <span class="block font-bold text-sm mt-3">Случайная практика</span><span class="block text-xs theme-text-muted mt-1">Все слова без изменения SRS</span>
@@ -602,6 +606,18 @@
         <div class="w-8 h-8 rounded-full bg-amber-100 border border-amber-300 shadow-inner"></div>
         <span class="text-xs font-bold">Теплая</span>
       </div>
+    </div>
+
+    <h2 class="text-2xl font-black tracking-tight mb-4">Обучение</h2>
+    <div class="theme-card border rounded-2xl p-4 mb-8">
+      <label for="quiet-mode-toggle" class="flex items-start justify-between gap-4 cursor-pointer">
+        <span class="min-w-0">
+          <span class="block font-bold text-sm">Тихий режим</span>
+          <span class="block text-xs theme-text-muted mt-1">Я сейчас не могу говорить. Не предлагать задания, в которых нужно произносить слова вслух.</span>
+        </span>
+        <input id="quiet-mode-toggle" type="checkbox" class="mt-1 h-5 w-5 accent-current shrink-0" onchange="setQuietMode(this.checked)">
+      </label>
+      <p class="text-xs theme-text-muted mt-3">Аудирование и письменные диктанты останутся доступны: для них достаточно слушать и печатать.</p>
     </div>
 
     <h2 class="text-2xl font-black tracking-tight mb-6">Данные</h2>
@@ -838,6 +854,21 @@
 
     const DAILY_STATS_KEY = 'hankecards_daily_stats_v1';
     const STATS_HISTORY_KEY = 'hankecards_stats_history_v1';
+    const QUIET_MODE_KEY = 'hankecards_quiet_mode_v1';
+    let quietMode = localStorage.getItem(QUIET_MODE_KEY) === 'true';
+
+    function setQuietMode(enabled) {
+      quietMode = Boolean(enabled);
+      localStorage.setItem(QUIET_MODE_KEY, String(quietMode));
+      const toggle = document.getElementById('quiet-mode-toggle');
+      if (toggle) toggle.checked = quietMode;
+      showToast(quietMode ? 'Тихий режим включён: устные задания отключены' : 'Тихий режим выключен');
+    }
+
+    function isSpeakingPracticeAllowed() {
+      return !quietMode;
+    }
+
     function localDateKey(date = new Date()) {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     }
@@ -891,11 +922,13 @@
       const weakEl = document.getElementById('practice-weak-count');
       const genderEl = document.getElementById('practice-gender-count');
       const listeningEl = document.getElementById('practice-listening-count');
+      const dictationEl = document.getElementById('practice-dictation-count');
       const listeningCount = cards.filter(card => String(card.front || '').trim() && String(card.back || '').trim()).length;
       if (dueEl) dueEl.innerText = `${dueCount} ${dueCount === 1 ? 'слово ждёт' : 'слов ждут'} повтора`;
       if (weakEl) weakEl.innerText = `${weakCount} ${weakCount === 1 ? 'слово' : 'слов'} с ошибками`;
       if (genderEl) genderEl.innerText = `${genderCount} ${genderCount === 1 ? 'слово' : 'слов'} с артиклем`;
       if (listeningEl) listeningEl.innerText = `${listeningCount} ${listeningCount === 1 ? 'карточка' : 'карточек'} доступно`;
+      if (dictationEl) dictationEl.innerText = `${listeningCount} ${listeningCount === 1 ? 'карточка' : 'карточек'} для диктанта`;
       const history = getStatsHistory();
       const today = new Date();
       const days = [];
@@ -1446,6 +1479,119 @@
       document.getElementById('quiz-next-btn').innerText = studyQueue.length ? 'Следующее слово' : 'Посмотреть результат';
     }
 
+    function startDictationQuiz(scope = 'all') {
+      const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
+      const eligible = source.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
+      if (!eligible.length) return showToast('Пока нет карточек для диктанта');
+      quizMode = true;
+      quizType = 'dictation';
+      practiceMode = 'quiz';
+      practiceScope = scope;
+      practiceReturnView = scope === 'all' ? 'practice' : 'deck';
+      quizCorrectCount = 0;
+      quizAnsweredCount = 0;
+      studyQueue = [...eligible].sort(() => Math.random() - 0.5);
+      initialQueueLength = studyQueue.length;
+      hideAllViews();
+      document.getElementById('view-study').classList.remove('hidden');
+      document.getElementById('study-mode-label').innerText = 'Диктант · На слух и письменно';
+      document.getElementById('quiz-panel').classList.remove('hidden');
+      document.getElementById('quiz-panel').classList.add('flex');
+      document.getElementById('card-area').classList.add('hidden');
+      document.querySelector('.study-answer-actions').classList.add('hidden');
+      loadNextCard();
+    }
+
+    function renderDictationQuestion() {
+      const card = currentStudyCard;
+      const prompt = document.getElementById('quiz-prompt');
+      const promptLabel = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
+      const promptHint = document.querySelector('#quiz-panel .text-sm.theme-text-muted');
+      if (promptLabel) promptLabel.innerText = 'Прослушай и напиши по-немецки';
+      if (promptHint) promptHint.innerText = 'Введи услышанное слово или выражение. Можно прослушать ещё раз.';
+      prompt.innerHTML = '';
+
+      const audioButton = document.createElement('button');
+      audioButton.type = 'button';
+      audioButton.className = 'btn-secondary mx-auto flex items-center justify-center gap-2 px-5 py-3 rounded-2xl';
+      audioButton.innerHTML = '<span aria-hidden="true">🔊</span><span>Прослушать</span>';
+      audioButton.addEventListener('click', () => speakGerman(card.front));
+      prompt.appendChild(audioButton);
+
+      const optionsEl = document.getElementById('quiz-options');
+      optionsEl.innerHTML = '';
+      const form = document.createElement('form');
+      form.className = 'w-full flex flex-col gap-3 mt-4';
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        answerDictation(input.value, submitButton, optionsEl);
+      });
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.autocomplete = 'off';
+      input.autocapitalize = 'none';
+      input.spellcheck = false;
+      input.placeholder = 'Напиши услышанное по-немецки';
+      input.className = 'form-input w-full text-center';
+      input.setAttribute('aria-label', 'Ответ на диктант');
+      const submitButton = document.createElement('button');
+      submitButton.type = 'submit';
+      submitButton.className = 'btn-primary w-full';
+      submitButton.innerText = 'Проверить';
+      form.append(input, submitButton);
+      optionsEl.appendChild(form);
+
+      document.getElementById('quiz-feedback').classList.add('hidden');
+      document.getElementById('quiz-feedback').innerText = '';
+      document.getElementById('quiz-next-btn').classList.add('hidden');
+      quizAwaitingNext = false;
+      document.getElementById('study-counter').innerText = `Вопрос ${quizAnsweredCount + 1} из ${initialQueueLength}`;
+      const progressFill = document.getElementById('study-progress-fill');
+      if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
+      setTimeout(() => input.focus(), 0);
+    }
+
+    function normalizeDictationAnswer(value) {
+      return String(value || '').trim().toLocaleLowerCase()
+        .normalize('NFC')
+        .replace(/[.!?;,:"“”„()]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+    function answerDictation(value, submitButton, optionsEl) {
+      if (quizAwaitingNext || !currentStudyCard) return;
+      const card = currentStudyCard;
+      const answer = normalizeDictationAnswer(value);
+      if (!answer) return showToast('Сначала введи ответ');
+      quizAwaitingNext = true;
+      const correct = answer === normalizeDictationAnswer(card.front);
+      const input = optionsEl.querySelector('input');
+      if (input) input.disabled = true;
+      if (submitButton) submitButton.disabled = true;
+
+      const feedback = document.getElementById('quiz-feedback');
+      feedback.classList.remove('hidden');
+      if (correct) {
+        quizCorrectCount++;
+        card.weakCount = Math.max(0, (Number(card.weakCount) || 0) - 1);
+        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-green-500/40 bg-green-500/10';
+        feedback.innerText = 'Отлично! Ты правильно записал услышанное.';
+      } else {
+        card.weakCount = (Number(card.weakCount) || 0) + 1;
+        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-rose-500/40 bg-rose-500/10';
+        feedback.innerText = `Правильное написание: ${card.front}`;
+      }
+      recordAnswer(correct);
+      saveData();
+      quizAnsweredCount++;
+      studyQueue.shift();
+      document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
+      const progressFill = document.getElementById('study-progress-fill');
+      if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
+      document.getElementById('quiz-next-btn').classList.remove('hidden');
+      document.getElementById('quiz-next-btn').innerText = studyQueue.length ? 'Следующее слово' : 'Посмотреть результат';
+    }
+
     function startGenderQuiz(scope = 'all') {
       const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
       const eligible = source.filter(isArticleWord);
@@ -1534,6 +1680,7 @@
     function renderChoiceQuestion() {
       if (quizType === 'gender') return renderGenderQuestion();
       if (quizType === 'listening') return renderListeningQuestion();
+      if (quizType === 'dictation') return renderDictationQuestion();
       const card = currentStudyCard;
       const promptLabel = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
       const promptHint = document.querySelector('#quiz-panel .text-sm.theme-text-muted');
@@ -1947,6 +2094,8 @@
       reader.readAsText(file);
     }
     normalizeSRSData();
+    const quietModeToggle = document.getElementById('quiet-mode-toggle');
+    if (quietModeToggle) quietModeToggle.checked = quietMode;
     switchMainTab('home');
     renderDailyStats();
   </script>
