@@ -380,6 +380,24 @@
 
 
 
+
+    /* Stage 18: centered main section headings */
+    #view-home .home-intro,
+    #view-practice > section:first-child,
+    #view-achievements > .home-eyebrow,
+    #view-achievements > h2,
+    #view-achievements > p,
+    #view-games > .home-eyebrow,
+    #view-games > h2,
+    #view-games > p,
+    #view-mastered > h2,
+    #view-mastered > p,
+    #view-settings > h2,
+    #view-settings > p { text-align:center; }
+    #view-home .home-intro > div { position:relative; display:block; text-align:center; }
+    #view-home .home-intro > div > div { width:100%; text-align:center; }
+    #view-home .home-intro > div > button { position:absolute; right:0; top:50%; transform:translateY(-50%); }
+    .card-description { white-space:pre-wrap; line-height:1.5; overflow-wrap:anywhere; }
     .app-tabbar { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
     .app-tabbar::-webkit-scrollbar { display:none; }
     .app-tabbar button { flex:0 0 68px; width:68px; min-width:68px; height:76px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
@@ -412,28 +430,25 @@
   <!-- ================= FLOATING GLASS BOTTOM TABS ================= -->
   <div class="app-tabbar fixed bottom-6 left-4 right-4 max-w-xl mx-auto border rounded-3xl flex justify-start overflow-x-auto p-2 z-40 text-[10px] font-semibold" role="navigation" aria-label="Основная навигация" style="scrollbar-width:none;">
     <button onclick="switchMainTab('home')" id="tab-home" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">📚</span>
-      <span class="nav-label">Колоды</span>
+      <span class="nav-emoji" aria-hidden="true">📚</span><span class="nav-label">Колоды</span>
+    </button>
+    <button onclick="switchMainTab('quick')" id="tab-quick" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+      <span class="nav-emoji" aria-hidden="true">⚡</span><span class="nav-label">Быстро</span>
     </button>
     <button onclick="switchMainTab('practice')" id="tab-practice" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">📝</span>
-      <span class="nav-label">Практика</span>
-    </button>
-    <button onclick="switchMainTab('mastered')" id="tab-mastered" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">⭐</span>
-      <span class="nav-label">Выучено</span>
+      <span class="nav-emoji" aria-hidden="true">📝</span><span class="nav-label">Практика</span>
     </button>
     <button onclick="switchMainTab('achievements')" id="tab-achievements" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">🏆</span>
-      <span class="nav-label">Награды</span>
+      <span class="nav-emoji" aria-hidden="true">🏆</span><span class="nav-label">Награды</span>
     </button>
     <button onclick="switchMainTab('games')" id="tab-games" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">🎮</span>
-      <span class="nav-label">Игры</span>
+      <span class="nav-emoji" aria-hidden="true">🎮</span><span class="nav-label">Игры</span>
+    </button>
+    <button onclick="switchMainTab('mastered')" id="tab-mastered" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+      <span class="nav-emoji" aria-hidden="true">⭐</span><span class="nav-label">Выучено</span>
     </button>
     <button onclick="switchMainTab('settings')" id="tab-settings" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">⚙️</span>
-      <span class="nav-label">Настройки</span>
+      <span class="nav-emoji" aria-hidden="true">⚙️</span><span class="nav-label">Настройки</span>
     </button>
   </div>
 
@@ -443,7 +458,7 @@
       <p class="home-eyebrow mb-3">Dein Wortschatz</p>
       <div class="flex items-end justify-between gap-4">
         <div>
-          <h2 class="text-3xl font-black tracking-tight leading-tight">Мои колоды</h2>
+          <h2 class="text-3xl font-black tracking-tight leading-tight">Колоды</h2>
           <p class="text-sm theme-text-muted mt-2">Немецкий, слово за словом.</p>
         </div>
         <button onclick="createNewDeck()" class="btn-primary shrink-0" aria-label="Создать колоду">
@@ -477,6 +492,32 @@
       <span class="text-xs theme-text-muted">Открывай, чтобы продолжить</span>
     </div>
     <div id="decks-container" class="space-y-3"></div>
+  </main>
+
+  <!-- ================= VIEW: QUICK LEARNING ================= -->
+  <main id="view-quick" class="hidden flex-1 flex flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
+    <section class="screen-heading text-center">
+      <p class="home-eyebrow mb-2">Schnell lernen</p>
+      <h2 class="text-3xl font-black tracking-tight">Быстрое обучение ⚡</h2>
+      <p class="text-sm theme-text-muted mt-2">Одна тренировка, в которой задания постоянно меняются.</p>
+    </section>
+    <section class="theme-card border rounded-3xl p-4 mb-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="practice-tile-icon"><span class="text-xl">⚡</span></div>
+        <div class="flex-1"><h3 class="font-bold text-base">Быстрое обучение</h3><p class="text-xs theme-text-muted mt-1">Смешанная тренировка: карточки, тесты, письмо и аудирование.</p></div>
+      </div>
+      <div class="flex items-center gap-3">
+        <label for="quick-learning-count" class="text-xs theme-text-muted font-semibold">Количество заданий</label>
+        <select id="quick-learning-count" class="form-input flex-1" style="min-height:46px;padding:0 12px">
+          <option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="40">40</option><option value="50">50</option>
+        </select>
+      </div>
+      <button onclick="startQuickLearning()" class="btn-primary w-full mt-3">Начать быстрое обучение</button>
+    </section>
+    <section class="theme-card border rounded-3xl p-4 mt-4">
+      <p class="text-sm font-bold mb-2">Как проходит тренировка?</p>
+      <p class="text-xs theme-text-muted leading-relaxed">Приложение случайно смешивает карточки, тесты, письменные задания и аудирование. Одно и то же слово может встретиться несколько раз, если слов в колодах меньше выбранного количества заданий.</p>
+    </section>
   </main>
 
   <!-- ================= VIEW: PRACTICE & PROGRESS ================= -->
@@ -592,6 +633,8 @@
       
       <label class="text-xs theme-text-muted font-bold uppercase mb-1 block tracking-wider">Перевод</label>
       <input id="edit-back" type="text" class="w-full p-4 mb-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500">
+      <label for="edit-description" class="text-xs theme-text-muted font-bold uppercase mb-1 block tracking-wider">Описание / пример (необязательно)</label>
+      <textarea id="edit-description" rows="3" class="w-full p-4 mb-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500" style="resize:vertical" placeholder="Пример употребления, контекст или комментарий"></textarea>
       
       <div class="flex gap-3 mb-3">
         <button onclick="closeEditCard()" class="flex-1 py-3.5 theme-card border rounded-2xl font-bold active:scale-[0.98]">Отмена</button>
@@ -603,15 +646,15 @@
 
   <!-- ================= VIEW: MASTERED ================= -->
   <main id="view-mastered" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
-    <h2 class="text-2xl font-black tracking-tight mb-2 pt-2">Выученные слова</h2>
+    <h2 class="text-2xl font-black tracking-tight mb-2 pt-2">Выучено</h2>
     <p class="text-sm theme-text-muted mb-6">Слова, которые прошли весь цикл (4+ дня).</p>
     <div id="mastered-container" class="space-y-3"></div>
   </main>
 
   <!-- ================= VIEW: SETTINGS (СТИЛЬНЫЙ ВЫБОР ТЕМ БЕЗ ЭМОДЗИ) ================= -->
   <main id="view-settings" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
-    <h2 class="text-2xl font-black tracking-tight mb-4 pt-2">Оформление</h2>
-    <p class="text-xs theme-text-muted mb-6 uppercase tracking-wider font-semibold">Выберите стиль интерфейса</p>
+    <h2 class="text-2xl font-black tracking-tight mb-4 pt-2">Настройки</h2>
+    <p class="text-xs theme-text-muted mb-6 uppercase tracking-wider font-semibold">Оформление и параметры приложения</p>
     
     <div class="grid grid-cols-3 gap-3 mb-10">
       <!-- Светлая тема -->
@@ -758,6 +801,10 @@
         <label for="input-back" class="form-label block mb-2">Перевод</label>
         <input id="input-back" type="text" class="form-input" placeholder="Например: стул" autocomplete="off">
       </div>
+      <div class="form-field">
+        <label for="input-description" class="form-label block mb-2">Описание / пример (необязательно)</label>
+        <textarea id="input-description" class="form-input" rows="3" style="min-height:104px;padding:14px 17px;resize:vertical" placeholder="Пример употребления, контекст или комментарий"></textarea>
+      </div>
       <div class="form-hint">Подсказка: для существительных указывай артикль, чтобы легче запоминать род.</div>
       <button onclick="saveNewCard()" class="w-full btn-primary form-submit">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -823,7 +870,8 @@
           <!-- Обратная сторона -->
           <div class="absolute inset-0 theme-card rounded-3xl border p-6 flex flex-col justify-center items-center backface-hidden rotate-y-180">
             <p class="text-xs theme-accent-text uppercase tracking-widest absolute top-6 font-bold">Перевод</p>
-            <h2 id="study-back" class="text-2xl font-semibold text-center mb-4"></h2>
+            <h2 id="study-back" class="text-2xl font-semibold text-center mb-3"></h2>
+            <p id="study-description" class="card-description text-sm theme-text-muted text-center max-h-32 overflow-y-auto px-1 hidden"></p>
             <div class="absolute bottom-6 w-full px-6 flex justify-between text-xs font-semibold tracking-wide">
               <span class="study-hint study-hint-muted">← Ещё повторить</span>
               <span class="study-hint study-hint-good">Помню →</span>
@@ -906,6 +954,7 @@
     let practiceMode = false, practiceReturnView = 'deck';
     let practiceScope = 'deck';
     let quizMode = false, quizCorrectCount = 0, quizAnsweredCount = 0, quizAwaitingNext = false;
+    let quickLearningMode = false, quickTasks = [], quickTaskTypes = [], currentQuickTask = null;
     let quizType = 'choice';
 
     const DAILY_STATS_KEY = 'hankecards_daily_stats_v1';
@@ -1175,7 +1224,7 @@
       hideAllViews(); 
       document.getElementById(`view-${tab}`).classList.remove('hidden');
       
-      ['home', 'practice', 'mastered', 'achievements', 'games', 'settings'].forEach(t => {
+      ['home', 'quick', 'practice', 'achievements', 'games', 'mastered', 'settings'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if (!btn) return;
         btn.classList.toggle('active-tab', t === tab);
@@ -1412,6 +1461,7 @@
     function openEditCard(id) {
       currentEditCardId = id; const card = cards.find(c => c.id === id);
       document.getElementById('edit-front').value = card.front; document.getElementById('edit-back').value = card.back;
+      document.getElementById('edit-description').value = card.description || '';
       document.getElementById('edit-card-modal').classList.remove('hidden'); document.getElementById('edit-card-modal').classList.add('flex');
     }
     function closeEditCard() { document.getElementById('edit-card-modal').classList.add('hidden'); document.getElementById('edit-card-modal').classList.remove('flex'); }
@@ -1421,6 +1471,7 @@
       const card = cards.find(c => c.id === currentEditCardId); 
       card.front = front; 
       card.back = back;
+      card.description = document.getElementById('edit-description').value.trim();
       card.gender = parseGender(front);
       saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Сохранено ');
     }
@@ -1451,10 +1502,11 @@
 
     function saveNewCard() {
       const front = document.getElementById('input-front').value.trim(), back = document.getElementById('input-back').value.trim();
+      const description = document.getElementById('input-description').value.trim();
       if (!front || !back) return showToast('Заполни поля', '');
       const gender = parseGender(front);
-      cards.push({ id: Date.now().toString() + Math.floor(Math.random()*100), deckId: currentDeckId, front, back, gender, srsLevel: 0, srsEase: SRS_DEFAULT_EASE, srsIntervalDays: 0, srsReps: 0, srsLapses: 0, nextReview: Date.now() });
-      saveData(); document.getElementById('input-front').value = ''; document.getElementById('input-back').value = '';
+      cards.push({ id: Date.now().toString() + Math.floor(Math.random()*100), deckId: currentDeckId, front, back, description, gender, srsLevel: 0, srsEase: SRS_DEFAULT_EASE, srsIntervalDays: 0, srsReps: 0, srsLapses: 0, nextReview: Date.now() });
+      saveData(); document.getElementById('input-front').value = ''; document.getElementById('input-back').value = ''; document.getElementById('input-description').value = '';
       showToast('Добавлено! '); openDeck(currentDeckId);
     }
 
@@ -1517,6 +1569,132 @@
       document.getElementById('view-study').classList.remove('hidden');
       document.getElementById('study-mode-label').innerText = 'Слабые слова · Закрепление';
       loadNextCard();
+    }
+
+
+    function startQuickLearning() {
+      const source = cards.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
+      if (!source.length) return showToast('Сначала добавь хотя бы одну карточку');
+      const count = Math.max(10, Math.min(50, Number(document.getElementById('quick-learning-count')?.value) || 20));
+      const types = ['flip', 'choice', 'write', 'listen-choice', 'listen-write'];
+      quickTasks = [];
+      for (let i = 0; i < count; i++) {
+        const card = source[Math.floor(Math.random() * source.length)];
+        let type = types[i % types.length];
+        if (source.length < 2 && (type === 'choice' || type === 'listen-choice')) type = type === 'choice' ? 'write' : 'listen-write';
+        quickTasks.push({card, type});
+      }
+      quickTasks.sort(() => Math.random() - 0.5);
+      studyQueue = quickTasks.map(task => task.card);
+      quickTaskTypes = quickTasks.map(task => task.type);
+      quickLearningMode = true;
+      quizMode = true;
+      practiceMode = 'quiz';
+      practiceScope = 'all';
+      practiceReturnView = 'quick';
+      quizType = 'quick';
+      quizCorrectCount = 0;
+      quizAnsweredCount = 0;
+      quizAwaitingNext = false;
+      initialQueueLength = count;
+      hideAllViews();
+      document.getElementById('view-study').classList.remove('hidden');
+      document.getElementById('study-mode-label').innerText = '⚡ Быстрое обучение';
+      document.getElementById('quiz-panel').classList.remove('hidden');
+      document.getElementById('quiz-panel').classList.add('flex');
+      document.getElementById('card-area').classList.add('hidden');
+      document.querySelector('.study-answer-actions').classList.add('hidden');
+      loadNextCard();
+    }
+
+    function renderQuickQuestion() {
+      currentQuickTask = {card: currentStudyCard, type: quickTaskTypes[0] || 'flip'};
+      const card = currentQuickTask.card, type = currentQuickTask.type;
+      const prompt = document.getElementById('quiz-prompt');
+      const label = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
+      const hint = document.querySelector('#quiz-panel .text-sm.theme-text-muted');
+      const options = document.getElementById('quiz-options');
+      const feedback = document.getElementById('quiz-feedback');
+      options.innerHTML = ''; prompt.innerHTML = '';
+      feedback.classList.add('hidden'); feedback.innerText = '';
+      document.getElementById('quiz-next-btn').classList.add('hidden');
+      quizAwaitingNext = false;
+
+      const addButton = (text, handler, cls='quiz-option') => {
+        const b=document.createElement('button'); b.type='button'; b.className=cls; b.innerText=text;
+        b.addEventListener('click',handler); options.appendChild(b); return b;
+      };
+      const addAudio = () => {
+        const b=document.createElement('button'); b.type='button';
+        b.className='btn-secondary mx-auto flex items-center justify-center gap-2 px-5 py-3 rounded-2xl mb-3';
+        b.innerText='🔊 Прослушать слово'; b.addEventListener('click',()=>speakGerman(card.front)); prompt.appendChild(b);
+      };
+      const addInput = (placeholder, expected) => {
+        const form=document.createElement('form'); form.className='w-full flex flex-col gap-3 mt-3';
+        const input=document.createElement('input'); input.type='text'; input.autocomplete='off'; input.autocapitalize='none';
+        input.spellcheck=false; input.className='form-input w-full text-center'; input.placeholder=placeholder;
+        const submit=document.createElement('button'); submit.type='submit'; submit.className='btn-primary w-full'; submit.innerText='Проверить';
+        form.addEventListener('submit',e=>{
+          e.preventDefault(); if(quizAwaitingNext) return;
+          const value=normalizeDictationAnswer(input.value);
+          if(!value) return showToast('Сначала введи ответ');
+          input.disabled=true; submit.disabled=true;
+          answerQuickTask(value===normalizeDictationAnswer(expected));
+        });
+        form.append(input,submit); options.appendChild(form); setTimeout(()=>input.focus(),0);
+      };
+
+      if(type==='flip') {
+        if(label) label.innerText='Карточка · Вспомни перевод';
+        if(hint) hint.innerText='Попробуй вспомнить значение, затем открой ответ.';
+        prompt.innerText=card.front;
+        addButton('Показать перевод',()=>{
+          options.innerHTML='';
+          const panel=document.createElement('div'); panel.className='theme-card border rounded-2xl p-4 text-center mb-2';
+          const translation=document.createElement('div'); translation.className='font-bold text-lg'; translation.innerText=card.back; panel.appendChild(translation);
+          if(card.description){const d=document.createElement('p');d.className='card-description text-sm theme-text-muted mt-3';d.innerText=card.description;panel.appendChild(d);}
+          options.appendChild(panel);
+          addButton('Знал',()=>answerQuickTask(true),'btn-primary w-full');
+          addButton('Нужно повторить',()=>answerQuickTask(false),'btn-secondary w-full');
+        },'btn-primary w-full');
+      } else if(type==='choice' || type==='listen-choice') {
+        if(label) label.innerText=type==='choice'?'Тест · Выбери слово':'Аудирование · Выбери перевод';
+        if(hint) hint.innerText=type==='choice'?'Как это будет по-немецки?':'Прослушай слово и выбери его перевод.';
+        if(type==='choice') prompt.innerText=card.back; else addAudio();
+        const correct=type==='choice'?card.front:card.back;
+        const pool=cards.filter(item=>item.id!==card.id)
+          .map(item=>String(type==='choice'?item.front:item.back||'').trim())
+          .filter(v=>v&&v.toLocaleLowerCase()!==String(correct).toLocaleLowerCase());
+        const distractors=[...new Set(pool)].sort(()=>Math.random()-.5).slice(0,3);
+        [correct,...distractors].sort(()=>Math.random()-.5).forEach(value=>
+          addButton(value,()=>answerQuickTask(value.toLocaleLowerCase()===String(correct).toLocaleLowerCase())));
+      } else {
+        if(label) label.innerText=type==='write'?'Письмо · Напиши по-немецки':'Диктант · Напиши услышанное';
+        if(hint) hint.innerText=type==='write'?'Вспомни немецкое слово или выражение.':'Прослушай и запиши немецкое слово или выражение.';
+        if(type==='write') prompt.innerText=card.back; else addAudio();
+        addInput(type==='write'?'Введи немецкий вариант':'Напиши услышанное',card.front);
+      }
+      document.getElementById('study-counter').innerText=`Задание ${quizAnsweredCount+1} из ${initialQueueLength}`;
+      const bar=document.getElementById('study-progress-fill');
+      if(bar) bar.style.width=`${initialQueueLength?quizAnsweredCount/initialQueueLength*100:0}%`;
+    }
+
+    function answerQuickTask(correct) {
+      if(quizAwaitingNext||!currentQuickTask) return;
+      quizAwaitingNext=true;
+      const card=currentQuickTask.card;
+      if(correct){quizCorrectCount++;card.weakCount=Math.max(0,(Number(card.weakCount)||0)-1);}
+      else card.weakCount=(Number(card.weakCount)||0)+1;
+      recordAnswer(correct); saveData(); quizAnsweredCount++;
+      const feedback=document.getElementById('quiz-feedback');
+      feedback.classList.remove('hidden');
+      feedback.className=`rounded-2xl border p-4 mt-5 text-sm font-semibold ${correct?'border-green-500/40 bg-green-500/10':'border-rose-500/40 bg-rose-500/10'}`;
+      feedback.innerText=correct?'Верно! Отличная работа.':`Правильный ответ: ${card.front} · ${card.back}`;
+      studyQueue.shift(); quickTaskTypes.shift();
+      document.getElementById('study-counter').innerText=`Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
+      const bar=document.getElementById('study-progress-fill'); if(bar) bar.style.width=`${quizAnsweredCount/initialQueueLength*100}%`;
+      const next=document.getElementById('quiz-next-btn'); next.classList.remove('hidden');
+      next.innerText=studyQueue.length?'Следующее задание':'Завершить тренировку';
     }
 
     function startChoiceQuiz(scope = 'deck') {
@@ -1921,11 +2099,13 @@
       practiceMode = false;
       quizMode = false;
       quizType = 'choice';
+      quickLearningMode = false; quickTasks = []; quickTaskTypes = []; currentQuickTask = null;
       document.getElementById('quiz-panel').classList.add('hidden');
       document.getElementById('card-area').classList.remove('hidden');
       document.querySelector('.study-answer-actions').classList.remove('hidden');
       if (returnView === 'home') switchMainTab('home');
       else if (returnView === 'practice') switchMainTab('practice');
+      else if (returnView === 'quick') switchMainTab('quick');
       else openDeck(currentDeckId);
     }
 
@@ -1938,14 +2118,16 @@
         practiceMode = false;
         quizMode = false;
         quizType = 'choice';
+        quickLearningMode = false; quickTasks = []; quickTaskTypes = []; currentQuickTask = null;
         document.getElementById('quiz-panel').classList.add('hidden');
         document.getElementById('quiz-panel').classList.remove('flex');
         document.getElementById('card-area').classList.remove('hidden');
         document.querySelector('.study-answer-actions').classList.remove('hidden');
-        if (wasPractice || returnView === 'practice') {
+        if (wasPractice || returnView === 'practice' || returnView === 'quick') {
           if (wasPractice) showToast(resultText);
           if (returnView === 'home') switchMainTab('home');
           else if (returnView === 'practice') switchMainTab('practice');
+          else if (returnView === 'quick') switchMainTab('quick');
           else openDeck(currentDeckId);
         } else {
           openDeck(currentDeckId);
@@ -1953,6 +2135,14 @@
         return;
       }
       currentStudyCard = studyQueue[0]; isFlipped = false; isProcessingAnswer = false;
+      if (quickLearningMode) {
+        document.getElementById('quiz-panel').classList.remove('hidden');
+        document.getElementById('quiz-panel').classList.add('flex');
+        document.getElementById('card-area').classList.add('hidden');
+        document.querySelector('.study-answer-actions').classList.add('hidden');
+        renderQuickQuestion();
+        return;
+      }
       if (quizMode) {
         document.getElementById('quiz-panel').classList.remove('hidden');
         document.getElementById('quiz-panel').classList.add('flex');
@@ -1977,6 +2167,12 @@
       }
       document.getElementById('study-front').innerText = currentStudyCard.front; 
       document.getElementById('study-back').innerText = currentStudyCard.back;
+      const descriptionEl = document.getElementById('study-description');
+      if (descriptionEl) {
+        const description = String(currentStudyCard.description || '').trim();
+        descriptionEl.innerText = description;
+        descriptionEl.classList.toggle('hidden', !description);
+      }
 
       const frontBg = document.getElementById('study-card-front-bg');
       const badge = document.getElementById('study-gender-badge');
