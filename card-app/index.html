@@ -104,8 +104,8 @@
     }
 
     .theme-text-muted { color: var(--text-muted); }
-    .theme-accent { background: var(--accent); color: #fff; box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 28%, transparent); }
-    .theme-accent:active { background: var(--accent-hover); }
+    .theme-accent { background: color-mix(in srgb, var(--accent) 17%, var(--card-bg)); color: var(--text-color); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--card-border)); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 7px 18px rgba(0,0,0,.07); }
+    .theme-accent:active { background: color-mix(in srgb, var(--accent) 25%, var(--card-bg)); }
     .theme-accent-text { color: var(--accent); }
 
     /* Три рода сохраняют цветовую подсказку, но не перекрывают стекло. */
@@ -162,6 +162,34 @@
     .app-tabbar button { min-height: 54px; }
     .app-toast { bottom: calc(104px + var(--safe-bottom)); }
 
+    /* Stage 2: consistent controls and a calmer editorial layout. */
+    .app-nav { padding: calc(18px + var(--safe-top)) 24px 14px; min-height: 76px; }
+    .brand-mark { width: 34px; height: 34px; display:grid; place-items:center; border-radius:12px; color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); border:1px solid color-mix(in srgb, var(--accent) 20%, transparent); }
+    .btn-primary, .btn-secondary, .btn-soft {
+      display:inline-flex; align-items:center; justify-content:center; gap:9px;
+      min-height:48px; padding:0 18px; border-radius:16px; font-size:14px; font-weight:700;
+      transition:transform .18s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .btn-primary { color:var(--text-color); background:color-mix(in srgb, var(--accent) 16%, var(--card-bg)); border:1px solid color-mix(in srgb, var(--accent) 30%, var(--card-border)); box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 7px 18px rgba(0,0,0,.07); }
+    .btn-primary:hover { background:color-mix(in srgb, var(--accent) 23%, var(--card-bg)); }
+    .btn-secondary { color:var(--text-color); background:var(--card-bg); border:1px solid var(--card-border); box-shadow:var(--glass-shadow); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+    .btn-soft { color:var(--text-muted); background:transparent; border:1px solid transparent; }
+    .btn-primary:active, .btn-secondary:active, .btn-soft:active { transform:scale(.975); }
+    .home-intro { padding: 12px 2px 4px; }
+    .home-eyebrow { color:var(--accent); font-size:10px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+    .home-stat { border:1px solid var(--card-border); border-radius:22px; padding:15px 16px; background:var(--card-bg); -webkit-backdrop-filter:blur(20px) saturate(150%); backdrop-filter:blur(20px) saturate(150%); box-shadow:var(--glass-shadow); }
+    .deck-tile { min-height:112px; padding:17px; border-radius:24px; display:flex; align-items:center; gap:14px; cursor:pointer; }
+    .deck-symbol { width:44px; height:44px; flex:0 0 44px; display:grid; place-items:center; border-radius:16px; color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); border:1px solid color-mix(in srgb, var(--accent) 18%, transparent); }
+    .deck-open { width:30px; height:30px; display:grid; place-items:center; color:var(--text-muted); border-radius:10px; }
+    .empty-state { border:1px dashed color-mix(in srgb, var(--text-muted) 35%, transparent); border-radius:26px; padding:30px 22px; text-align:center; background:color-mix(in srgb, var(--card-bg) 60%, transparent); }
+    .action-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .app-tabbar button { color:var(--text-muted); }
+    .app-tabbar button.active-tab { color:var(--accent); background:color-mix(in srgb, var(--accent) 13%, transparent); }
+    .app-tabbar button.active-tab svg { opacity:1; }
+    .app-tabbar svg { width:19px; height:19px; opacity:.78; }
+    @media (min-width: 700px) { #view-home { padding-top:28px; } .home-intro h2 { font-size:34px; } }
+    @media (max-width: 380px) { .home-stat { padding:13px; } .deck-tile { padding:14px; } }
+
     .perspective-1000 { perspective: 1200px; }
     .preserve-3d { transform-style: preserve-3d; }
     .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
@@ -187,40 +215,64 @@
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
 
-  <!-- ================= NAV BAR (БЕЗ ЛИНИЙ, ПО ЦЕНТРУ) ================= -->
-  <nav class="app-nav pt-14 pb-4 px-6 flex items-center justify-center z-10 relative">
-    <h1 class="text-lg font-bold theme-accent-text cursor-pointer flex items-center gap-2 tracking-tight" onclick="goHome()">
-      <span>🪴</span> <span>HankeCards</span>
+  <!-- ================= APP HEADER ================= -->
+  <nav class="app-nav px-6 pb-4 flex items-center justify-between z-10 relative">
+    <h1 class="text-base font-extrabold cursor-pointer flex items-center gap-3 tracking-tight" onclick="goHome()">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V7.5A2.5 2.5 0 0 1 7.5 5h9A2.5 2.5 0 0 1 19 7.5V19"/><path d="M8 9h8M8 13h5M8 17h8"/></svg></span>
+      <span>HankeCards</span>
     </h1>
-    <div id="nav-actions" class="absolute right-6 text-sm font-semibold flex gap-3 items-center"></div>
+    <div id="nav-actions" class="text-sm font-semibold flex gap-2 items-center"></div>
   </nav>
 
   <!-- ================= TOAST ================= -->
   <div id="toast" class="app-toast fixed bottom-28 left-1/2 -translate-x-1/2 theme-card border text-inherit px-6 py-3 rounded-full shadow-2xl z-[100] toast-enter pointer-events-none flex items-center gap-2 whitespace-nowrap">
-    <span id="toast-icon">✨</span>
+    <span id="toast-icon" class="w-2 h-2 rounded-full bg-current opacity-70"></span>
     <span id="toast-msg" class="text-sm font-medium">Уведомление</span>
   </div>
 
   <!-- ================= FLOATING GLASS BOTTOM TABS ================= -->
-  <div class="app-tabbar fixed bottom-6 left-6 right-6 max-w-md mx-auto theme-card border rounded-3xl flex justify-around p-2.5 z-40 text-xs font-semibold shadow-[0_15px_35px_rgba(0,0,0,0.12)]">
-    <button onclick="switchMainTab('home')" id="tab-home" class="flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="text-lg">📚</span><span>Колоды</span>
+  <div class="app-tabbar fixed bottom-6 left-6 right-6 max-w-md mx-auto border rounded-3xl flex justify-around p-2.5 z-40 text-xs font-semibold">
+    <button onclick="switchMainTab('home')" id="tab-home" class="active-tab flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5z"/><path d="M4 7h13M8 9v8"/></svg><span>Колоды</span>
     </button>
     <button onclick="switchMainTab('mastered')" id="tab-mastered" class="flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="text-lg">🎓</span><span>Выучил</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.5-4.6 2.5.9-5.2-3.8-3.7 5.2-.8z"/><path d="m9 20 3 1 3-1"/></svg><span>Выучил</span>
     </button>
     <button onclick="switchMainTab('settings')" id="tab-settings" class="flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="text-lg">⚙️</span><span>Настройки</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2z" transform="translate(-1 -1) scale(1.08)"/></svg><span>Настройки</span>
     </button>
   </div>
 
   <!-- ================= VIEW: DECKS (HOME) ================= -->
-  <main id="view-home" class="flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
-    <div class="flex justify-between items-center mb-6 pt-2">
-      <h2 class="text-2xl font-black tracking-tight">Мои колоды</h2>
-      <button onclick="createNewDeck()" class="theme-accent-text text-sm font-bold theme-card border px-4 py-2.5 rounded-2xl active:scale-95 transition-transform shadow-sm">+ Создать</button>
+  <main id="view-home" class="flex-1 flex flex-col px-6 pt-3 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
+    <section class="home-intro mb-6">
+      <p class="home-eyebrow mb-3">Dein Wortschatz</p>
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <h2 class="text-3xl font-black tracking-tight leading-tight">Мои колоды</h2>
+          <p class="text-sm theme-text-muted mt-2">Немецкий, слово за словом.</p>
+        </div>
+        <button onclick="createNewDeck()" class="btn-primary shrink-0" aria-label="Создать колоду">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Создать
+        </button>
+      </div>
+    </section>
+    <section class="grid grid-cols-2 gap-3 mb-8" aria-label="Статистика словаря">
+      <div class="home-stat">
+        <p class="text-[10px] font-bold theme-text-muted uppercase tracking-widest">Всего колод</p>
+        <p id="home-total" class="text-2xl font-black tracking-tight mt-2">0</p>
+      </div>
+      <div class="home-stat">
+        <p class="text-[10px] font-bold theme-text-muted uppercase tracking-widest">К повторению</p>
+        <p id="home-due" class="text-2xl font-black tracking-tight mt-2 theme-accent-text">0</p>
+      </div>
+    </section>
+    <div class="flex items-center justify-between mb-4 px-1">
+      <h3 class="text-base font-bold tracking-tight">Твои наборы</h3>
+      <span class="text-xs theme-text-muted">Открывай, чтобы продолжить</span>
     </div>
-    <div id="decks-container" class="space-y-4"></div>
+    <div id="decks-container" class="space-y-3"></div>
   </main>
 
   <!-- ================= MODAL: DECK OPTIONS ================= -->
@@ -228,8 +280,8 @@
     <div class="theme-card w-full max-w-md mx-auto rounded-t-3xl border-t p-6 transform transition-transform shadow-2xl">
       <h3 id="menu-deck-title" class="text-lg font-bold mb-4 border-b border-black/10 dark:border-white/10 pb-4">Опции колоды</h3>
       <button onclick="renameDeck()" class="w-full text-left py-3.5 font-medium text-base active:opacity-70">✏️ Переименовать</button>
-      <button onclick="exportSingleDeck()" class="w-full text-left py-3.5 font-medium text-base text-emerald-500 active:opacity-70">📤 Экспорт колоды</button>
-      <button onclick="deleteDeck()" class="w-full text-left py-3.5 font-medium text-base text-rose-500 active:opacity-70">🗑️ Удалить колоду</button>
+      <button onclick="exportSingleDeck()" class="w-full text-left py-3.5 font-medium text-base text-emerald-500 active:opacity-70">Экспорт колоды</button>
+      <button onclick="deleteDeck()" class="w-full text-left py-3.5 font-medium text-base text-rose-500 active:opacity-70">Удалить колоду</button>
       <button onclick="closeDeckMenu()" class="w-full mt-2 py-3.5 theme-card border rounded-2xl font-bold active:scale-[0.98]">Отмена</button>
     </div>
   </div>
@@ -241,7 +293,7 @@
       
       <div class="flex justify-between items-end mb-1">
         <label class="text-xs theme-text-muted font-bold uppercase block tracking-wider">Слово (с артиклем)</label>
-        <button onclick="autoTranslateEdit()" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-xl active:opacity-70">🪄 Перевести</button>
+        <button onclick="autoTranslateEdit()" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-xl active:opacity-70">Перевести</button>
       </div>
       <input id="edit-front" type="text" class="w-full p-4 mb-3 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500">
       
@@ -250,15 +302,15 @@
       
       <div class="flex gap-3 mb-3">
         <button onclick="closeEditCard()" class="flex-1 py-3.5 theme-card border rounded-2xl font-bold active:scale-[0.98]">Отмена</button>
-        <button onclick="saveEditedCard()" class="flex-1 py-3.5 theme-accent rounded-2xl font-bold active:scale-[0.98]">Сохранить</button>
+        <button onclick="saveEditedCard()" class="flex-1 btn-primary">Сохранить</button>
       </div>
-      <button onclick="deleteCard()" class="w-full py-3 text-rose-500 font-bold border border-rose-500/30 rounded-2xl active:bg-rose-500/10">🗑️ Удалить карточку</button>
+      <button onclick="deleteCard()" class="w-full py-3 text-rose-500 font-bold border border-rose-500/30 rounded-2xl active:bg-rose-500/10">Удалить карточку</button>
     </div>
   </div>
 
   <!-- ================= VIEW: MASTERED ================= -->
   <main id="view-mastered" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
-    <h2 class="text-2xl font-black tracking-tight mb-2 pt-2">Выученные слова 🏆</h2>
+    <h2 class="text-2xl font-black tracking-tight mb-2 pt-2">Выученные слова</h2>
     <p class="text-sm theme-text-muted mb-6">Слова, которые прошли весь цикл (4+ дня).</p>
     <div id="mastered-container" class="space-y-3"></div>
   </main>
@@ -289,12 +341,12 @@
     <h2 class="text-2xl font-black tracking-tight mb-6">Данные</h2>
     <div class="space-y-4">
       <button onclick="exportToFile()" class="w-full theme-card border py-4 rounded-2xl font-bold flex justify-center items-center gap-2 active:scale-[0.98]">
-        <span>📤</span> Скачать резервную копию
+        <span></span> Скачать резервную копию
       </button>
       <div class="relative">
         <input type="file" id="file-import" accept=".json" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="importFromFile(event)">
-        <button class="w-full theme-accent py-4 rounded-2xl font-bold shadow-lg flex justify-center items-center gap-2 pointer-events-none">
-          <span>📥</span> Загрузить из файла
+        <button class="w-full btn-secondary pointer-events-none">
+          <span></span> Загрузить из файла
         </button>
       </div>
     </div>
@@ -316,12 +368,14 @@
         </div>
       </div>
       <div class="space-y-3">
-        <button onclick="startStudy()" class="w-full theme-accent font-bold py-4 rounded-2xl shadow-lg active:scale-[0.98] transition-transform">
-          Учить карточки
-        </button>
-        <button onclick="startSpellingMode()" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl border border-emerald-500 active:scale-[0.98] transition-transform">
-          Написание
-        </button>
+        <div class="action-row">
+          <button onclick="startStudy()" class="btn-primary w-full">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.8A2.8 2.8 0 0 1 7.8 3H20v16H7.8A2.8 2.8 0 0 1 5 16.2z"/><path d="M9 8h7M9 12h7"/></svg>Учить
+          </button>
+          <button onclick="startSpellingMode()" class="btn-secondary w-full">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 10h10M4 15h16M4 20h10"/><path d="m17 9 3 3-3 3"/></svg>Написание
+          </button>
+        </div>
       </div>
     </div>
     <div class="mt-2 mb-4 flex justify-between items-center px-1">
@@ -338,7 +392,7 @@
       <div>
         <div class="flex justify-between items-end mb-1">
           <label class="text-xs theme-text-muted uppercase font-bold tracking-wider">Слово или фраза</label>
-          <button onclick="autoTranslate('input-front', 'input-back')" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-xl active:opacity-70">🪄 Умный перевод</button>
+          <button onclick="autoTranslate('input-front', 'input-back')" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-xl active:opacity-70">Умный перевод</button>
         </div>
         <input id="input-front" type="text" class="w-full p-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium" placeholder="Например: Stuhl">
       </div>
@@ -346,7 +400,7 @@
         <label class="text-xs theme-text-muted uppercase font-bold tracking-wider">Перевод</label>
         <input id="input-back" type="text" class="w-full mt-1 p-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium">
       </div>
-      <button onclick="saveNewCard()" class="w-full py-4 mt-2 theme-accent rounded-2xl font-bold shadow-lg transition-transform active:scale-[0.98]">
+      <button onclick="saveNewCard()" class="w-full btn-primary mt-2">
         Сохранить в колоду
       </button>
     </div>
@@ -362,7 +416,7 @@
       <p class="text-sm theme-text-muted uppercase tracking-widest mb-2 font-bold">Напиши по-немецки (с артиклем):</p>
       <h2 id="spell-prompt" class="text-3xl font-bold text-center mb-10">Перевод</h2>
       <input id="spell-input" type="text" class="w-full p-4 rounded-2xl bg-transparent theme-card border text-center text-xl font-bold mb-4 focus:outline-none focus:border-indigo-500" placeholder="Введи слово..." autocomplete="off">
-      <button onclick="checkSpelling()" class="w-full theme-accent py-4 rounded-2xl font-bold shadow-lg active:scale-[0.98]">Проверить</button>
+      <button onclick="checkSpelling()" class="w-full btn-primary">Проверить</button>
     </div>
   </main>
 
@@ -409,11 +463,11 @@
     setTheme(localStorage.getItem('mytheme') || 'light', true);
     function setTheme(themeName, isInit = false) {
       document.body.setAttribute('data-theme', themeName); localStorage.setItem('mytheme', themeName);
-      if(!isInit) showToast('Тема обновлена ✨');
+      if(!isInit) showToast('Тема обновлена ');
     }
 
     let toastTimeout;
-    function showToast(msg, icon = '✨') {
+    function showToast(msg, icon = '•') {
       const toast = document.getElementById('toast');
       document.getElementById('toast-msg').innerText = msg; document.getElementById('toast-icon').innerText = icon;
       toast.classList.remove('toast-enter'); toast.classList.add('toast-active');
@@ -433,9 +487,9 @@
       ['home', 'mastered', 'settings'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if(t === tab) {
-          btn.className = "flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all theme-accent shadow-sm scale-105";
+          btn.className = "active-tab flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all";
         } else {
-          btn.className = "flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all theme-text-muted hover:opacity-80";
+          btn.className = "flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all";
         }
       });
 
@@ -453,22 +507,39 @@
     }
 
     function renderDecks() {
-      const container = document.getElementById('decks-container'); container.innerHTML = '';
+      const container = document.getElementById('decks-container');
+      container.innerHTML = '';
+      let totalDue = 0;
       decks.forEach(deck => {
         const deckCards = cards.filter(c => c.deckId === deck.id && c.srsLevel < 4);
         const dueCount = deckCards.filter(c => c.nextReview <= Date.now()).length;
-        container.innerHTML += `
-          <div class="theme-card border rounded-3xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition-all relative">
-            <div onclick="openDeck('${deck.id}')" class="flex-1 cursor-pointer">
-              <h3 class="text-lg font-bold tracking-tight">${deck.name}</h3>
-              <p class="text-xs theme-text-muted mt-1 font-medium">В процессе: ${deckCards.length}</p>
+        totalDue += dueCount;
+        const tile = document.createElement('div');
+        tile.className = 'theme-card border deck-tile hover:shadow-md transition-all';
+        tile.innerHTML = `
+          <div class="deck-symbol" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.8A2.8 2.8 0 0 1 7.8 3H20v16H7.8A2.8 2.8 0 0 1 5 16.2z"/><path d="M5 7h11M9 10v6"/></svg>
+          </div>
+          <div class="min-w-0 flex-1" onclick="openDeck('${deck.id}')">
+            <h3 class="text-[15px] font-bold tracking-tight truncate">${deck.name}</h3>
+            <p class="text-xs theme-text-muted mt-1.5">${deckCards.length} ${deckCards.length === 1 ? 'слово' : 'слов'} в процессе</p>
+            <div class="flex items-center gap-2 mt-3">
+              ${dueCount > 0 ? `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full theme-accent-text" style="background:color-mix(in srgb, var(--accent) 12%, transparent)">${dueCount} к повторению</span>` : `<span class="text-[10px] font-semibold theme-text-muted">Всё повторено</span>`}
             </div>
-            <div class="flex items-center gap-3">
-              ${dueCount > 0 ? `<div class="theme-accent text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm">${dueCount} ждет</div>` : ''}
-              <button onclick="openDeckMenu('${deck.id}', '${deck.name}')" class="text-xl px-2 py-1 theme-text-muted active:text-white">⋮</button>
-            </div>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <button onclick="openDeckMenu('${deck.id}', '${deck.name.replace(/'/g, "\\'")}')" class="deck-open" aria-label="Опции колоды">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+            </button>
+            <svg onclick="openDeck('${deck.id}')" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="theme-text-muted"><path d="m9 18 6-6-6-6"/></svg>
           </div>`;
+        container.appendChild(tile);
       });
+      document.getElementById('home-total').innerText = decks.length;
+      document.getElementById('home-due').innerText = totalDue;
+      if (!decks.length) {
+        container.innerHTML = `<div class="empty-state"><div class="brand-mark mx-auto mb-4"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5.8A2.8 2.8 0 0 1 7.8 3H20v16H7.8A2.8 2.8 0 0 1 5 16.2z"/></svg></div><h3 class="font-bold text-base">Пока нет колод</h3><p class="text-sm theme-text-muted mt-2 mb-5">Создай первую колоду и собирай в ней немецкие слова.</p><button onclick="createNewDeck()" class="btn-primary">Создать первую колоду</button></div>`;
+      }
     }
 
     function openDeckMenu(id, name) {
@@ -483,26 +554,26 @@
     function deleteDeck() {
       if(confirm("Удалить колоду и ВСЕ слова внутри?")) {
         decks = decks.filter(d => d.id !== currentMenuDeckId); cards = cards.filter(c => c.deckId !== currentMenuDeckId);
-        saveData(); renderDecks(); closeDeckMenu(); showToast('Колода удалена 🗑️');
+        saveData(); renderDecks(); closeDeckMenu(); showToast('Колода удалена ');
       }
     }
     function createNewDeck() {
       const name = prompt("Название новой колоды:");
-      if (name && name.trim()) { decks.push({ id: Date.now().toString(), name: name.trim() }); saveData(); renderDecks(); showToast('Создано 📁'); }
+      if (name && name.trim()) { decks.push({ id: Date.now().toString(), name: name.trim() }); saveData(); renderDecks(); showToast('Создано '); }
     }
     function exportSingleDeck() {
       const deck = decks.find(d => d.id === currentMenuDeckId), deckCards = cards.filter(c => c.deckId === currentMenuDeckId);
       const data = JSON.stringify({ isSingleDeck: true, decks: [deck], cards: deckCards });
       const blob = new Blob([data], { type: 'application/json' }), url = URL.createObjectURL(blob), a = document.createElement('a');
       a.href = url; a.download = `HankeCards_Deck_${deck.name}.json`; a.click(); URL.revokeObjectURL(url);
-      closeDeckMenu(); showToast('Колода экспортирована 📁');
+      closeDeckMenu(); showToast('Колода экспортирована ');
     }
 
     function openDeck(id) {
       currentDeckId = id; hideAllViews(); document.getElementById('view-deck').classList.remove('hidden');
       const deck = decks.find(d => d.id === id), deckCards = cards.filter(c => c.deckId === id && c.srsLevel < 4), dueCards = deckCards.filter(c => c.nextReview <= Date.now());
       document.getElementById('deck-title').innerText = deck.name; document.getElementById('deck-due').innerText = dueCards.length; document.getElementById('deck-total').innerText = deckCards.length;
-      document.getElementById('nav-actions').innerHTML = `<button onclick="openAddCard()" class="px-4 py-2 theme-card border rounded-2xl font-bold text-xs shadow-sm">+ Добавить</button>`;
+      document.getElementById('nav-actions').innerHTML = `<button onclick="openAddCard()" class="btn-secondary" style="min-height:40px;padding:0 13px;font-size:12px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Добавить</button>`;
       renderDeckVocab();
     }
     function openAddCard() { hideAllViews(); document.getElementById('view-add').classList.remove('hidden'); document.getElementById('nav-actions').innerHTML = `<button onclick="openDeck('${currentDeckId}')" class="font-bold text-xs">Назад</button>`; }
@@ -530,7 +601,7 @@
     function closeEditCard() { document.getElementById('edit-card-modal').classList.add('hidden'); document.getElementById('edit-card-modal').classList.remove('flex'); }
     function saveEditedCard() {
       const front = document.getElementById('edit-front').value.trim(), back = document.getElementById('edit-back').value.trim();
-      if(!front || !back) return showToast('Заполни поля', '⚠️');
+      if(!front || !back) return showToast('Заполни поля', '');
       const card = cards.find(c => c.id === currentEditCardId); 
       card.front = front; 
       card.back = back;
@@ -538,12 +609,12 @@
       saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Сохранено ✅');
     }
     function deleteCard() {
-      if(confirm('Удалить эту карточку?')) { cards = cards.filter(c => c.id !== currentEditCardId); saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Удалено 🗑️'); }
+      if(confirm('Удалить эту карточку?')) { cards = cards.filter(c => c.id !== currentEditCardId); saveData(); closeEditCard(); openDeck(currentDeckId); showToast('Удалено '); }
     }
 
     async function autoTranslate(frontId, backId) {
       const inputFront = document.getElementById(frontId), inputBack = document.getElementById(backId);
-      let text = inputFront.value.trim(); if (!text) return showToast('Напиши слово!', '⚠️'); showToast('Перевожу...', '⏳');
+      let text = inputFront.value.trim(); if (!text) return showToast('Напиши слово!', ''); showToast('Перевожу...', '⏳');
       try {
         const isRussian = /[а-яА-ЯёЁ]/.test(text), langPair = isRussian ? 'ru|de' : 'de|ru';
         const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
@@ -557,24 +628,24 @@
             inputBack.value = translated; 
           }
           showToast('Переведено!', '✅');
-        } else { showToast('Не найдено 😕', '⚠️'); }
+        } else { showToast('Не найдено ', ''); }
       } catch (e) { showToast('Ошибка сети API', '❌'); }
     }
     function autoTranslateEdit() { autoTranslate('edit-front', 'edit-back'); }
 
     function saveNewCard() {
       const front = document.getElementById('input-front').value.trim(), back = document.getElementById('input-back').value.trim();
-      if (!front || !back) return showToast('Заполни поля', '⚠️');
+      if (!front || !back) return showToast('Заполни поля', '');
       const gender = parseGender(front);
       cards.push({ id: Date.now().toString() + Math.floor(Math.random()*100), deckId: currentDeckId, front, back, gender, srsLevel: 0, nextReview: Date.now() });
       saveData(); document.getElementById('input-front').value = ''; document.getElementById('input-back').value = '';
-      showToast('Добавлено! 🃏'); openDeck(currentDeckId);
+      showToast('Добавлено! '); openDeck(currentDeckId);
     }
 
     function startStudy() {
       const deckCards = cards.filter(c => c.deckId === currentDeckId && c.srsLevel < 4);
       studyQueue = deckCards.filter(c => c.nextReview <= Date.now()).sort((a,b) => a.nextReview - b.nextReview);
-      if (studyQueue.length === 0) return showToast('Всё повторено! Отдохни 🍵');
+      if (studyQueue.length === 0) return showToast('Всё повторено! Отдохни ');
       initialQueueLength = studyQueue.length; hideAllViews(); document.getElementById('view-study').classList.remove('hidden'); loadNextCard();
     }
     
@@ -613,10 +684,10 @@
       const cardIndex = cards.findIndex(c => c.id === currentStudyCard.id);
       if (direction === 'right') {
         cards[cardIndex].srsLevel++; if(cards[cardIndex].srsLevel < 4) cards[cardIndex].nextReview = Date.now() + (SRS_INTERVALS[cards[cardIndex].srsLevel] * 60 * 1000);
-        studyQueue.shift(); if(cards[cardIndex].srsLevel >= 4) showToast('Выучено! 🌟');
+        studyQueue.shift(); if(cards[cardIndex].srsLevel >= 4) showToast('Выучено! ');
       } else {
         cards[cardIndex].srsLevel = 0; cards[cardIndex].nextReview = Date.now();
-        studyQueue.push(studyQueue.shift()); showToast('Повторим еще раз 🔄');
+        studyQueue.push(studyQueue.shift()); showToast('Повторим еще раз ');
       }
       saveData();
       const swipeCont = document.getElementById('swipe-container'); swipeCont.style.transition = 'transform 0.3s ease, opacity 0.3s';
@@ -656,13 +727,13 @@
     function renderMastered() {
       const container = document.getElementById('mastered-container'); const masteredCards = cards.filter(c => c.srsLevel >= 4); container.innerHTML = '';
       if(masteredCards.length === 0) return container.innerHTML = '<p class="text-sm theme-text-muted">Пока тут пусто.</p>';
-      masteredCards.forEach(c => { container.innerHTML += `<div class="theme-card border p-4 rounded-2xl flex justify-between items-center shadow-sm"><div><p class="font-bold">${c.front}</p><p class="text-xs theme-text-muted">${c.back}</p></div><span class="text-2xl">🌟</span></div>`; });
+      masteredCards.forEach(c => { container.innerHTML += `<div class="theme-card border p-4 rounded-2xl flex justify-between items-center shadow-sm"><div><p class="font-bold">${c.front}</p><p class="text-xs theme-text-muted">${c.back}</p></div><span class="text-2xl"></span></div>`; });
     }
     
     function exportToFile() {
       const blob = new Blob([JSON.stringify({ decks, cards, isSingleDeck: false })], { type: 'application/json' });
       const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = `HankeCards_Backup_${new Date().toISOString().split('T')[0]}.json`;
-      a.click(); URL.revokeObjectURL(url); showToast('Резервная копия скачана! 📁');
+      a.click(); URL.revokeObjectURL(url); showToast('Резервная копия скачана! ');
     }
     function importFromFile(event) {
       const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
@@ -674,10 +745,10 @@
               const newDeckId = Date.now().toString() + Math.floor(Math.random()*100);
               decks.push({ ...parsed.decks[0], id: newDeckId });
               parsed.cards.forEach(c => cards.push({ ...c, id: Date.now().toString() + Math.floor(Math.random()*1000), deckId: newDeckId }));
-              showToast('Колода успешно импортирована! 📥');
+              showToast('Колода успешно импортирована! ');
             } else {
               if(confirm('Заменить текущие данные резервной копией? Все текущие слова будут стерты!')) {
-                decks = parsed.decks; cards = parsed.cards; showToast('Данные восстановлены! 🚀');
+                decks = parsed.decks; cards = parsed.cards; showToast('Данные восстановлены! ');
               } else return;
             }
             saveData(); renderDecks();
