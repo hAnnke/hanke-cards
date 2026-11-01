@@ -350,6 +350,15 @@
     }
     .vocab-search-wrap input::placeholder { color:var(--text-muted); opacity:.8; }
 
+
+    .audio-button {
+      min-height:36px; display:inline-flex; align-items:center; justify-content:center; gap:7px;
+      padding:0 13px; border:1px solid var(--card-border); border-radius:999px;
+      color:var(--text-muted); background:color-mix(in srgb, var(--card-bg) 84%, transparent);
+      font-size:12px; font-weight:700; transition:transform .16s ease, color .2s ease;
+    }
+    .audio-button:active { transform:scale(.95); color:var(--accent); }
+
   </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
@@ -404,7 +413,7 @@
       </span>
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
     </button>
-    <section class="grid grid-cols-2 gap-3 mb-8" aria-label="Статистика словаря">
+    <section class="grid grid-cols-2 gap-3 mb-3" aria-label="Статистика словаря">
       <div class="home-stat">
         <p class="text-[10px] font-bold theme-text-muted uppercase tracking-widest">Всего колод</p>
         <p id="home-total" class="text-2xl font-black tracking-tight mt-2">0</p>
@@ -414,6 +423,26 @@
         <p id="home-due" class="text-2xl font-black tracking-tight mt-2 theme-accent-text">0</p>
       </div>
     </section>
+    <section class="home-stat flex items-center justify-between mb-6">
+      <div>
+        <p class="text-[10px] font-bold theme-text-muted uppercase tracking-widest">Сегодня потренировано</p>
+        <p class="text-xl font-black tracking-tight mt-1"><span id="home-today-count">0</span> <span class="text-xs font-semibold theme-text-muted">ответов</span></p>
+      </div>
+      <div class="text-right">
+        <p class="text-[10px] font-bold theme-text-muted uppercase tracking-widest">Точность</p>
+        <p id="home-today-accuracy" class="text-xl font-black tracking-tight mt-1">–</p>
+      </div>
+    </section>
+    <button onclick="startWeakPractice('all')" class="free-practice-home mb-3">
+      <span class="free-practice-icon">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><path d="M7 7l10 10M17 7 7 17"/></svg>
+      </span>
+      <span class="min-w-0 flex-1 text-left">
+        <span class="block text-sm font-bold">Слабые слова</span>
+        <span id="home-weak-caption" class="block text-xs theme-text-muted mt-1">Слова, в которых были ошибки</span>
+      </span>
+      <span id="home-weak-count" class="study-count-pill">0</span>
+    </button>
     <div class="flex items-center justify-between mb-4 px-1">
       <h3 class="text-base font-bold tracking-tight">Твои наборы</h3>
       <span class="text-xs theme-text-muted">Открывай, чтобы продолжить</span>
@@ -555,6 +584,9 @@
           <button onclick="startStudy()" class="btn-primary w-full">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.8A2.8 2.8 0 0 1 7.8 3H20v16H7.8A2.8 2.8 0 0 1 5 16.2z"/><path d="M9 8h7M9 12h7"/></svg>Учить
           </button>
+          <button onclick="startWeakPractice('deck')" class="btn-secondary w-full">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><path d="M7 7l10 10M17 7 7 17"/></svg>Слабые слова
+          </button>
           <button onclick="startFreePractice('deck')" class="btn-secondary w-full">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 1 4 16.5z"/><path d="M4 7h12M8 11h8"/></svg>Практика
           </button>
@@ -640,8 +672,12 @@
             <div class="w-full flex justify-end">
               <span id="study-gender-badge" class="text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider hidden"></span>
             </div>
-            <div class="text-center">
-              <h2 id="study-front" class="text-3xl font-bold text-center mb-2"></h2>
+            <div class="text-center flex flex-col items-center gap-3">
+              <h2 id="study-front" class="text-3xl font-bold text-center mb-1"></h2>
+              <button type="button" onclick="speakGerman(currentStudyCard?.front)" class="audio-button" aria-label="Прослушать произношение">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+                Слушать
+              </button>
             </div>
             <p class="text-xs theme-text-muted font-semibold tracking-wide">Открой перевод или сразу оцени ответ ниже</p>
           </div>
@@ -680,6 +716,52 @@
     let studyQueue = [], initialQueueLength = 0, currentStudyCard = null, isFlipped = false;
     let isProcessingAnswer = false, suppressStudyClick = false;
     let practiceMode = false, practiceReturnView = 'deck';
+    let practiceScope = 'deck';
+    const DAILY_STATS_KEY = 'hankecards_daily_stats_v1';
+    function getDailyStats() {
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      let stats = {};
+      try { stats = JSON.parse(localStorage.getItem(DAILY_STATS_KEY)) || {}; } catch (_) {}
+      if (stats.date !== today) stats = { date: today, correct: 0, wrong: 0 };
+      return stats;
+    }
+    function recordAnswer(correct) {
+      const stats = getDailyStats();
+      if (correct) stats.correct++;
+      else stats.wrong++;
+      localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(stats));
+      renderDailyStats();
+    }
+    function renderDailyStats() {
+      const stats = getDailyStats();
+      const total = stats.correct + stats.wrong;
+      const accuracy = total ? Math.round(stats.correct / total * 100) + '%' : '–';
+      const count = document.getElementById('home-today-count');
+      const accuracyEl = document.getElementById('home-today-accuracy');
+      const weakEl = document.getElementById('home-weak-count');
+      const weakCaption = document.getElementById('home-weak-caption');
+      if (count) count.innerText = total;
+      if (accuracyEl) accuracyEl.innerText = accuracy;
+      const weakCount = cards.reduce((sum, card) => sum + Math.max(0, Number(card.weakCount) || 0), 0);
+      if (weakEl) weakEl.innerText = weakCount;
+      if (weakCaption) weakCaption.innerText = weakCount ? 'Есть слова, которые стоит закрепить' : 'Пока нет слов с ошибками';
+    }
+    function speakGerman(text) {
+      if (!text) return;
+      if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+        showToast('Озвучивание не поддерживается браузером');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(String(text));
+      utterance.lang = 'de-DE';
+      utterance.rate = 0.88;
+      const voices = window.speechSynthesis.getVoices();
+      const germanVoice = voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith('de'));
+      if (germanVoice) utterance.voice = germanVoice;
+      window.speechSynthesis.speak(utterance);
+    }
     
     setTheme(localStorage.getItem('mytheme') || 'light', true);
     function setTheme(themeName, isInit = false) {
@@ -759,6 +841,7 @@
       });
       document.getElementById('home-total').innerText = decks.length;
       document.getElementById('home-due').innerText = totalDue;
+      renderDailyStats();
       if (!decks.length) {
         container.innerHTML = `<div class="empty-state"><div class="brand-mark mx-auto mb-4"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5.8A2.8 2.8 0 0 1 7.8 3H20v16H7.8A2.8 2.8 0 0 1 5 16.2z"/></svg></div><h3 class="font-bold text-base">Пока нет колод</h3><p class="text-sm theme-text-muted mt-2 mb-5">Создай первую колоду и собирай в ней немецкие слова.</p><button onclick="createNewDeck()" class="btn-primary">Создать первую колоду</button></div>`;
       }
@@ -914,11 +997,16 @@
         if (c.gender === 'das') cardClass = 'card-das';
         list.innerHTML += `<div role="button" tabindex="0" onclick="openEditCard('${c.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEditCard('${c.id}')}" class="theme-card border p-4 rounded-2xl flex justify-between items-center shadow-sm ${cardClass} vocab-row">
           <div class="truncate pr-2 min-w-0">
-            <p class="font-bold truncate">${c.front}</p>
+            <p class="font-bold truncate vocab-front-word">${c.front}</p>
             <p class="text-xs theme-text-muted truncate">${c.back}</p>
           </div>
-          <span class="icon-button" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4.2-.9L19 8.3a2.1 2.1 0 0 0-3-3L5.2 16.1 4 20Z"/></svg>
+          <span class="flex items-center gap-2">
+            <button type="button" class="icon-button" onclick="event.stopPropagation();speakGerman(this.closest('.vocab-row').querySelector('.vocab-front-word').textContent)" aria-label="Прослушать слово">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+            </button>
+            <span class="icon-button" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5 5 5M4 20l4.2-.9L19 8.3a2.1 2.1 0 0 0-3-3L5.2 16.1 4 20Z"/></svg>
+            </span>
           </span></div>`;
       });
     }
@@ -992,13 +1080,30 @@
       const source = scope === 'all' ? cards : cards.filter(c => c.deckId === currentDeckId);
       const shuffled = [...source].sort(() => Math.random() - 0.5);
       if (!shuffled.length) return showToast('Пока нет слов для практики');
-      practiceMode = true;
+      practiceMode = 'free';
+      practiceScope = scope;
       practiceReturnView = scope === 'all' ? 'home' : 'deck';
       studyQueue = shuffled;
       initialQueueLength = studyQueue.length;
       hideAllViews();
       document.getElementById('view-study').classList.remove('hidden');
       document.getElementById('study-mode-label').innerText = 'Свободная практика · Без SRS';
+      loadNextCard();
+    }
+
+    function startWeakPractice(scope = 'deck') {
+      const source = scope === 'all' ? cards : cards.filter(c => c.deckId === currentDeckId);
+      const weakCards = source.filter(card => (Number(card.weakCount) || 0) > 0)
+        .sort((a, b) => (Number(b.weakCount) || 0) - (Number(a.weakCount) || 0));
+      if (!weakCards.length) return showToast('Пока нет слов с ошибками');
+      practiceMode = 'weak';
+      practiceScope = scope;
+      practiceReturnView = scope === 'all' ? 'home' : 'deck';
+      studyQueue = weakCards;
+      initialQueueLength = studyQueue.length;
+      hideAllViews();
+      document.getElementById('view-study').classList.remove('hidden');
+      document.getElementById('study-mode-label').innerText = 'Слабые слова · Закрепление';
       loadNextCard();
     }
 
@@ -1067,19 +1172,29 @@
       document.getElementById('study-again-btn').disabled = true;
       document.getElementById('study-known-btn').disabled = true;
       if (practiceMode) {
+        const answeredCard = cards[cardIndex];
         if (direction === 'right') {
+          recordAnswer(true);
+          if (practiceMode === 'weak') answeredCard.weakCount = Math.max(0, (Number(answeredCard.weakCount) || 0) - 1);
           studyQueue.shift();
         } else {
+          recordAnswer(false);
+          if (practiceMode === 'weak') answeredCard.weakCount = Math.max(1, Number(answeredCard.weakCount) || 0);
           studyQueue.push(studyQueue.shift());
           showToast('Это слово ещё вернётся');
         }
+        if (practiceMode === 'weak') saveData();
       } else {
         if (direction === 'right') {
+          recordAnswer(true);
+          cards[cardIndex].weakCount = Math.max(0, (Number(cards[cardIndex].weakCount) || 0) - 1);
           cards[cardIndex].srsLevel++;
           if (cards[cardIndex].srsLevel < 4) cards[cardIndex].nextReview = Date.now() + (SRS_INTERVALS[cards[cardIndex].srsLevel] * 60 * 1000);
           studyQueue.shift();
           if (cards[cardIndex].srsLevel >= 4) showToast('Выучено!');
         } else {
+          recordAnswer(false);
+          cards[cardIndex].weakCount = (Number(cards[cardIndex].weakCount) || 0) + 1;
           cards[cardIndex].srsLevel = 0;
           cards[cardIndex].nextReview = Date.now();
           studyQueue.push(studyQueue.shift());
@@ -1146,10 +1261,16 @@
       const input = normalizeSpelling(document.getElementById('spell-input').value);
       const expected = normalizeSpelling(currentSpellCard.front);
       if (input && input === expected) {
+        recordAnswer(true);
+        currentSpellCard.weakCount = Math.max(0, (Number(currentSpellCard.weakCount) || 0) - 1);
+        saveData();
         showToast('Правильно!');
         spellQueue.shift();
         loadNextSpell();
       } else {
+        recordAnswer(false);
+        currentSpellCard.weakCount = (Number(currentSpellCard.weakCount) || 0) + 1;
+        saveData();
         showToast(`Правильный ответ: ${currentSpellCard.front}`);
         spellQueue.push(spellQueue.shift());
         loadNextSpell();
@@ -1191,6 +1312,7 @@
       }; reader.readAsText(file);
     }
     switchMainTab('home');
+    renderDailyStats();
   </script>
 </body>
 </html>
