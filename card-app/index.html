@@ -476,6 +476,10 @@
         <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h16"/><path d="M8 2v6M16 9v6M8 16v6"/></svg></span>
         <span class="block font-bold text-sm mt-3">Артикли der / die / das</span><span id="practice-gender-count" class="block text-xs theme-text-muted mt-1">Тренировка рода существительных</span>
       </button>
+      <button onclick="startListeningQuiz('all')" class="practice-tile text-left">
+        <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>
+        <span class="block font-bold text-sm mt-3">Аудирование</span><span id="practice-listening-count" class="block text-xs theme-text-muted mt-1">Угадай перевод на слух</span>
+      </button>
       <button onclick="startFreePractice('all')" class="practice-tile text-left">
         <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 1 4 16.5z"/><path d="M4 7h12M8 11h8M8 15h5"/></svg></span>
         <span class="block font-bold text-sm mt-3">Случайная практика</span><span class="block text-xs theme-text-muted mt-1">Все слова без изменения SRS</span>
@@ -833,13 +837,16 @@
     function renderPracticeHub() {
       const dueCount = cards.filter(card => Number(card.srsLevel) < 4 && Number(card.nextReview || 0) <= Date.now()).length;
       const weakCount = cards.filter(card => (Number(card.weakCount) || 0) > 0).length;
-      const genderCount = cards.filter(card => ['der', 'die', 'das'].includes(card.gender || parseGender(card.front))).length;
+      const genderCount = cards.filter(card => isArticleWord(card)).length;
       const dueEl = document.getElementById('practice-due-count');
       const weakEl = document.getElementById('practice-weak-count');
       const genderEl = document.getElementById('practice-gender-count');
+      const listeningEl = document.getElementById('practice-listening-count');
+      const listeningCount = cards.filter(card => String(card.front || '').trim() && String(card.back || '').trim()).length;
       if (dueEl) dueEl.innerText = `${dueCount} ${dueCount === 1 ? 'слово ждёт' : 'слов ждут'} повтора`;
       if (weakEl) weakEl.innerText = `${weakCount} ${weakCount === 1 ? 'слово' : 'слов'} с ошибками`;
       if (genderEl) genderEl.innerText = `${genderCount} ${genderCount === 1 ? 'слово' : 'слов'} с артиклем`;
+      if (listeningEl) listeningEl.innerText = `${listeningCount} ${listeningCount === 1 ? 'карточка' : 'карточек'} доступно`;
       const history = getStatsHistory();
       const today = new Date();
       const days = [];
@@ -938,11 +945,19 @@
     function goHome() { switchMainTab('home'); }
 
     function parseGender(text) {
-      const lower = text.trim().toLowerCase();
+      const lower = String(text || '').trim().toLowerCase();
       if (lower.startsWith('der ')) return 'der';
       if (lower.startsWith('die ')) return 'die';
       if (lower.startsWith('das ')) return 'das';
       return '';
+    }
+
+    // Только отдельные существительные в формате "der Tisch".
+    // Фразы и предложения не попадают в тренировку артиклей.
+    function isArticleWord(card) {
+      if (!card) return false;
+      const front = String(card.front || '').trim();
+      return /^(der|die|das)\s+[\p{L}][\p{L}'’\-]*$/iu.test(front);
     }
 
     function renderDecks() {
@@ -1090,11 +1105,12 @@
       showToast('Колода создана');
     }
     function exportSingleDeck() {
-      const deck = decks.find(d => d.id === currentMenuDeckId), deckCards = cards.filter(c => c.deckId === currentMenuDeckId);
-      const data = JSON.stringify({ isSingleDeck: true, decks: [deck], cards: deckCards });
-      const blob = new Blob([data], { type: 'application/json' }), url = URL.createObjectURL(blob), a = document.createElement('a');
-      a.href = url; a.download = `HankeCards_Deck_${deck.name}.json`; a.click(); URL.revokeObjectURL(url);
-      closeDeckMenu(); showToast('Колода экспортирована ');
+      const deck = decks.find(d => String(d.id) === String(currentMenuDeckId));
+      if (!deck) return showToast('Колода не найдена');
+      const payload = createBackupPayload(true, deck.id);
+      const safeName = String(deck.name || 'Deck').replace(/[\\/:*?"<>|]+/g, '_');
+      downloadJsonFile(payload, `HankeCards_Deck_${safeName}.json`, 'Колода экспортирована');
+      closeDeckMenu();
     }
 
     function openDeck(id) {
@@ -1279,9 +1295,111 @@
       loadNextCard();
     }
 
+    function startListeningQuiz(scope = 'all') {
+      const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
+      const eligible = source.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
+      const translations = new Set(eligible.map(card => String(card.back).trim().toLocaleLowerCase()));
+      if (eligible.length < 2 || translations.size < 2) return showToast('Для аудирования нужно хотя бы 2 карточки с разными переводами');
+      quizMode = true;
+      quizType = 'listening';
+      practiceMode = 'quiz';
+      practiceScope = scope;
+      practiceReturnView = scope === 'all' ? 'practice' : 'deck';
+      quizCorrectCount = 0;
+      quizAnsweredCount = 0;
+      studyQueue = [...eligible].sort(() => Math.random() - 0.5);
+      initialQueueLength = studyQueue.length;
+      hideAllViews();
+      document.getElementById('view-study').classList.remove('hidden');
+      document.getElementById('study-mode-label').innerText = 'Аудирование · На слух';
+      document.getElementById('quiz-panel').classList.remove('hidden');
+      document.getElementById('quiz-panel').classList.add('flex');
+      document.getElementById('card-area').classList.add('hidden');
+      document.querySelector('.study-answer-actions').classList.add('hidden');
+      loadNextCard();
+    }
+
+    function renderListeningQuestion() {
+      const card = currentStudyCard;
+      const prompt = document.getElementById('quiz-prompt');
+      const promptLabel = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
+      const promptHint = document.querySelector('#quiz-panel .text-sm.theme-text-muted');
+      if (promptLabel) promptLabel.innerText = 'Прослушай немецкое слово';
+      if (promptHint) promptHint.innerText = 'Выбери правильный перевод. Можно прослушать ещё раз.';
+      prompt.innerHTML = '';
+      const audioButton = document.createElement('button');
+      audioButton.type = 'button';
+      audioButton.className = 'btn-secondary mx-auto flex items-center justify-center gap-2 px-5 py-3 rounded-2xl';
+      audioButton.innerHTML = '<span aria-hidden="true">🔊</span><span>Прослушать слово</span>';
+      audioButton.addEventListener('click', () => speakGerman(card.front));
+      prompt.appendChild(audioButton);
+
+      const optionsEl = document.getElementById('quiz-options');
+      optionsEl.innerHTML = '';
+      const correctTranslation = String(card.back || '').trim();
+      const pool = cards
+        .filter(item => item.id !== card.id && String(item.back || '').trim() &&
+          String(item.back).trim().toLocaleLowerCase() !== correctTranslation.toLocaleLowerCase())
+        .map(item => String(item.back).trim());
+      const uniqueDistractors = [...new Map(pool.map(value => [value.toLocaleLowerCase(), value])).values()]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+      const options = [correctTranslation, ...uniqueDistractors].sort(() => Math.random() - 0.5);
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'quiz-option';
+        button.dataset.translation = option;
+        button.innerText = option;
+        button.addEventListener('click', () => answerListeningQuiz(option, button, optionsEl));
+        optionsEl.appendChild(button);
+      });
+      document.getElementById('quiz-feedback').classList.add('hidden');
+      document.getElementById('quiz-feedback').innerText = '';
+      document.getElementById('quiz-next-btn').classList.add('hidden');
+      quizAwaitingNext = false;
+      document.getElementById('study-counter').innerText = `Вопрос ${quizAnsweredCount + 1} из ${initialQueueLength}`;
+      const progressFill = document.getElementById('study-progress-fill');
+      if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
+    }
+
+    function answerListeningQuiz(selectedTranslation, selectedButton, optionsEl) {
+      if (quizAwaitingNext || !currentStudyCard) return;
+      quizAwaitingNext = true;
+      const card = currentStudyCard;
+      const correctTranslation = String(card.back || '').trim();
+      const correct = selectedTranslation.toLocaleLowerCase() === correctTranslation.toLocaleLowerCase();
+      [...optionsEl.querySelectorAll('button')].forEach(button => {
+        button.disabled = true;
+        if (button.dataset.translation.toLocaleLowerCase() === correctTranslation.toLocaleLowerCase()) button.classList.add('quiz-correct');
+      });
+      const feedback = document.getElementById('quiz-feedback');
+      feedback.classList.remove('hidden');
+      if (correct) {
+        quizCorrectCount++;
+        card.weakCount = Math.max(0, (Number(card.weakCount) || 0) - 1);
+        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-green-500/40 bg-green-500/10';
+        feedback.innerText = 'Верно! Ты правильно распознал слово на слух.';
+      } else {
+        selectedButton.classList.add('quiz-wrong');
+        card.weakCount = (Number(card.weakCount) || 0) + 1;
+        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-rose-500/40 bg-rose-500/10';
+        feedback.innerText = `Правильный перевод: ${correctTranslation}. Немецкое слово: ${card.front}`;
+      }
+      recordAnswer(correct);
+      saveData();
+      quizAnsweredCount++;
+      studyQueue.shift();
+      document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
+      const progressFill = document.getElementById('study-progress-fill');
+      if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
+      document.getElementById('quiz-next-btn').classList.remove('hidden');
+      document.getElementById('quiz-next-btn').innerText = studyQueue.length ? 'Следующее слово' : 'Посмотреть результат';
+    }
+
     function startGenderQuiz(scope = 'all') {
       const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
-      const eligible = source.filter(card => ['der', 'die', 'das'].includes(card.gender || parseGender(card.front)));
+      const eligible = source.filter(isArticleWord);
       if (!eligible.length) return showToast('Пока нет слов с указанным артиклем');
       quizMode = true;
       quizType = 'gender';
@@ -1305,7 +1423,7 @@
     function renderGenderQuestion() {
       const card = currentStudyCard;
       const optionsEl = document.getElementById('quiz-options');
-      const gender = card.gender || parseGender(card.front);
+      const gender = parseGender(card.front);
       const noun = String(card.front || '').replace(/^(der|die|das)\\s+/i, '').trim();
       document.getElementById('quiz-prompt').innerText = noun || card.front;
       const promptLabel = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
@@ -1366,6 +1484,7 @@
 
     function renderChoiceQuestion() {
       if (quizType === 'gender') return renderGenderQuestion();
+      if (quizType === 'listening') return renderListeningQuestion();
       const card = currentStudyCard;
       const promptLabel = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
       const promptHint = document.querySelector('#quiz-panel .text-sm.theme-text-muted');
@@ -1641,32 +1760,122 @@
       masteredCards.forEach(c => { container.innerHTML += `<div class="theme-card border p-4 rounded-2xl flex justify-between items-center shadow-sm"><div><p class="font-bold">${c.front}</p><p class="text-xs theme-text-muted">${c.back}</p></div><span class="text-2xl"></span></div>`; });
     }
     
-    function exportToFile() {
-      const blob = new Blob([JSON.stringify({ decks, cards, isSingleDeck: false })], { type: 'application/json' });
-      const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = `HankeCards_Backup_${new Date().toISOString().split('T')[0]}.json`;
-      a.click(); URL.revokeObjectURL(url); showToast('Резервная копия скачана! ');
+    function createBackupPayload(singleDeck = false, deckId = null) {
+      const selectedDecks = singleDeck ? decks.filter(deck => String(deck.id) === String(deckId)) : decks;
+      const selectedIds = new Set(selectedDecks.map(deck => String(deck.id)));
+      const selectedCards = cards.filter(card => selectedIds.has(String(card.deckId)));
+      const payload = {
+        app: 'HankeCards',
+        backupVersion: 2,
+        exportedAt: new Date().toISOString(),
+        isSingleDeck: singleDeck,
+        decks: selectedDecks,
+        cards: selectedCards
+      };
+      if (!singleDeck) {
+        payload.statsHistory = getStatsHistory();
+        try { payload.dailyStats = JSON.parse(localStorage.getItem(DAILY_STATS_KEY) || 'null'); } catch (_) {}
+      }
+      return payload;
     }
+
+    function downloadJsonFile(data, filename, successMessage) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (successMessage) showToast(successMessage);
+    }
+
+    function exportToFile() {
+      downloadJsonFile(createBackupPayload(false), `HankeCards_Backup_${new Date().toISOString().split('T')[0]}.json`, 'Резервная копия скачана!');
+    }
+
+    function validateBackup(parsed) {
+      if (!parsed || !Array.isArray(parsed.decks) || !Array.isArray(parsed.cards)) {
+        throw new Error('Файл не похож на резервную копию HankeCards');
+      }
+      if (!parsed.decks.length) throw new Error('В резервной копии нет колод');
+      const deckIds = new Set();
+      parsed.decks.forEach(deck => {
+        if (!deck || deck.id === undefined || deck.id === null || !String(deck.name || '').trim()) {
+          throw new Error('Некорректная структура колоды');
+        }
+        const id = String(deck.id);
+        if (deckIds.has(id)) throw new Error('В файле есть повторяющиеся ID колод');
+        deckIds.add(id);
+      });
+      const cardIds = new Set();
+      parsed.cards.forEach(card => {
+        if (!card || card.id === undefined || card.id === null ||
+            !String(card.front || '').trim() || !String(card.back || '').trim() ||
+            !deckIds.has(String(card.deckId))) {
+          throw new Error('В файле найдена карточка с неполными данными или неизвестной колодой');
+        }
+        const id = String(card.id);
+        if (cardIds.has(id)) throw new Error('В файле есть повторяющиеся ID карточек');
+        cardIds.add(id);
+      });
+      return true;
+    }
+
+    function makeUniqueId(prefix = 'hc') {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') return `${prefix}_${window.crypto.randomUUID()}`;
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    }
+
     function importFromFile(event) {
-      const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (file.size > 15 * 1024 * 1024) {
+        showToast('Файл слишком большой (максимум 15 МБ)');
+        event.target.value = '';
+        return;
+      }
+      const reader = new FileReader();
       reader.onload = function(e) {
-        try { 
-          const parsed = JSON.parse(e.target.result); 
-          if (parsed.decks && parsed.cards) { 
-            if (parsed.isSingleDeck) {
-              const newDeckId = Date.now().toString() + Math.floor(Math.random()*100);
-              decks.push({ ...parsed.decks[0], id: newDeckId });
-              parsed.cards.forEach(c => cards.push({ ...c, id: Date.now().toString() + Math.floor(Math.random()*1000), deckId: newDeckId }));
-              showToast('Колода успешно импортирована! ');
-            } else {
-              if(confirm('Заменить текущие данные резервной копией? Все текущие слова будут стерты!')) {
-                decks = parsed.decks; cards = parsed.cards; showToast('Данные восстановлены! ');
-              } else return;
+        try {
+          const parsed = JSON.parse(e.target.result);
+          validateBackup(parsed);
+
+          if (parsed.isSingleDeck) {
+            if (parsed.decks.length !== 1) throw new Error('Файл отдельной колоды должен содержать ровно одну колоду');
+            const importedDeck = parsed.decks[0];
+            const newDeckId = makeUniqueId('deck');
+            const newDeck = { ...importedDeck, id: newDeckId, name: `${String(importedDeck.name || 'Колода')} (импорт)` };
+            decks.push(newDeck);
+            parsed.cards.forEach(card => cards.push({ ...card, id: makeUniqueId('card'), deckId: newDeckId }));
+            showToast(`Импортирована колода: ${newDeck.name}`);
+          } else {
+            const confirmed = confirm('Восстановить резервную копию? Текущие колоды и карточки будут заменены. Перед заменой приложение скачает страховочную копию текущих данных.');
+            if (!confirmed) return;
+            downloadJsonFile(createBackupPayload(false), `HankeCards_Before_Restore_${new Date().toISOString().split('T')[0]}.json`);
+            decks = parsed.decks.map(deck => ({ ...deck }));
+            cards = parsed.cards.map(card => ({ ...card }));
+            if (parsed.statsHistory && typeof parsed.statsHistory === 'object' && !Array.isArray(parsed.statsHistory)) {
+              localStorage.setItem(STATS_HISTORY_KEY, JSON.stringify(parsed.statsHistory));
             }
-            saveData(); renderDecks();
-          } else throw new Error(); 
-        } 
-        catch (err) { showToast('Ошибка формата файла '); } event.target.value = '';
-      }; reader.readAsText(file);
+            if (Object.prototype.hasOwnProperty.call(parsed, 'dailyStats')) {
+              localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(parsed.dailyStats));
+            }
+            showToast('Резервная копия восстановлена!');
+          }
+          saveData();
+          renderDecks();
+          renderPracticeHub();
+          renderDailyStats();
+        } catch (err) {
+          console.error('HankeCards import error:', err);
+          showToast(err && err.message ? err.message : 'Не удалось прочитать резервную копию');
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.onerror = function() {
+        showToast('Не удалось прочитать файл');
+        event.target.value = '';
+      };
+      reader.readAsText(file);
     }
     switchMainTab('home');
     renderDailyStats();
