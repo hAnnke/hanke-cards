@@ -374,6 +374,10 @@
     .vocab-search-wrap input::placeholder { color:var(--text-muted); opacity:.8; }
 
 
+
+    .app-tabbar { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+    .app-tabbar::-webkit-scrollbar { display:none; }
+    .app-tabbar button { flex-shrink:0; min-width:68px; }
     .audio-button {
       min-height:36px; display:inline-flex; align-items:center; justify-content:center; gap:7px;
       padding:0 13px; border:1px solid var(--card-border); border-radius:999px;
@@ -399,19 +403,21 @@
   </div>
 
   <!-- ================= FLOATING GLASS BOTTOM TABS ================= -->
-  <div class="app-tabbar fixed bottom-6 left-6 right-6 max-w-md mx-auto border rounded-3xl flex justify-around p-2 z-40 text-[11px] font-semibold" role="navigation" aria-label="Основная навигация">
-    <button onclick="switchMainTab('home')" id="tab-home" class="active-tab flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+  <div class="app-tabbar fixed bottom-6 left-4 right-4 max-w-xl mx-auto border rounded-3xl flex justify-start overflow-x-auto p-2 z-40 text-[10px] font-semibold" role="navigation" aria-label="Основная навигация" style="scrollbar-width:none;">
+    <button onclick="switchMainTab('home')" id="tab-home" class="active-tab flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 1 4 16.5z"/><path d="M4 7h13M8 9v8"/></svg><span>Колоды</span>
     </button>
-    <button onclick="switchMainTab('practice')" id="tab-practice" class="flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+    <button onclick="switchMainTab('practice')" id="tab-practice" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="m8 10 2.2 2.2L16 7.5M8 16h8"/></svg><span>Практика</span>
     </button>
-    <button onclick="switchMainTab('mastered')" id="tab-mastered" class="flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+    <button onclick="switchMainTab('mastered')" id="tab-mastered" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.5-4.6 2.5.9-5.2-3.8-3.7 5.2-.8z"/><path d="m9 20 3 1 3-1"/></svg><span>Выучено</span>
     </button>
-    <button onclick="switchMainTab('settings')" id="tab-settings" class="flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+    <button onclick="switchMainTab('settings')" id="tab-settings" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2z" transform="translate(-1 -1) scale(1.08)"/></svg><span>Настройки</span>
     </button>
+    <button onclick="switchMainTab('achievements')" id="tab-achievements" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all"><span class="text-lg">🏆</span><span>Награды</span></button>
+    <button onclick="switchMainTab('games')" id="tab-games" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all"><span class="text-lg">🎮</span><span>Игры</span></button>
   </div>
 
   <!-- ================= VIEW: DECKS (HOME) ================= -->
@@ -634,6 +640,39 @@
     </div>
   </main>
 
+
+  <!-- ================= VIEW: ACHIEVEMENTS ================= -->
+  <main id="view-achievements" class="hidden flex-1 flex flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
+    <p class="home-eyebrow mb-2">Deine Erfolge</p>
+    <h2 class="text-3xl font-black tracking-tight">Достижения 🏆</h2>
+    <p class="text-sm theme-text-muted mt-2 mb-5">Небольшие цели, которые отмечают твой прогресс.</p>
+    <section class="theme-card border rounded-3xl p-5 mb-5">
+      <p class="text-xs theme-text-muted uppercase tracking-wider font-bold">Твой баланс</p>
+      <div class="flex items-end justify-between mt-2">
+        <p class="text-3xl font-black"><span id="achievement-points">0</span> <span class="text-sm theme-text-muted">очков</span></p>
+        <span class="text-2xl">🪙</span>
+      </div>
+    </section>
+    <div id="achievements-list" class="space-y-3"></div>
+  </main>
+
+  <!-- ================= VIEW: GAMES & REWARDS ================= -->
+  <main id="view-games" class="hidden flex-1 flex flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
+    <p class="home-eyebrow mb-2">Spiel & Belohnung</p>
+    <h2 class="text-3xl font-black tracking-tight">Игры 🎮</h2>
+    <p class="text-sm theme-text-muted mt-2 mb-5">Зарабатывай очки во время занятий и обменивай их на тестовые награды.</p>
+    <section class="theme-card border rounded-3xl p-5 mb-5">
+      <p class="text-xs theme-text-muted uppercase tracking-wider font-bold">Доступно для обмена</p>
+      <p class="text-3xl font-black mt-2"><span id="games-points">0</span> 🪙</p>
+      <p class="text-xs theme-text-muted mt-2">+5 за правильный ответ · +2 за неправильный ответ</p>
+    </section>
+    <h3 class="font-bold text-base mb-3">Магазин наград</h3>
+    <div id="rewards-shop" class="space-y-3"></div>
+    <h3 class="font-bold text-base mt-6 mb-3">Мои награды</h3>
+    <div id="owned-rewards" class="theme-card border rounded-2xl p-4 text-sm theme-text-muted">Пока ничего не приобретено.</div>
+    <p class="text-[11px] theme-text-muted mt-4">Это тестовая система очков. Покупки пока не дают игровых преимуществ и не влияют на обучение.</p>
+  </main>
+
   <!-- ================= VIEW: DECK DETAILS ================= -->
   <main id="view-deck" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto pb-32">
     <div class="theme-card rounded-3xl p-6 mb-6 border shadow-sm pt-2">
@@ -854,6 +893,20 @@
 
     const DAILY_STATS_KEY = 'hankecards_daily_stats_v1';
     const STATS_HISTORY_KEY = 'hankecards_stats_history_v1';
+    const POINTS_KEY = 'hankecards_points_v1';
+    const REWARDS_KEY = 'hankecards_rewards_v1';
+    let pointsBalance = Math.max(0, Number(localStorage.getItem(POINTS_KEY)) || 0);
+    let ownedRewards = [];
+    try {
+      const storedRewards = JSON.parse(localStorage.getItem(REWARDS_KEY) || '[]');
+      if (Array.isArray(storedRewards)) ownedRewards = storedRewards.filter(id => typeof id === 'string');
+    } catch (_) { ownedRewards = []; }
+    const REWARD_CATALOG = [
+      { id: 'starter-badge', title: 'Значок «Первый шаг»', description: 'Твоя первая награда в Hanke Cards.', cost: 50, icon: '🥉' },
+      { id: 'focus-badge', title: 'Значок «Фокус»', description: 'За регулярную работу над словарём.', cost: 120, icon: '🎯' },
+      { id: 'language-title', title: 'Титул «Полиглот в пути»', description: 'Маленькое звание на пути к свободному немецкому.', cost: 250, icon: '🌟' }
+    ];
+
     const QUIET_MODE_KEY = 'hankecards_quiet_mode_v1';
     let quietMode = localStorage.getItem(QUIET_MODE_KEY) === 'true';
 
@@ -891,6 +944,8 @@
       return { date: today, ...(history[today] || { correct: 0, wrong: 0 }) };
     }
     function recordAnswer(correct) {
+      pointsBalance += correct ? 5 : 2;
+      localStorage.setItem(POINTS_KEY, String(pointsBalance));
       const today = localDateKey();
       const history = getStatsHistory();
       if (!history[today]) history[today] = { correct: 0, wrong: 0 };
@@ -905,6 +960,98 @@
       renderDailyStats();
       renderPracticeHub();
     }
+
+    function getLearningTotals() {
+      const history = getStatsHistory();
+      let correct = 0, wrong = 0;
+      Object.values(history).forEach(day => {
+        correct += Number(day.correct) || 0;
+        wrong += Number(day.wrong) || 0;
+      });
+      return { correct, wrong, total: correct + wrong };
+    }
+
+    function getStudyStreak() {
+      const history = getStatsHistory();
+      let streak = 0;
+      const cursor = new Date();
+      const todayKey = localDateKey(cursor);
+      if (!history[todayKey] || !(Number(history[todayKey].correct) + Number(history[todayKey].wrong))) {
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      for (let i = 0; i < 180; i++) {
+        const item = history[localDateKey(cursor)];
+        if (!item || !(Number(item.correct) + Number(item.wrong))) break;
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return streak;
+    }
+
+    function renderAchievements() {
+      const totals = getLearningTotals();
+      const mastered = cards.filter(card => Number(card.srsLevel) >= 4).length;
+      const streak = getStudyStreak();
+      const items = [
+        { title: 'Первый ответ', detail: 'Ответь на 1 вопрос', current: totals.total, target: 1, icon: '🌱' },
+        { title: 'Первые 50', detail: 'Дай 50 ответов', current: totals.total, target: 50, icon: '📚' },
+        { title: 'Сотня знаний', detail: 'Дай 100 ответов', current: totals.total, target: 100, icon: '🧠' },
+        { title: 'Без пропусков', detail: 'Занимайся 3 дня подряд', current: streak, target: 3, icon: '🔥' },
+        { title: 'Первый мастер', detail: 'Выучи 1 карточку до конца SRS', current: mastered, target: 1, icon: '🏅' },
+        { title: 'Коллекционер', detail: 'Выучи 10 карточек до конца SRS', current: mastered, target: 10, icon: '🏆' }
+      ];
+      const pointsEl = document.getElementById('achievement-points');
+      if (pointsEl) pointsEl.innerText = pointsBalance;
+      const container = document.getElementById('achievements-list');
+      if (!container) return;
+      container.innerHTML = items.map(item => {
+        const done = item.current >= item.target;
+        const progress = Math.min(100, Math.round(item.current / item.target * 100));
+        return `<div class="theme-card border rounded-2xl p-4">
+          <div class="flex items-center gap-3">
+            <div class="text-2xl">${item.icon}</div>
+            <div class="min-w-0 flex-1"><div class="font-bold text-sm">${item.title}</div><div class="text-xs theme-text-muted mt-1">${item.detail}</div></div>
+            <div class="text-xs font-bold ${done ? 'theme-accent-text' : 'theme-text-muted'}">${done ? 'Готово ✓' : `${Math.min(item.current, item.target)}/${item.target}`}</div>
+          </div>
+          <div class="h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden mt-3"><div class="h-full rounded-full" style="width:${progress}% ; background:var(--accent)"></div></div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderGames() {
+      const pointsEl = document.getElementById('games-points');
+      if (pointsEl) pointsEl.innerText = pointsBalance;
+      const shop = document.getElementById('rewards-shop');
+      if (shop) {
+        shop.innerHTML = REWARD_CATALOG.map(item => {
+          const owned = ownedRewards.includes(item.id);
+          const canBuy = pointsBalance >= item.cost;
+          return `<div class="theme-card border rounded-2xl p-4 flex items-center gap-3">
+            <div class="text-3xl">${item.icon}</div>
+            <div class="min-w-0 flex-1"><div class="font-bold text-sm">${item.title}</div><div class="text-xs theme-text-muted mt-1">${item.description}</div><div class="text-xs font-bold mt-2">${item.cost} 🪙</div></div>
+            <button ${owned || !canBuy ? 'disabled' : ''} onclick="buyReward('${item.id}')" class="px-3 py-2 rounded-xl text-xs font-bold ${owned ? 'theme-card border opacity-60' : canBuy ? 'btn-primary' : 'theme-card border opacity-50'}">${owned ? 'Куплено' : 'Обменять'}</button>
+          </div>`;
+        }).join('');
+      }
+      const ownedEl = document.getElementById('owned-rewards');
+      if (ownedEl) {
+        const owned = REWARD_CATALOG.filter(item => ownedRewards.includes(item.id));
+        ownedEl.innerHTML = owned.length ? owned.map(item => `<div class="flex items-center gap-2 py-1"><span>${item.icon}</span><span class="font-semibold">${item.title}</span></div>`).join('') : 'Пока ничего не приобретено.';
+      }
+    }
+
+    function buyReward(rewardId) {
+      const item = REWARD_CATALOG.find(reward => reward.id === rewardId);
+      if (!item || ownedRewards.includes(rewardId)) return;
+      if (pointsBalance < item.cost) return showToast('Пока не хватает очков');
+      pointsBalance -= item.cost;
+      ownedRewards.push(rewardId);
+      localStorage.setItem(POINTS_KEY, String(pointsBalance));
+      localStorage.setItem(REWARDS_KEY, JSON.stringify(ownedRewards));
+      renderGames();
+      showToast(`Получена награда: ${item.title}`);
+    }
+
     function renderDailyStats() {
       const stats = getDailyStats();
       const total = stats.correct + stats.wrong;
@@ -1003,7 +1150,7 @@
     }
 
     function hideAllViews() {
-      ['view-home', 'view-practice', 'view-mastered', 'view-settings', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      ['view-home', 'view-practice', 'view-mastered', 'view-settings', 'view-achievements', 'view-games', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
       document.getElementById('nav-actions').innerHTML = '';
     }
 
@@ -1011,18 +1158,17 @@
       hideAllViews(); 
       document.getElementById(`view-${tab}`).classList.remove('hidden');
       
-      ['home', 'practice', 'mastered', 'settings'].forEach(t => {
+      ['home', 'practice', 'mastered', 'achievements', 'games', 'settings'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
-        if(t === tab) {
-          btn.className = "active-tab flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all";
-        } else {
-          btn.className = "flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all";
-        }
+        if (!btn) return;
+        btn.classList.toggle('active-tab', t === tab);
       });
 
       if(tab === 'home') renderDecks();
       if(tab === 'practice') renderPracticeHub();
       if(tab === 'mastered') renderMastered();
+      if(tab === 'achievements') renderAchievements();
+      if(tab === 'games') renderGames();
     }
     function goHome() { switchMainTab('home'); }
 
@@ -1039,6 +1185,7 @@
     function isArticleWord(card) {
       if (!card) return false;
       const front = String(card.front || '').trim();
+      // Только артикль + одно существительное. Пробелы внутри слова/фразы исключены.
       return /^(der|die|das)\s+[\p{L}][\p{L}'’\-]*$/iu.test(front);
     }
 
@@ -1619,7 +1766,7 @@
       const card = currentStudyCard;
       const optionsEl = document.getElementById('quiz-options');
       const gender = parseGender(card.front);
-      const noun = String(card.front || '').replace(/^(der|die|das)\\s+/i, '').trim();
+      const noun = String(card.front || '').replace(/^(der|die|das)\s+/i, '').trim();
       document.getElementById('quiz-prompt').innerText = noun || card.front;
       const promptLabel = document.querySelector('#quiz-panel .text-xs.theme-accent-text');
       const promptHint = document.querySelector('#quiz-panel .text-sm.theme-text-muted');
@@ -2098,6 +2245,8 @@
     if (quietModeToggle) quietModeToggle.checked = quietMode;
     switchMainTab('home');
     renderDailyStats();
+    renderAchievements();
+    renderGames();
   </script>
 </body>
 </html>
