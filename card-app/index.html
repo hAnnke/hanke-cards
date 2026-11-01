@@ -6,59 +6,189 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="HankeCards – немецкий словарь с карточками и интервальным повторением.">
+  <link rel="manifest" href="./manifest.json">
   <title>HankeCards</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Премиальные темы оформления без лишней пестроты */
-    :root { /* Светлая (Light) */
-      --bg-color: #f8fafc; --text-color: #0f172a; --text-muted: #64748b;
-      --card-bg: rgba(255, 255, 255, 0.85); --card-border: rgba(226, 232, 240, 0.8); --accent: #f97316; --accent-hover: #ea580c;
-    }
-    [data-theme="dark"] { /* Темная (Dark) */
-      --bg-color: #090d16; --text-color: #f8fafc; --text-muted: #94a3b8;
-      --card-bg: rgba(17, 24, 39, 0.75); --card-border: rgba(31, 41, 55, 0.8); --accent: #6366f1; --accent-hover: #4f46e5;
-    }
-    [data-theme="peach"] { /* Теплая персиковая */
-      --bg-color: #fffaf5; --text-color: #431407; --text-muted: #9a3412;
-      --card-bg: rgba(255, 255, 255, 0.85); --card-border: rgba(254, 215, 170, 0.8); --accent: #f97316; --accent-hover: #ea580c;
+    /* =========================================================
+       HANKECARDS 2.0 · STAGE 1
+       Liquid Minimal design system
+       Существующая логика приложения и схема хранения не меняются.
+       ========================================================= */
+    :root {
+      color-scheme: light;
+      --bg-color: #f4f6fb;
+      --text-color: #182033;
+      --text-muted: #758098;
+      --card-bg: rgba(255, 255, 255, .58);
+      --card-border: rgba(255, 255, 255, .78);
+      --accent: #6658e8;
+      --accent-hover: #5546d6;
+      --orb-a: rgba(117, 104, 255, .20);
+      --orb-b: rgba(75, 180, 220, .14);
+      --orb-c: rgba(255, 174, 143, .13);
+      --glass-shadow: 0 12px 36px rgba(34, 45, 78, .09), inset 0 1px 0 rgba(255,255,255,.72);
+      --glass-blur: 24px;
+      --surface-solid: #ffffff;
+      --focus-ring: rgba(102, 88, 232, .38);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
     }
 
-    body { background-color: var(--bg-color); color: var(--text-color); overscroll-behavior-y: none; transition: background-color 0.3s, color 0.3s; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    
-    /* Эффект матового стекла (Glassmorphism) */
-    .theme-card { 
-      background-color: var(--card-bg); 
-      border-color: var(--card-border); 
-      backdrop-filter: blur(20px); 
-      -webkit-backdrop-filter: blur(20px);
-      transition: all 0.3s; 
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg-color: #090d18;
+      --text-color: #f4f5ff;
+      --text-muted: #9aa4bd;
+      --card-bg: rgba(23, 29, 48, .48);
+      --card-border: rgba(177, 188, 255, .13);
+      --accent: #9385ff;
+      --accent-hover: #7969f0;
+      --orb-a: rgba(91, 77, 224, .28);
+      --orb-b: rgba(32, 139, 184, .17);
+      --orb-c: rgba(177, 91, 151, .12);
+      --glass-shadow: 0 18px 48px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255,255,255,.09);
+      --surface-solid: #171d30;
+      --focus-ring: rgba(147, 133, 255, .48);
     }
+
+    [data-theme="peach"] {
+      color-scheme: light;
+      --bg-color: #fff8f2;
+      --text-color: #422b2a;
+      --text-muted: #987b76;
+      --card-bg: rgba(255, 255, 255, .60);
+      --card-border: rgba(255, 255, 255, .86);
+      --accent: #d97855;
+      --accent-hover: #c76543;
+      --orb-a: rgba(246, 169, 143, .23);
+      --orb-b: rgba(255, 207, 153, .19);
+      --orb-c: rgba(194, 151, 220, .13);
+      --glass-shadow: 0 12px 36px rgba(125, 75, 55, .09), inset 0 1px 0 rgba(255,255,255,.8);
+      --surface-solid: #fffdfb;
+      --focus-ring: rgba(217, 120, 85, .35);
+    }
+
+    * { -webkit-tap-highlight-color: transparent; }
+    html { min-height: 100%; background: var(--bg-color); }
+    body, body.h-screen {
+      height: 100vh;
+      height: 100dvh;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background-color: var(--bg-color);
+      background-image:
+        radial-gradient(ellipse at 8% 8%, var(--orb-a), transparent 38%),
+        radial-gradient(ellipse at 94% 28%, var(--orb-b), transparent 34%),
+        radial-gradient(ellipse at 48% 100%, var(--orb-c), transparent 42%);
+      background-attachment: fixed;
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overscroll-behavior: none;
+      transition: background-color .35s ease, color .25s ease;
+      isolation: isolate;
+    }
+
+    /* Glass surfaces: фон намеренно остаётся полупрозрачным,
+       чтобы blur действительно показывал окружающий фон. */
+    .theme-card {
+      background: var(--card-bg);
+      border-color: var(--card-border);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+      backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+      box-shadow: var(--glass-shadow);
+      transition: background-color .28s ease, border-color .28s ease,
+                  box-shadow .28s ease, transform .28s ease;
+    }
+
     .theme-text-muted { color: var(--text-muted); }
-    .theme-accent { background-color: var(--accent); color: #fff; }
-    .theme-accent:active { background-color: var(--accent-hover); }
+    .theme-accent { background: var(--accent); color: #fff; box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 28%, transparent); }
+    .theme-accent:active { background: var(--accent-hover); }
     .theme-accent-text { color: var(--accent); }
 
-    /* Нежные фоны и подсветка для родов существительных */
-    .card-der { background-color: rgba(56, 189, 248, 0.1) !important; border-color: rgba(56, 189, 248, 0.35) !important; box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.12); backdrop-filter: blur(20px); }
-    .card-die { background-color: rgba(244, 63, 94, 0.1) !important; border-color: rgba(244, 63, 94, 0.35) !important; box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.12); backdrop-filter: blur(20px); }
-    .card-das { background-color: rgba(52, 211, 153, 0.1) !important; border-color: rgba(52, 211, 153, 0.35) !important; box-shadow: 0 10px 25px -5px rgba(52, 211, 153, 0.12); backdrop-filter: blur(20px); }
+    /* Три рода сохраняют цветовую подсказку, но не перекрывают стекло. */
+    .card-der {
+      background: rgba(56, 189, 248, .13) !important;
+      border-color: rgba(56, 189, 248, .32) !important;
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(175%);
+      backdrop-filter: blur(var(--glass-blur)) saturate(175%);
+      box-shadow: 0 12px 30px rgba(56, 189, 248, .09), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    .card-die {
+      background: rgba(244, 63, 94, .12) !important;
+      border-color: rgba(244, 63, 94, .30) !important;
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(175%);
+      backdrop-filter: blur(var(--glass-blur)) saturate(175%);
+      box-shadow: 0 12px 30px rgba(244, 63, 94, .08), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    .card-das {
+      background: rgba(52, 211, 153, .12) !important;
+      border-color: rgba(52, 211, 153, .30) !important;
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(175%);
+      backdrop-filter: blur(var(--glass-blur)) saturate(175%);
+      box-shadow: 0 12px 30px rgba(52, 211, 153, .08), inset 0 1px 0 rgba(255,255,255,.12);
+    }
 
-    .perspective-1000 { perspective: 1000px; }
+    /* Единый характер интерактивных элементов. */
+    button, input { font: inherit; }
+    button { touch-action: manipulation; }
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 3px;
+    }
+    input {
+      caret-color: var(--accent);
+      transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+    input:focus {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 3px var(--focus-ring);
+    }
+    .theme-card:active { transition-duration: .12s; }
+
+    /* Мобильная навигация с учётом системной safe area. */
+    .app-nav { padding-top: calc(3.5rem + var(--safe-top)); }
+    .app-tabbar {
+      bottom: calc(16px + var(--safe-bottom));
+      border-radius: 26px;
+      background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      backdrop-filter: blur(30px) saturate(180%);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 16px 44px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.13);
+    }
+    .app-tabbar button { min-height: 54px; }
+    .app-toast { bottom: calc(104px + var(--safe-bottom)); }
+
+    .perspective-1000 { perspective: 1200px; }
     .preserve-3d { transform-style: preserve-3d; }
     .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
     .rotate-y-180 { transform: rotateY(180deg); }
-    .snap-back { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    .flip-anim { transition: transform 0.4s ease-in-out; }
-    
-    .toast-enter { transform: translateY(100%); opacity: 0; }
-    .toast-active { transform: translateY(0); opacity: 1; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; }
+    .snap-back { transition: transform .32s cubic-bezier(.2,.8,.2,1); }
+    .flip-anim { transition: transform .48s cubic-bezier(.2,.75,.25,1); }
+
+    .toast-enter { transform: translate(-50%, 18px); opacity: 0; }
+    .toast-active { transform: translate(-50%, 0); opacity: 1; transition: transform .28s ease, opacity .28s ease; }
     ::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .theme-card, .app-tabbar { background: var(--surface-solid); }
+    }
+    @media (max-width: 380px) {
+      .app-tabbar { left: 12px; right: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
   </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
 
   <!-- ================= NAV BAR (БЕЗ ЛИНИЙ, ПО ЦЕНТРУ) ================= -->
-  <nav class="pt-14 pb-4 px-6 flex items-center justify-center z-10 relative">
+  <nav class="app-nav pt-14 pb-4 px-6 flex items-center justify-center z-10 relative">
     <h1 class="text-lg font-bold theme-accent-text cursor-pointer flex items-center gap-2 tracking-tight" onclick="goHome()">
       <span>🪴</span> <span>HankeCards</span>
     </h1>
@@ -66,13 +196,13 @@
   </nav>
 
   <!-- ================= TOAST ================= -->
-  <div id="toast" class="fixed bottom-28 left-1/2 -translate-x-1/2 theme-card border text-inherit px-6 py-3 rounded-full shadow-2xl z-[100] toast-enter pointer-events-none flex items-center gap-2 whitespace-nowrap">
+  <div id="toast" class="app-toast fixed bottom-28 left-1/2 -translate-x-1/2 theme-card border text-inherit px-6 py-3 rounded-full shadow-2xl z-[100] toast-enter pointer-events-none flex items-center gap-2 whitespace-nowrap">
     <span id="toast-icon">✨</span>
     <span id="toast-msg" class="text-sm font-medium">Уведомление</span>
   </div>
 
   <!-- ================= FLOATING GLASS BOTTOM TABS ================= -->
-  <div class="fixed bottom-6 left-6 right-6 max-w-md mx-auto theme-card border rounded-3xl flex justify-around p-2.5 z-40 text-xs font-semibold shadow-[0_15px_35px_rgba(0,0,0,0.12)]">
+  <div class="app-tabbar fixed bottom-6 left-6 right-6 max-w-md mx-auto theme-card border rounded-3xl flex justify-around p-2.5 z-40 text-xs font-semibold shadow-[0_15px_35px_rgba(0,0,0,0.12)]">
     <button onclick="switchMainTab('home')" id="tab-home" class="flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="text-lg">📚</span><span>Колоды</span>
     </button>
