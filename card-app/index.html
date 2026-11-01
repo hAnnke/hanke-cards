@@ -417,7 +417,23 @@
     }
     .audio-button:active { transform:scale(.95); color:var(--accent); }
 
-  </style>
+  
+    /* Stage 22: center practice tile icons and content within each grid cell. */
+    #view-practice .practice-tile {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+    }
+    #view-practice .practice-tile .practice-tile-icon {
+      align-self:center;
+      margin-inline:auto;
+    }
+    #view-practice .practice-tile > span:not(.practice-tile-icon) {
+      width:100%;
+      text-align:center;
+    }
+</style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
 
