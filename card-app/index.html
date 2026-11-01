@@ -9,6 +9,9 @@
   <meta name="theme-color" content="#090d18">
   <meta name="description" content="HankeCards – немецкий словарь с карточками и интервальным повторением.">
   <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="./HankeCards-apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="Hanke Cards">
+  <meta name="application-name" content="Hanke Cards">
   <title>HankeCards</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -484,7 +487,7 @@
       <p class="text-sm theme-text-muted mt-2">Выбери подходящий способ повторения.</p>
     </section>
     <div class="grid grid-cols-2 gap-3 mb-6">
-      <button onclick="startAllDueStudy()" class="practice-tile practice-tile-primary text-left">
+      <button onclick="startAllDueStudy()" class="practice-tile text-left">
         <span class="practice-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.8A2.8 2.8 0 0 1 7.8 3H20v16H7.8A2.8 2.8 0 0 1 5 16.2z"/><path d="M9 8h7M9 12h7"/></svg></span>
         <span class="block font-bold text-sm mt-3">Повторение SRS</span><span id="practice-due-count" class="block text-xs mt-1 opacity-75">По расписанию</span>
       </button>
