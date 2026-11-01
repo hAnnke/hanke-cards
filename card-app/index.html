@@ -9,26 +9,28 @@
   <title>HankeCards</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg-color: #fcfaf7; --text-color: #1c1917; --text-muted: #78716c;
-      --card-bg: rgba(255, 255, 255, 0.75); --card-border: rgba(240, 235, 228, 0.8); --accent: #f97316; --accent-hover: #ea580c;
+    /* Премиальные темы оформления без лишней пестроты */
+    :root { /* Светлая (Light) */
+      --bg-color: #f8fafc; --text-color: #0f172a; --text-muted: #64748b;
+      --card-bg: rgba(255, 255, 255, 0.85); --card-border: rgba(226, 232, 240, 0.8); --accent: #f97316; --accent-hover: #ea580c;
     }
-    [data-theme="dark"] {
-      --bg-color: #0f172a; --text-color: #f1f5f9; --text-muted: #94a3b8;
-      --card-bg: rgba(30, 41, 59, 0.75); --card-border: rgba(51, 65, 85, 0.8); --accent: #6366f1; --accent-hover: #4f46e5;
+    [data-theme="dark"] { /* Темная (Dark) */
+      --bg-color: #090d16; --text-color: #f8fafc; --text-muted: #94a3b8;
+      --card-bg: rgba(17, 24, 39, 0.75); --card-border: rgba(31, 41, 55, 0.8); --accent: #6366f1; --accent-hover: #4f46e5;
     }
-    [data-theme="pink"] {
-      --bg-color: #fdf2f8; --text-color: #831843; --text-muted: #f472b6;
-      --card-bg: rgba(255, 255, 255, 0.75); --card-border: rgba(251, 207, 232, 0.8); --accent: #ec4899; --accent-hover: #db2777;
+    [data-theme="peach"] { /* Теплая персиковая */
+      --bg-color: #fffaf5; --text-color: #431407; --text-muted: #9a3412;
+      --card-bg: rgba(255, 255, 255, 0.85); --card-border: rgba(254, 215, 170, 0.8); --accent: #f97316; --accent-hover: #ea580c;
     }
 
-    body { background-color: var(--bg-color); color: var(--text-color); overscroll-behavior-y: none; transition: background-color 0.3s, color 0.3s; }
+    body { background-color: var(--bg-color); color: var(--text-color); overscroll-behavior-y: none; transition: background-color 0.3s, color 0.3s; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     
+    /* Эффект матового стекла (Glassmorphism) */
     .theme-card { 
       background-color: var(--card-bg); 
       border-color: var(--card-border); 
-      backdrop-filter: blur(16px); 
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(20px); 
+      -webkit-backdrop-filter: blur(20px);
       transition: all 0.3s; 
     }
     .theme-text-muted { color: var(--text-muted); }
@@ -36,9 +38,10 @@
     .theme-accent:active { background-color: var(--accent-hover); }
     .theme-accent-text { color: var(--accent); }
 
-    .card-der { background-color: rgba(56, 189, 248, 0.12) !important; border-color: rgba(56, 189, 248, 0.4) !important; box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.15); backdrop-filter: blur(16px); }
-    .card-die { background-color: rgba(244, 63, 94, 0.12) !important; border-color: rgba(244, 63, 94, 0.4) !important; box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.15); backdrop-filter: blur(16px); }
-    .card-das { background-color: rgba(52, 211, 153, 0.12) !important; border-color: rgba(52, 211, 153, 0.4) !important; box-shadow: 0 10px 25px -5px rgba(52, 211, 153, 0.15); backdrop-filter: blur(16px); }
+    /* Нежные фоны и подсветка для родов существительных */
+    .card-der { background-color: rgba(56, 189, 248, 0.1) !important; border-color: rgba(56, 189, 248, 0.35) !important; box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.12); backdrop-filter: blur(20px); }
+    .card-die { background-color: rgba(244, 63, 94, 0.1) !important; border-color: rgba(244, 63, 94, 0.35) !important; box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.12); backdrop-filter: blur(20px); }
+    .card-das { background-color: rgba(52, 211, 153, 0.1) !important; border-color: rgba(52, 211, 153, 0.35) !important; box-shadow: 0 10px 25px -5px rgba(52, 211, 153, 0.12); backdrop-filter: blur(20px); }
 
     .perspective-1000 { perspective: 1000px; }
     .preserve-3d { transform-style: preserve-3d; }
@@ -52,14 +55,14 @@
     ::-webkit-scrollbar { display: none; }
   </style>
 </head>
-<body class="h-screen overflow-hidden flex flex-col font-sans select-none" data-theme="dark">
+<body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
 
-  <!-- ================= NAV BAR ================= -->
-  <nav class="pt-14 pb-4 px-6 flex items-center justify-between z-10 theme-card border-b shadow-sm relative">
-    <h1 class="text-xl font-bold theme-accent-text cursor-pointer flex items-center justify-center gap-2" onclick="goHome()">
-      <span class="text-2xl mt-[-2px]">🪴</span> <span class="tracking-tight">HankeCards</span>
+  <!-- ================= NAV BAR (БЕЗ ЛИНИЙ, ПО ЦЕНТРУ) ================= -->
+  <nav class="pt-14 pb-4 px-6 flex items-center justify-center z-10 relative">
+    <h1 class="text-lg font-bold theme-accent-text cursor-pointer flex items-center gap-2 tracking-tight" onclick="goHome()">
+      <span>🪴</span> <span>HankeCards</span>
     </h1>
-    <div id="nav-actions" class="text-sm font-semibold flex gap-3 items-center justify-end"></div>
+    <div id="nav-actions" class="absolute right-6 text-sm font-semibold flex gap-3 items-center"></div>
   </nav>
 
   <!-- ================= TOAST ================= -->
@@ -69,7 +72,7 @@
   </div>
 
   <!-- ================= FLOATING GLASS BOTTOM TABS ================= -->
-  <div class="fixed bottom-4 left-4 right-4 max-w-md mx-auto theme-card border rounded-3xl flex justify-around p-2 z-40 text-xs font-bold shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+  <div class="fixed bottom-6 left-6 right-6 max-w-md mx-auto theme-card border rounded-3xl flex justify-around p-2.5 z-40 text-xs font-semibold shadow-[0_15px_35px_rgba(0,0,0,0.12)]">
     <button onclick="switchMainTab('home')" id="tab-home" class="flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="text-lg">📚</span><span>Колоды</span>
     </button>
@@ -94,9 +97,9 @@
   <div id="deck-menu-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] hidden flex-col justify-end">
     <div class="theme-card w-full max-w-md mx-auto rounded-t-3xl border-t p-6 transform transition-transform shadow-2xl">
       <h3 id="menu-deck-title" class="text-lg font-bold mb-4 border-b border-black/10 dark:border-white/10 pb-4">Опции колоды</h3>
-      <button onclick="renameDeck()" class="w-full text-left py-3.5 font-bold text-base active:opacity-70">✏️ Переименовать</button>
-      <button onclick="exportSingleDeck()" class="w-full text-left py-3.5 font-bold text-base text-emerald-500 active:opacity-70">📤 Экспорт колоды</button>
-      <button onclick="deleteDeck()" class="w-full text-left py-3.5 font-bold text-base text-rose-500 active:opacity-70">🗑️ Удалить колоду</button>
+      <button onclick="renameDeck()" class="w-full text-left py-3.5 font-medium text-base active:opacity-70">✏️ Переименовать</button>
+      <button onclick="exportSingleDeck()" class="w-full text-left py-3.5 font-medium text-base text-emerald-500 active:opacity-70">📤 Экспорт колоды</button>
+      <button onclick="deleteDeck()" class="w-full text-left py-3.5 font-medium text-base text-rose-500 active:opacity-70">🗑️ Удалить колоду</button>
       <button onclick="closeDeckMenu()" class="w-full mt-2 py-3.5 theme-card border rounded-2xl font-bold active:scale-[0.98]">Отмена</button>
     </div>
   </div>
@@ -107,12 +110,12 @@
       <h3 class="text-lg font-bold mb-4">Редактировать слово</h3>
       
       <div class="flex justify-between items-end mb-1">
-        <label class="text-xs theme-text-muted font-bold uppercase block">Слово (с артиклем)</label>
-        <button onclick="autoTranslateEdit()" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-lg active:opacity-70">🪄 Перевести</button>
+        <label class="text-xs theme-text-muted font-bold uppercase block tracking-wider">Слово (с артиклем)</label>
+        <button onclick="autoTranslateEdit()" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-xl active:opacity-70">🪄 Перевести</button>
       </div>
       <input id="edit-front" type="text" class="w-full p-4 mb-3 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500">
       
-      <label class="text-xs theme-text-muted font-bold uppercase mb-1 block">Перевод</label>
+      <label class="text-xs theme-text-muted font-bold uppercase mb-1 block tracking-wider">Перевод</label>
       <input id="edit-back" type="text" class="w-full p-4 mb-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500">
       
       <div class="flex gap-3 mb-3">
@@ -130,18 +133,33 @@
     <div id="mastered-container" class="space-y-3"></div>
   </main>
 
-  <!-- ================= VIEW: SETTINGS ================= -->
+  <!-- ================= VIEW: SETTINGS (СТИЛЬНЫЙ ВЫБОР ТЕМ БЕЗ ЭМОДЗИ) ================= -->
   <main id="view-settings" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
-    <h2 class="text-2xl font-black tracking-tight mb-6 pt-2">Оформление 🎨</h2>
-    <div class="space-y-3 mb-10">
-      <div onclick="setTheme('dark', false)" class="theme-card border p-4 rounded-2xl flex justify-between items-center cursor-pointer active:scale-[0.98] shadow-sm"><span class="font-bold">🌌 Темная (Классика)</span></div>
-      <div onclick="setTheme('pink', false)" class="bg-[#fce7f3]/80 backdrop-blur-md border border-[#fbcfe8] text-[#831843] p-4 rounded-2xl flex justify-between items-center cursor-pointer active:scale-[0.98] shadow-sm"><span class="font-bold">🌸 Нежно-розовая</span></div>
-      <div onclick="setTheme('peach', false)" class="bg-[#ffedd5]/80 backdrop-blur-md border border-[#fed7aa] text-[#7c2d12] p-4 rounded-2xl flex justify-between items-center cursor-pointer active:scale-[0.98] shadow-sm"><span class="font-bold">🍑 Персиковая</span></div>
+    <h2 class="text-2xl font-black tracking-tight mb-4 pt-2">Оформление</h2>
+    <p class="text-xs theme-text-muted mb-6 uppercase tracking-wider font-semibold">Выберите стиль интерфейса</p>
+    
+    <div class="grid grid-cols-3 gap-3 mb-10">
+      <!-- Светлая тема -->
+      <div onclick="setTheme('light', false)" class="theme-card border p-4 rounded-2xl flex flex-col items-center gap-3 cursor-pointer active:scale-95 shadow-sm bg-slate-100 text-slate-900 border-slate-300">
+        <div class="w-8 h-8 rounded-full bg-white border border-slate-300 shadow-inner"></div>
+        <span class="text-xs font-bold">Светлая</span>
+      </div>
+      <!-- Темная тема -->
+      <div onclick="setTheme('dark', false)" class="theme-card border p-4 rounded-2xl flex flex-col items-center gap-3 cursor-pointer active:scale-95 shadow-sm bg-slate-900 text-slate-100 border-slate-700">
+        <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
+        <span class="text-xs font-bold">Темная</span>
+      </div>
+      <!-- Персиковая тема -->
+      <div onclick="setTheme('peach', false)" class="theme-card border p-4 rounded-2xl flex flex-col items-center gap-3 cursor-pointer active:scale-95 shadow-sm bg-amber-50 text-amber-950 border-amber-200">
+        <div class="w-8 h-8 rounded-full bg-amber-100 border border-amber-300 shadow-inner"></div>
+        <span class="text-xs font-bold">Теплая</span>
+      </div>
     </div>
-    <h2 class="text-2xl font-black tracking-tight mb-6">Данные (Файлы) 📁</h2>
+
+    <h2 class="text-2xl font-black tracking-tight mb-6">Данные</h2>
     <div class="space-y-4">
       <button onclick="exportToFile()" class="w-full theme-card border py-4 rounded-2xl font-bold flex justify-center items-center gap-2 active:scale-[0.98]">
-        <span>📤</span> Скачать всё (Резервная копия)
+        <span>📤</span> Скачать резервную копию
       </button>
       <div class="relative">
         <input type="file" id="file-import" accept=".json" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="importFromFile(event)">
@@ -149,7 +167,6 @@
           <span>📥</span> Загрузить из файла
         </button>
       </div>
-      <p class="text-xs theme-text-muted text-center mt-2">Загрузить можно как одиночную колоду, так и полную копию всех данных.</p>
     </div>
   </main>
 
@@ -161,11 +178,11 @@
       <div class="grid grid-cols-2 gap-3 mb-6">
         <div class="bg-black/5 dark:bg-white/5 rounded-2xl p-4 border theme-card">
           <p class="text-2xl font-black theme-accent-text" id="deck-due">0</p>
-          <p class="text-[10px] theme-text-muted uppercase font-bold mt-1">Ждут повтора</p>
+          <p class="text-[10px] theme-text-muted uppercase font-bold mt-1 tracking-wider">Ждут повтора</p>
         </div>
         <div class="bg-black/5 dark:bg-white/5 rounded-2xl p-4 border theme-card">
           <p class="text-2xl font-black text-emerald-500" id="deck-total">0</p>
-          <p class="text-[10px] theme-text-muted uppercase font-bold mt-1">В процессе</p>
+          <p class="text-[10px] theme-text-muted uppercase font-bold mt-1 tracking-wider">В процессе</p>
         </div>
       </div>
       <div class="space-y-3">
@@ -190,13 +207,13 @@
     <div class="space-y-4">
       <div>
         <div class="flex justify-between items-end mb-1">
-          <label class="text-xs theme-text-muted uppercase font-bold">Слово или фраза</label>
-          <button onclick="autoTranslate('input-front', 'input-back')" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-lg active:opacity-70">🪄 Умный перевод</button>
+          <label class="text-xs theme-text-muted uppercase font-bold tracking-wider">Слово или фраза</label>
+          <button onclick="autoTranslate('input-front', 'input-back')" class="text-[10px] font-bold theme-card border theme-accent-text px-3 py-1 rounded-xl active:opacity-70">🪄 Умный перевод</button>
         </div>
         <input id="input-front" type="text" class="w-full p-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium" placeholder="Например: Stuhl">
       </div>
       <div>
-        <label class="text-xs theme-text-muted uppercase font-bold">Перевод</label>
+        <label class="text-xs theme-text-muted uppercase font-bold tracking-wider">Перевод</label>
         <input id="input-back" type="text" class="w-full mt-1 p-4 rounded-2xl bg-transparent theme-card border text-inherit focus:outline-none focus:border-indigo-500 text-lg font-medium">
       </div>
       <button onclick="saveNewCard()" class="w-full py-4 mt-2 theme-accent rounded-2xl font-bold shadow-lg transition-transform active:scale-[0.98]">
@@ -259,10 +276,10 @@
     let currentDeckId = null, currentMenuDeckId = null, currentEditCardId = null;
     let studyQueue = [], initialQueueLength = 0, currentStudyCard = null, isFlipped = false;
     
-    setTheme(localStorage.getItem('mytheme') || 'dark', true);
+    setTheme(localStorage.getItem('mytheme') || 'light', true);
     function setTheme(themeName, isInit = false) {
       document.body.setAttribute('data-theme', themeName); localStorage.setItem('mytheme', themeName);
-      if(!isInit) showToast('Тема обновлена 🎨');
+      if(!isInit) showToast('Тема обновлена ✨');
     }
 
     let toastTimeout;
