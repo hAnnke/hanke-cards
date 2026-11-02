@@ -1366,7 +1366,8 @@
     renderPracticeHub();
     function setTheme(themeName, isInit = false) {
       document.body.setAttribute('data-theme', themeName); localStorage.setItem('mytheme', themeName);
-      if (typeof scheduleCloudSave === 'function') scheduleCloudSave();
+      // Do not trigger cloud sync during initial script setup, before auth state initializes.
+      if (!isInit && typeof scheduleCloudSave === 'function') scheduleCloudSave();
       if(!isInit) showToast('Тема обновлена ');
     }
 
