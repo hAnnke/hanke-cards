@@ -434,6 +434,9 @@
       width:100%;
       text-align:center;
     }
+    .app-tabbar .tab-dragging { opacity: .45; transform: scale(.94); }
+    .app-tabbar .tab-drag-target { outline: 2px solid var(--accent); outline-offset: -3px; }
+    .app-tabbar button { touch-action: pan-x; user-select: none; -webkit-user-select: none; }
 </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
@@ -518,11 +521,11 @@
     <button onclick="switchMainTab('quick')" id="tab-quick" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">⚡</span><span class="nav-label">Быстро</span>
     </button>
-    <button onclick="switchMainTab('social')" id="tab-social" class="hidden flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">👥</span><span class="nav-label">Друзья</span>
-    </button>
     <button onclick="switchMainTab('practice')" id="tab-practice" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">📝</span><span class="nav-label">Практика</span>
+    </button>
+    <button onclick="switchMainTab('social')" id="tab-social" class="hidden flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+      <span class="nav-emoji" aria-hidden="true">👥</span><span class="nav-label">Друзья</span>
     </button>
     <button onclick="switchMainTab('achievements')" id="tab-achievements" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">🏆</span><span class="nav-label">Награды</span>
@@ -1485,6 +1488,87 @@
       if(tab === 'statistics') renderStatistics();
       if(tab === 'social') loadSocialHub();
     }
+    const TAB_ORDER_KEY = 'hankecards_tab_order_v1';
+
+    function restoreTabOrder() {
+      const bar = document.querySelector('.app-tabbar');
+      if (!bar) return;
+      const buttons = [...bar.querySelectorAll('button[id^="tab-"]')];
+      const defaults = buttons.map(button => button.id);
+      let saved = [];
+      try { saved = JSON.parse(localStorage.getItem(TAB_ORDER_KEY) || '[]'); } catch (_) {}
+      if (!Array.isArray(saved)) saved = [];
+      const valid = [...saved.filter(id => defaults.includes(id)), ...defaults.filter(id => !saved.includes(id))];
+      valid.forEach(id => {
+        const button = document.getElementById(id);
+        if (button) bar.append(button);
+      });
+    }
+
+    function saveTabOrder() {
+      const bar = document.querySelector('.app-tabbar');
+      if (!bar) return;
+      localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(
+        [...bar.querySelectorAll('button[id^="tab-"]')].map(button => button.id)
+      ));
+    }
+
+    function enableTabReordering() {
+      const bar = document.querySelector('.app-tabbar');
+      if (!bar || bar.dataset.reorderReady === 'true') return;
+      bar.dataset.reorderReady = 'true';
+      let holdTimer = null, dragging = null, pointerId = null, moved = false, suppressClickUntil = 0;
+
+      bar.addEventListener('pointerdown', event => {
+        const button = event.target.closest('button[id^="tab-"]');
+        if (!button || button.classList.contains('hidden') || event.button > 0) return;
+        clearTimeout(holdTimer);
+        pointerId = event.pointerId;
+        moved = false;
+        holdTimer = setTimeout(() => {
+          dragging = button;
+          dragging.classList.add('tab-dragging');
+          if (navigator.vibrate) navigator.vibrate(25);
+          showToast('Перемещай вкладку в нужное место');
+        }, 2000);
+      });
+
+      bar.addEventListener('pointermove', event => {
+        if (!dragging || event.pointerId !== pointerId) return;
+        moved = true;
+        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('button[id^="tab-"]');
+        if (!target || target === dragging || target.parentElement !== bar || target.classList.contains('hidden')) return;
+        const rect = target.getBoundingClientRect();
+        bar.insertBefore(dragging, event.clientX > rect.left + rect.width / 2 ? target.nextSibling : target);
+        bar.querySelectorAll('.tab-drag-target').forEach(el => el.classList.remove('tab-drag-target'));
+        target.classList.add('tab-drag-target');
+      });
+
+      const finishDrag = event => {
+        if (event.pointerId !== pointerId) return;
+        clearTimeout(holdTimer);
+        if (dragging) {
+          dragging.classList.remove('tab-dragging');
+          bar.querySelectorAll('.tab-drag-target').forEach(el => el.classList.remove('tab-drag-target'));
+          if (moved) {
+            saveTabOrder();
+            suppressClickUntil = Date.now() + 450;
+            showToast('Порядок вкладок сохранён');
+          }
+        }
+        dragging = null;
+        pointerId = null;
+      };
+      bar.addEventListener('pointerup', finishDrag);
+      bar.addEventListener('pointercancel', finishDrag);
+      bar.addEventListener('click', event => {
+        if (Date.now() < suppressClickUntil) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+    }
+
     function goHome() { switchMainTab('home'); }
 
     function parseGender(text) {
@@ -2602,6 +2686,8 @@
     // HankeCards Social: public learning profile + friend requests.
     let socialBusy = false;
     let socialProfileCache = new Map();
+    let socialFriendRows = [];
+    let activePublicProfile = null;
 
     function socialStatus(message, isError = false) {
       const el = document.getElementById('social-status');
@@ -2685,6 +2771,7 @@
           .order('created_at', { ascending: false });
         if (error) throw error;
         const rows = relations || [];
+        socialFriendRows = rows;
         const otherIds = [...new Set(rows.map(row => row.requester_id === id ? row.addressee_id : row.requester_id))];
         let profiles = [];
         if (otherIds.length) {
@@ -2790,11 +2877,6 @@
         const profile = socialProfileCache.get(otherId);
         if (!profile) return;
         const wrap = socialProfileCard(profile);
-        const remove = document.createElement('button');
-        remove.className = 'btn-soft text-[11px] px-3 py-2 mt-2';
-        remove.textContent = 'Удалить из друзей';
-        remove.onclick = () => removeFriend(row.id);
-        wrap.append(remove);
         friends.append(wrap);
       });
     }
@@ -2896,6 +2978,7 @@
         const { error } = await supabaseClient.from('friendships')
           .delete().eq('id', relationId);
         if (error) throw error;
+        closePublicProfile();
         showToast('Пользователь удалён из друзей');
         await loadSocialHub();
       } catch (error) {
@@ -2903,7 +2986,8 @@
       }
     }
 
-    function openPublicProfile(profile) {
+    async function openPublicProfile(profile) {
+      activePublicProfile = profile;
       const modal = document.getElementById('public-profile-modal');
       const content = document.getElementById('public-profile-content');
       content.replaceChildren();
@@ -2938,13 +3022,110 @@
         item.append(v, l);
         grid.append(item);
       });
+      const supportItem = document.createElement('div');
+      supportItem.className = 'theme-card border rounded-xl p-3 col-span-2';
+      const supportValue = document.createElement('p');
+      supportValue.id = 'public-profile-support-count';
+      supportValue.className = 'text-xl font-black';
+      supportValue.textContent = '…';
+      const supportLabel = document.createElement('p');
+      supportLabel.className = 'text-[11px] theme-text-muted mt-1';
+      supportLabel.textContent = '🔥 Получено огоньков поддержки';
+      supportItem.append(supportValue, supportLabel);
+      grid.append(supportItem);
       const joined = document.createElement('p');
       joined.className = 'text-[11px] theme-text-muted mt-4';
       joined.textContent = profile.created_at ? 'Участник с ' + new Date(profile.created_at).toLocaleDateString('ru-RU') : '';
       content.append(grid, joined);
+      const actions = document.createElement('div');
+      actions.id = 'public-profile-actions';
+      actions.className = 'space-y-2 mt-5';
+      content.append(actions);
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+
+      const isSelf = profile.user_id === currentAuthUser?.id;
+      const relation = socialFriendRows.find(row => row.status === 'accepted' &&
+        (row.requester_id === profile.user_id || row.addressee_id === profile.user_id));
+      if (!isSelf && relation) {
+        const supportButton = document.createElement('button');
+        supportButton.id = 'public-profile-support-btn';
+        supportButton.className = 'btn-primary w-full';
+        supportButton.textContent = '🔥 Отправить огонёк поддержки';
+        supportButton.onclick = () => sendFriendSupport(profile.user_id);
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn-soft w-full';
+        removeButton.textContent = 'Удалить из друзей';
+        removeButton.onclick = () => removeFriend(relation.id);
+        actions.append(supportButton, removeButton);
+        try {
+          const { data, error } = await supabaseClient.rpc('get_friend_support_status', { target_user_id: profile.user_id });
+          if (error) throw error;
+          if (activePublicProfile?.user_id !== profile.user_id) return;
+          const countEl = document.getElementById('public-profile-support-count');
+          if (countEl) countEl.textContent = String(data?.support_count ?? 0);
+          if (data?.supported_today) {
+            supportButton.disabled = true;
+            supportButton.textContent = '🔥 Ты уже поддержал сегодня';
+            supportButton.classList.add('opacity-60');
+          }
+        } catch (error) {
+          const countEl = document.getElementById('public-profile-support-count');
+          if (countEl) countEl.textContent = 'Недоступно';
+          supportButton.disabled = true;
+          supportButton.textContent = 'Поддержка временно недоступна';
+          console.warn('Support status:', error.message);
+        }
+      } else if (!isSelf) {
+        const pending = socialFriendRows.find(row => row.status === 'pending' &&
+          ((row.requester_id === currentAuthUser?.id && row.addressee_id === profile.user_id) ||
+           (row.requester_id === profile.user_id && row.addressee_id === currentAuthUser?.id)));
+        const addButton = document.createElement('button');
+        addButton.className = 'btn-primary w-full';
+        addButton.textContent = pending
+          ? (pending.requester_id === currentAuthUser?.id ? 'Заявка уже отправлена' : 'Есть входящая заявка')
+          : 'Добавить в друзья';
+        addButton.disabled = Boolean(pending);
+        addButton.onclick = () => sendFriendRequest(profile.user_id);
+        actions.append(addButton);
+        try {
+          const { data, error } = await supabaseClient.rpc('get_friend_support_status', { target_user_id: profile.user_id });
+          if (error) throw error;
+          if (activePublicProfile?.user_id !== profile.user_id) return;
+          const countEl = document.getElementById('public-profile-support-count');
+          if (countEl) countEl.textContent = String(data?.support_count ?? 0);
+        } catch (error) {
+          const countEl = document.getElementById('public-profile-support-count');
+          if (countEl) countEl.textContent = 'Недоступно';
+        }
+      } else {
+        const countEl = document.getElementById('public-profile-support-count');
+        if (countEl) countEl.textContent = 'Твой профиль';
+      }
     }
+
+    async function sendFriendSupport(targetId) {
+      const button = document.getElementById('public-profile-support-btn');
+      if (button) { button.disabled = true; button.textContent = 'Отправляем огонёк…'; }
+      try {
+        const { data, error } = await supabaseClient.rpc('send_friend_support', { target_user_id: targetId });
+        if (error) throw error;
+        const countEl = document.getElementById('public-profile-support-count');
+        if (countEl) countEl.textContent = String(data?.support_count ?? 0);
+        if (button) {
+          button.textContent = '🔥 Ты уже поддержал сегодня';
+          button.classList.add('opacity-60');
+        }
+        showToast('Огонёк поддержки отправлен!');
+      } catch (error) {
+        if (button) {
+          button.disabled = false;
+          button.textContent = '🔥 Отправить огонёк поддержки';
+        }
+        showToast(error.message || 'Не удалось отправить поддержку');
+      }
+    }
+
 
     function closePublicProfile() {
       const modal = document.getElementById('public-profile-modal');
@@ -3328,6 +3509,8 @@
       if (currentAuthUser) setCloudSyncStatus('offline');
     });
 
+    restoreTabOrder();
+    enableTabReordering();
     initSupabaseClient();
     function renderMastered() {
       const container = document.getElementById('mastered-container'); const masteredCards = cards.filter(c => c.srsLevel >= 4); container.innerHTML = '';
