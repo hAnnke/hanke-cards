@@ -518,6 +518,9 @@
     <button onclick="switchMainTab('quick')" id="tab-quick" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">⚡</span><span class="nav-label">Быстро</span>
     </button>
+    <button onclick="switchMainTab('social')" id="tab-social" class="hidden flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+      <span class="nav-emoji" aria-hidden="true">👥</span><span class="nav-label">Друзья</span>
+    </button>
     <button onclick="switchMainTab('practice')" id="tab-practice" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">📝</span><span class="nav-label">Практика</span>
     </button>
@@ -770,6 +773,64 @@
     </section>
     <p class="text-[10px] theme-text-muted text-center mt-4">История хранится на этом устройстве. В текущей версии сохраняются данные за последние 180 дней.</p>
   </main>
+
+  <!-- ================= VIEW: SOCIAL ================= -->
+  <main id="view-social" class="hidden flex-1 flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
+    <p class="home-eyebrow mb-2">HankeCards Social</p>
+    <h2 class="text-3xl font-black tracking-tight">Друзья 👥</h2>
+    <p class="text-sm theme-text-muted mt-2 mb-5">Находи других учеников, добавляй в друзья и следи за их прогрессом.</p>
+
+    <section class="theme-card border rounded-2xl p-4 mb-4">
+      <p class="text-xs font-bold theme-text-muted mb-2">Твой публичный адрес</p>
+      <div class="flex gap-2">
+        <input id="social-username-input" class="form-input min-w-0 flex-1" maxlength="30" placeholder="username" autocomplete="off">
+        <button onclick="saveMySocialUsername()" class="btn-secondary px-3">Сохранить</button>
+      </div>
+      <p class="text-[11px] theme-text-muted mt-2">Твой профиль будет доступен другим пользователям по этому имени.</p>
+    </section>
+
+    <section class="theme-card border rounded-2xl p-4 mb-4">
+      <label for="social-search-input" class="text-xs font-bold theme-text-muted block mb-2">Найти пользователя по имени</label>
+      <div class="flex gap-2">
+        <input id="social-search-input" class="form-input min-w-0 flex-1" maxlength="30" placeholder="@username" autocomplete="off">
+        <button onclick="searchSocialUsers()" class="btn-primary px-4">Найти</button>
+      </div>
+      <p class="text-[11px] theme-text-muted mt-2">Показываем публичные профили. Email и личные карточки не раскрываются.</p>
+      <div id="social-search-results" class="space-y-2 mt-3"></div>
+    </section>
+
+    <section class="mb-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-base">Заявки</h3>
+        <span id="social-request-count" class="text-xs theme-text-muted">0</span>
+      </div>
+      <div id="social-requests" class="space-y-2">
+        <p class="text-xs theme-text-muted">Пока нет заявок.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-base">Мои друзья</h3>
+        <span id="social-friend-count" class="text-xs theme-text-muted">0</span>
+      </div>
+      <div id="social-friends" class="space-y-2">
+        <p class="text-xs theme-text-muted">Здесь появятся твои друзья.</p>
+      </div>
+    </section>
+    <p id="social-status" class="text-xs theme-text-muted text-center mt-5" aria-live="polite"></p>
+  </main>
+
+  <!-- ================= PUBLIC PROFILE MODAL ================= -->
+  <div id="public-profile-modal" class="hidden fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm items-end sm:items-center justify-center p-3" onclick="if(event.target===this)closePublicProfile()">
+    <div class="theme-modal w-full max-w-md rounded-3xl p-5 max-h-[88vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-black">Профиль пользователя</h3>
+        <button onclick="closePublicProfile()" class="btn-soft px-3" aria-label="Закрыть">✕</button>
+      </div>
+      <div id="public-profile-content"></div>
+    </div>
+  </div>
 
   <!-- ================= VIEW: MASTERED ================= -->
   <main id="view-mastered" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto relative pb-32">
@@ -1402,7 +1463,7 @@
     }
 
     function hideAllViews() {
-      ['view-home', 'view-quick', 'view-practice', 'view-achievements', 'view-games', 'view-statistics', 'view-mastered', 'view-settings', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+      ['view-home', 'view-quick', 'view-practice', 'view-achievements', 'view-games', 'view-statistics', 'view-social', 'view-mastered', 'view-settings', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
       document.getElementById('nav-actions').innerHTML = '';
     }
 
@@ -1410,7 +1471,7 @@
       hideAllViews(); 
       document.getElementById(`view-${tab}`).classList.remove('hidden');
       
-      ['home', 'quick', 'practice', 'achievements', 'games', 'statistics', 'mastered', 'settings', 'profile'].forEach(t => {
+      ['home', 'quick', 'social', 'practice', 'achievements', 'games', 'statistics', 'mastered', 'settings', 'profile'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if (!btn) return;
         btn.classList.toggle('active-tab', t === tab);
@@ -1422,6 +1483,7 @@
       if(tab === 'achievements') renderAchievements();
       if(tab === 'games') renderGames();
       if(tab === 'statistics') renderStatistics();
+      if(tab === 'social') loadSocialHub();
     }
     function goHome() { switchMainTab('home'); }
 
@@ -2537,6 +2599,359 @@
     let cloudSaveInFlight = false;
     let authMode = 'login';
 
+    // HankeCards Social: public learning profile + friend requests.
+    let socialBusy = false;
+    let socialProfileCache = new Map();
+
+    function socialStatus(message, isError = false) {
+      const el = document.getElementById('social-status');
+      if (el) {
+        el.textContent = message || '';
+        el.style.color = isError ? '#dc5555' : '';
+      }
+    }
+
+    function getPublicStatsSnapshot() {
+      const totals = getLearningTotals();
+      const mastered = cards.filter(card => Number(card.srsLevel) >= 4).length;
+      const accuracy = totals.total ? Math.round((totals.correct / totals.total) * 100) : 0;
+      return {
+        decks_count: decks.length,
+        cards_count: cards.length,
+        coins: pointsBalance,
+        rewards_count: ownedRewards.length,
+        answers_total: totals.total,
+        accuracy,
+        mastered_count: mastered,
+        study_streak: getStudyStreak()
+      };
+    }
+
+    function makeDefaultUsername() {
+      const raw = currentAuthUser?.user_metadata?.username || currentAuthUser?.email?.split('@')[0] || 'learner';
+      const base = String(raw).toLowerCase().normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_]/g, '_')
+        .replace(/_+/g, '_').replace(/^_+|_+$/g, '').slice(0, 20);
+      return base || ('learner_' + String(currentAuthUser?.id || '').slice(0, 6));
+    }
+
+    async function syncPublicProfile(usernameOverride = '') {
+      if (!supabaseClient || !currentAuthUser) return;
+      const { data: existing, error: readError } = await supabaseClient
+        .from('public_profiles').select('username, display_name')
+        .eq('user_id', currentAuthUser.id).maybeSingle();
+      if (readError) throw readError;
+      const displayName = currentAuthUser.user_metadata?.username ||
+        currentAuthUser.user_metadata?.name || currentAuthUser.email?.split('@')[0] || 'Ученик';
+      const username = usernameOverride || existing?.username || makeDefaultUsername();
+      const stats = getPublicStatsSnapshot();
+      const { error } = await supabaseClient.rpc('sync_my_public_profile', {
+        p_username: username,
+        p_display_name: existing?.display_name || displayName,
+        p_decks_count: stats.decks_count,
+        p_cards_count: stats.cards_count,
+        p_coins: stats.coins,
+        p_rewards_count: stats.rewards_count,
+        p_answers_total: stats.answers_total,
+        p_accuracy: stats.accuracy,
+        p_mastered_count: stats.mastered_count,
+        p_study_streak: stats.study_streak
+      });
+      if (error) throw error;
+    }
+
+    async function loadSocialHub() {
+      const signedIn = Boolean(currentAuthUser);
+      if (!signedIn) {
+        socialStatus('Войди в аккаунт, чтобы пользоваться друзьями.', true);
+        return;
+      }
+      if (!supabaseClient) return socialStatus('Соединение с базой данных недоступно.', true);
+      if (socialBusy) return;
+      socialBusy = true;
+      socialStatus('Обновляем список друзей…');
+      try {
+        await syncPublicProfile();
+        const { data: ownProfile, error: ownProfileError } = await supabaseClient
+          .from('public_profiles').select('username')
+          .eq('user_id', currentAuthUser.id).single();
+        if (ownProfileError) throw ownProfileError;
+        const usernameInput = document.getElementById('social-username-input');
+        if (usernameInput && document.activeElement !== usernameInput) usernameInput.value = ownProfile.username || '';
+        const id = currentAuthUser.id;
+        const { data: relations, error } = await supabaseClient
+          .from('friendships').select('id, requester_id, addressee_id, status, created_at')
+          .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        const rows = relations || [];
+        const otherIds = [...new Set(rows.map(row => row.requester_id === id ? row.addressee_id : row.requester_id))];
+        let profiles = [];
+        if (otherIds.length) {
+          const result = await supabaseClient.from('public_profiles')
+            .select('user_id, username, display_name, decks_count, cards_count, coins, rewards_count, answers_total, accuracy, mastered_count, study_streak, created_at')
+            .in('user_id', otherIds);
+          if (result.error) throw result.error;
+          profiles = result.data || [];
+        }
+        socialProfileCache = new Map(profiles.map(profile => [profile.user_id, profile]));
+        renderSocialLists(rows, id);
+        socialStatus('');
+      } catch (error) {
+        console.error('Social hub:', error);
+        socialStatus('Не удалось загрузить друзей: ' + (error.message || 'ошибка базы'), true);
+      } finally {
+        socialBusy = false;
+      }
+    }
+
+    function socialProfileCard(profile, actionHtml = '') {
+      const card = document.createElement('div');
+      card.className = 'theme-card border rounded-2xl p-3 flex items-center gap-3';
+      const avatar = document.createElement('div');
+      avatar.className = 'w-11 h-11 rounded-full theme-card border flex items-center justify-center text-xl shrink-0';
+      avatar.textContent = '👤';
+      const info = document.createElement('div');
+      info.className = 'min-w-0 flex-1';
+      const name = document.createElement('p');
+      name.className = 'font-bold text-sm truncate';
+      name.textContent = profile.display_name || profile.username || 'Ученик';
+      const username = document.createElement('p');
+      username.className = 'text-xs theme-text-muted truncate';
+      username.textContent = '@' + (profile.username || 'learner');
+      info.append(name, username);
+      const open = document.createElement('button');
+      open.className = 'btn-soft text-xs px-3 py-2 shrink-0';
+      open.textContent = 'Профиль';
+      open.addEventListener('click', () => openPublicProfile(profile));
+      card.append(avatar, info, open);
+      if (actionHtml) {
+        const action = document.createElement('div');
+        action.className = 'w-full';
+        action.innerHTML = actionHtml;
+        card.classList.add('flex-wrap');
+        card.append(action);
+      }
+      return card;
+    }
+
+    function renderSocialLists(rows, myId) {
+      const requests = document.getElementById('social-requests');
+      const friends = document.getElementById('social-friends');
+      const incoming = rows.filter(row => row.status === 'pending' && row.addressee_id === myId);
+      const outgoing = rows.filter(row => row.status === 'pending' && row.requester_id === myId);
+      const accepted = rows.filter(row => row.status === 'accepted');
+      document.getElementById('social-request-count').textContent = String(incoming.length);
+      document.getElementById('social-friend-count').textContent = String(accepted.length);
+      requests.replaceChildren();
+      if (!incoming.length && !outgoing.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs theme-text-muted';
+        empty.textContent = 'Пока нет заявок.';
+        requests.append(empty);
+      }
+      incoming.forEach(row => {
+        const profile = socialProfileCache.get(row.requester_id);
+        if (!profile) return;
+        const wrap = socialProfileCard(profile);
+        const actions = document.createElement('div');
+        actions.className = 'flex gap-2 mt-2';
+        const accept = document.createElement('button');
+        accept.className = 'btn-primary text-xs px-3 py-2';
+        accept.textContent = 'Принять';
+        accept.onclick = () => respondFriendRequest(row.id, true);
+        const decline = document.createElement('button');
+        decline.className = 'btn-soft text-xs px-3 py-2';
+        decline.textContent = 'Отклонить';
+        decline.onclick = () => respondFriendRequest(row.id, false);
+        actions.append(accept, decline);
+        wrap.append(actions);
+        requests.append(wrap);
+      });
+      outgoing.forEach(row => {
+        const profile = socialProfileCache.get(row.addressee_id);
+        if (!profile) return;
+        const wrap = socialProfileCard(profile);
+        const note = document.createElement('p');
+        note.className = 'text-[11px] theme-text-muted w-full';
+        note.textContent = 'Заявка отправлена, ожидаем ответа';
+        wrap.append(note);
+        requests.append(wrap);
+      });
+      friends.replaceChildren();
+      if (!accepted.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs theme-text-muted';
+        empty.textContent = 'Пока нет друзей. Найди пользователя выше.';
+        friends.append(empty);
+      }
+      accepted.forEach(row => {
+        const otherId = row.requester_id === myId ? row.addressee_id : row.requester_id;
+        const profile = socialProfileCache.get(otherId);
+        if (!profile) return;
+        const wrap = socialProfileCard(profile);
+        const remove = document.createElement('button');
+        remove.className = 'btn-soft text-[11px] px-3 py-2 mt-2';
+        remove.textContent = 'Удалить из друзей';
+        remove.onclick = () => removeFriend(row.id);
+        wrap.append(remove);
+        friends.append(wrap);
+      });
+    }
+
+    async function saveMySocialUsername() {
+      if (!currentAuthUser || !supabaseClient) return;
+      const input = document.getElementById('social-username-input');
+      const username = String(input.value || '').trim().replace(/^@/, '').toLowerCase();
+      if (!/^[a-z0-9_]{3,30}$/.test(username)) {
+        return showToast('Имя должно содержать 3-30 символов: a-z, 0-9 или _');
+      }
+      try {
+        await syncPublicProfile(username);
+        input.value = username;
+        showToast('Твой username сохранён');
+      } catch (error) {
+        const message = error.message || 'Не удалось сохранить username';
+        showToast(message.includes('duplicate') || message.includes('unique') ? 'Это имя уже занято' : message);
+      }
+    }
+
+    async function searchSocialUsers() {
+      if (!currentAuthUser || !supabaseClient) return showToast('Сначала войди в аккаунт');
+      const input = document.getElementById('social-search-input');
+      const query = String(input.value || '').trim().replace(/^@/, '');
+      const container = document.getElementById('social-search-results');
+      container.replaceChildren();
+      if (query.length < 2) return socialStatus('Введи минимум 2 символа для поиска.', true);
+      socialStatus('Ищем пользователей…');
+      try {
+        await syncPublicProfile();
+        const { data, error } = await supabaseClient.from('public_profiles')
+          .select('user_id, username, display_name, decks_count, cards_count, coins, rewards_count, answers_total, accuracy, mastered_count, study_streak, created_at')
+          .ilike('username', query.replace(/[%_]/g, '') + '%')
+          .neq('user_id', currentAuthUser.id).limit(20);
+        if (error) throw error;
+        if (!data?.length) {
+          const empty = document.createElement('p');
+          empty.className = 'text-xs theme-text-muted';
+          empty.textContent = 'Пользователей не найдено.';
+          container.append(empty);
+        } else {
+          data.forEach(profile => {
+            const card = socialProfileCard(profile);
+            const add = document.createElement('button');
+            add.className = 'btn-primary text-xs px-3 py-2 mt-2';
+            add.textContent = 'Добавить в друзья';
+            add.onclick = () => sendFriendRequest(profile.user_id);
+            card.append(add);
+            container.append(card);
+          });
+        }
+        socialStatus('');
+      } catch (error) {
+        console.error('Social search:', error);
+        socialStatus('Ошибка поиска: ' + (error.message || 'ошибка базы'), true);
+      }
+    }
+
+    document.getElementById('social-search-input')?.addEventListener('keydown', event => {
+      if (event.key === 'Enter') searchSocialUsers();
+    });
+
+    async function sendFriendRequest(targetId) {
+      if (!currentAuthUser || !supabaseClient) return;
+      try {
+        const { error } = await supabaseClient.rpc('send_friend_request', { target_user_id: targetId });
+        if (error) throw error;
+        showToast('Заявка отправлена');
+        await loadSocialHub();
+      } catch (error) {
+        showToast(error.message || 'Не удалось отправить заявку');
+      }
+    }
+
+    async function respondFriendRequest(requestId, accept) {
+      try {
+        if (accept) {
+          const { error } = await supabaseClient.from('friendships')
+            .update({ status: 'accepted', responded_at: new Date().toISOString() })
+            .eq('id', requestId).eq('addressee_id', currentAuthUser.id).eq('status', 'pending');
+          if (error) throw error;
+          showToast('Теперь вы друзья!');
+        } else {
+          const { error } = await supabaseClient.from('friendships')
+            .delete().eq('id', requestId).eq('addressee_id', currentAuthUser.id).eq('status', 'pending');
+          if (error) throw error;
+          showToast('Заявка отклонена');
+        }
+        await loadSocialHub();
+      } catch (error) {
+        showToast(error.message || 'Не удалось обработать заявку');
+      }
+    }
+
+    async function removeFriend(relationId) {
+      if (!confirm('Удалить пользователя из друзей?')) return;
+      try {
+        const { error } = await supabaseClient.from('friendships')
+          .delete().eq('id', relationId);
+        if (error) throw error;
+        showToast('Пользователь удалён из друзей');
+        await loadSocialHub();
+      } catch (error) {
+        showToast(error.message || 'Не удалось удалить друга');
+      }
+    }
+
+    function openPublicProfile(profile) {
+      const modal = document.getElementById('public-profile-modal');
+      const content = document.getElementById('public-profile-content');
+      content.replaceChildren();
+      const title = document.createElement('h2');
+      title.className = 'text-2xl font-black';
+      title.textContent = profile.display_name || profile.username || 'Ученик';
+      const username = document.createElement('p');
+      username.className = 'text-xs theme-text-muted mt-1';
+      username.textContent = '@' + (profile.username || 'learner');
+      content.append(title, username);
+      const metrics = [
+        ['🪙', Number(profile.coins) || 0, 'Монеты'],
+        ['📚', Number(profile.decks_count) || 0, 'Колоды'],
+        ['🗂️', Number(profile.cards_count) || 0, 'Карточки'],
+        ['🏆', Number(profile.rewards_count) || 0, 'Награды'],
+        ['🎯', Number(profile.answers_total) || 0, 'Ответы'],
+        ['⭐', (Number(profile.accuracy) || 0) + '%', 'Точность'],
+        ['🧠', Number(profile.mastered_count) || 0, 'Выучено'],
+        ['🔥', Number(profile.study_streak) || 0, 'Дней подряд']
+      ];
+      const grid = document.createElement('div');
+      grid.className = 'grid grid-cols-2 gap-2 mt-5';
+      metrics.forEach(([icon, value, label]) => {
+        const item = document.createElement('div');
+        item.className = 'theme-card border rounded-xl p-3';
+        const v = document.createElement('p');
+        v.className = 'text-xl font-black';
+        v.textContent = String(value);
+        const l = document.createElement('p');
+        l.className = 'text-[11px] theme-text-muted mt-1';
+        l.textContent = icon + ' ' + label;
+        item.append(v, l);
+        grid.append(item);
+      });
+      const joined = document.createElement('p');
+      joined.className = 'text-[11px] theme-text-muted mt-4';
+      joined.textContent = profile.created_at ? 'Участник с ' + new Date(profile.created_at).toLocaleDateString('ru-RU') : '';
+      content.append(grid, joined);
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePublicProfile() {
+      const modal = document.getElementById('public-profile-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
     function initSupabaseClient() {
       try {
         if (!window.supabase || !window.supabase.createClient) throw new Error('Supabase SDK не загрузился');
@@ -2572,9 +2987,11 @@
       const label = document.getElementById('account-button-label');
       const headerButton = document.getElementById('account-open-btn');
       const profileTab = document.getElementById('tab-profile');
+      const socialTab = document.getElementById('tab-social');
       const signedIn = Boolean(currentAuthUser);
       if (headerButton) headerButton.classList.toggle('hidden', signedIn);
       if (profileTab) profileTab.classList.toggle('hidden', !signedIn);
+      if (socialTab) socialTab.classList.toggle('hidden', !signedIn);
       if (label) label.textContent = 'Войти';
     }
 
@@ -2821,6 +3238,9 @@
         cloudInitInProgress = false;
         setCloudSyncStatus('synced');
         renderAccountPanel();
+        try { await syncPublicProfile(); } catch (socialError) {
+          console.warn('Public profile initialization skipped:', socialError.message);
+        }
         closeAccountModal();
       } catch (error) {
         cloudInitInProgress = false;
@@ -2842,6 +3262,9 @@
       localStorage.setItem(LAST_CLOUD_SYNC_KEY, new Date().toISOString());
       setCloudSyncStatus('synced');
       renderProfileMetrics();
+      try { await syncPublicProfile(); } catch (socialError) {
+        console.warn('Public profile update skipped:', socialError.message);
+      }
     }
 
     function scheduleCloudSave() {
