@@ -679,6 +679,9 @@
       <button onclick="changeDeckIcon()" class="modal-action">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>Изменить иконку
       </button>
+      <button onclick="openDeckSharePicker()" class="modal-action">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3m-5 5 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>Отправить колоду другу
+      </button>
       <button onclick="exportSingleDeck()" class="modal-action">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 17v3h14v-3"/></svg>Экспорт колоды
       </button>
@@ -686,6 +689,23 @@
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>Удалить колоду
       </button>
       <button onclick="closeDeckMenu()" class="w-full mt-3 btn-secondary">Отмена</button>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SEND DECK TO FRIEND ================= -->
+  <div id="deck-share-picker-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[205] hidden items-end sm:items-center justify-center p-3" onclick="if(event.target===this)closeDeckSharePicker()">
+    <div class="theme-card w-full max-w-md rounded-3xl border p-5 shadow-2xl max-h-[82vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="home-eyebrow mb-1">HankeCards Social</p>
+          <h3 class="text-lg font-black">Отправить колоду</h3>
+        </div>
+        <button onclick="closeDeckSharePicker()" class="btn-soft px-3" aria-label="Закрыть">✕</button>
+      </div>
+      <p id="deck-share-picker-caption" class="text-xs theme-text-muted mb-4"></p>
+      <div id="deck-share-friends-list" class="space-y-2">
+        <p class="text-sm theme-text-muted">Загружаем список друзей…</p>
+      </div>
     </div>
   </div>
 
@@ -849,11 +869,7 @@
     <section class="theme-card border rounded-2xl p-4 mt-5">
       <h3 class="font-bold text-base">Обмен колодами 📦</h3>
       <p class="text-xs theme-text-muted mt-1 mb-4">Отправляй свои колоды только подтверждённым друзьям. Получатель импортирует отдельную копию.</p>
-      <label for="deck-share-select" class="text-xs font-bold theme-text-muted block mb-2">Выбери колоду</label>
-      <select id="deck-share-select" class="form-input w-full mb-3"></select>
-      <label for="deck-share-friend" class="text-xs font-bold theme-text-muted block mb-2">Отправить другу</label>
-      <select id="deck-share-friend" class="form-input w-full mb-3"></select>
-      <button onclick="sendSelectedDeckShare()" class="btn-primary w-full">Отправить колоду</button>
+      <p class="text-xs theme-text-muted mb-4">Предложения, которые тебе отправили друзья, появятся здесь. Чтобы отправить свою колоду, открой меню «⋯» рядом с ней на главной странице.</p>
       <div class="border-t theme-border my-4"></div>
       <div class="flex items-center justify-between mb-2">
         <h4 class="font-bold text-sm">Входящие предложения</h4>
@@ -2864,7 +2880,6 @@
         }
         socialProfileCache = new Map(profiles.map(profile => [profile.user_id, profile]));
         renderSocialLists(rows, id);
-        populateDeckShareSelectors();
         await loadDeckShares();
         socialStatus('');
       } catch (error) {
@@ -2965,50 +2980,90 @@
     }
 
     // Deck sharing: server validates friendship and stores only the explicitly selected deck.
-    function populateDeckShareSelectors() {
-      const deckSelect = document.getElementById('deck-share-select');
-      const friendSelect = document.getElementById('deck-share-friend');
-      if (!deckSelect || !friendSelect) return;
-      deckSelect.replaceChildren();
-      decks.forEach(deck => {
-        const option = document.createElement('option');
-        option.value = deck.id;
-        option.textContent = deck.name || 'Без названия';
-        deckSelect.append(option);
-      });
-      friendSelect.replaceChildren();
-      const accepted = socialFriendRows.filter(row => row.status === 'accepted');
-      accepted.forEach(row => {
-        const friendId = row.requester_id === currentAuthUser?.id ? row.addressee_id : row.requester_id;
-        const profile = socialProfileCache.get(friendId);
-        if (!profile) return;
-        const option = document.createElement('option');
-        option.value = friendId;
-        option.textContent = (profile.display_name || profile.username || 'Друг') + ' (@' + (profile.username || 'user') + ')';
-        friendSelect.append(option);
-      });
-      if (!decks.length) {
-        const option = document.createElement('option');
-        option.textContent = 'Нет доступных колод';
-        option.value = '';
-        deckSelect.append(option);
-      }
-      if (!friendSelect.options.length) {
-        const option = document.createElement('option');
-        option.textContent = 'Сначала добавь друга';
-        option.value = '';
-        friendSelect.append(option);
+    async function openDeckSharePicker() {
+      const deck = decks.find(item => String(item.id) === String(currentMenuDeckId));
+      if (!deck) return showToast('Колода не найдена');
+      if (!currentAuthUser || !supabaseClient) return showToast('Войди в аккаунт, чтобы отправлять колоды');
+      closeDeckMenu();
+      const modal = document.getElementById('deck-share-picker-modal');
+      const list = document.getElementById('deck-share-friends-list');
+      const caption = document.getElementById('deck-share-picker-caption');
+      caption.textContent = `Колода «${deck.name}» · ${cards.filter(card => String(card.deckId) === String(deck.id)).length} карточек`;
+      list.innerHTML = '<p class="text-sm theme-text-muted">Загружаем список друзей…</p>';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      try {
+        const id = currentAuthUser.id;
+        const { data: relations, error } = await supabaseClient
+          .from('friendships').select('requester_id, addressee_id, status')
+          .or(`requester_id.eq.${id},addressee_id.eq.${id}`)
+          .eq('status', 'accepted');
+        if (error) throw error;
+        const friendIds = [...new Set((relations || []).map(row => row.requester_id === id ? row.addressee_id : row.requester_id))];
+        let profiles = [];
+        if (friendIds.length) {
+          const result = await supabaseClient.from('public_profiles')
+            .select('user_id, username, display_name')
+            .in('user_id', friendIds);
+          if (result.error) throw result.error;
+          profiles = result.data || [];
+        }
+        socialFriendRows = relations || [];
+        profiles.forEach(profile => socialProfileCache.set(profile.user_id, profile));
+        list.replaceChildren();
+        if (!profiles.length) {
+          const empty = document.createElement('div');
+          empty.className = 'theme-card border rounded-2xl p-4 text-sm theme-text-muted';
+          empty.textContent = 'Пока нет подтверждённых друзей. Сначала добавь пользователя в друзья во вкладке «Друзья».';
+          list.append(empty);
+          return;
+        }
+        profiles.sort((a,b) => (a.display_name || a.username || '').localeCompare(b.display_name || b.username || ''));
+        profiles.forEach(profile => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'theme-card border rounded-2xl p-3 w-full flex items-center gap-3 text-left';
+          const avatar = document.createElement('span');
+          avatar.className = 'w-10 h-10 rounded-full flex items-center justify-center font-black theme-accent shrink-0';
+          avatar.textContent = (profile.display_name || profile.username || '?').trim().charAt(0).toUpperCase();
+          const info = document.createElement('span');
+          info.className = 'flex-1 min-w-0';
+          const name = document.createElement('span');
+          name.className = 'block text-sm font-bold truncate';
+          name.textContent = profile.display_name || profile.username || 'Друг';
+          const username = document.createElement('span');
+          username.className = 'block text-xs theme-text-muted truncate';
+          username.textContent = '@' + (profile.username || 'user');
+          const send = document.createElement('span');
+          send.className = 'text-xs font-bold theme-accent-text';
+          send.textContent = 'Отправить →';
+          info.append(name, username);
+          button.append(avatar, info, send);
+          button.onclick = () => sendDeckToFriend(profile.user_id);
+          list.append(button);
+        });
+      } catch (error) {
+        console.error('Deck share friends:', error);
+        list.innerHTML = '<p class="text-sm text-red-500">Не удалось загрузить друзей. Проверь подключение и попробуй ещё раз.</p>';
       }
     }
 
-    async function sendSelectedDeckShare() {
+    function closeDeckSharePicker() {
+      const modal = document.getElementById('deck-share-picker-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function sendDeckToFriend(friendId) {
       if (!currentAuthUser || !supabaseClient) return showToast('Сначала войди в аккаунт');
-      const deckId = document.getElementById('deck-share-select')?.value;
-      const friendId = document.getElementById('deck-share-friend')?.value;
-      const deck = decks.find(item => String(item.id) === String(deckId));
-      if (!deck || !friendId) return showToast('Выбери колоду и друга');
+      const deck = decks.find(item => String(item.id) === String(currentMenuDeckId));
+      if (!deck) return showToast('Колода не найдена');
       const deckCards = cards.filter(card => String(card.deckId) === String(deck.id));
-      if (!confirm(`Отправить другу колоду «${deck.name}» (${deckCards.length} карточек)?`)) return;
+      const profile = socialProfileCache.get(friendId);
+      const friendName = profile?.display_name || profile?.username || 'другу';
+      if (!confirm(`Отправить колоду «${deck.name}» (${deckCards.length} карточек) пользователю ${friendName}?`)) return;
+      const list = document.getElementById('deck-share-friends-list');
+      if (list) list.style.pointerEvents = 'none';
       try {
         const { error } = await supabaseClient.rpc('send_friend_deck_share', {
           p_receiver_id: friendId,
@@ -3022,11 +3077,14 @@
           }))
         });
         if (error) throw error;
+        closeDeckSharePicker();
         showToast('Предложение отправлено 📦');
         await loadDeckShares();
       } catch (error) {
         console.error('Deck share send:', error);
         showToast(error.message || 'Не удалось отправить колоду');
+      } finally {
+        if (list) list.style.pointerEvents = '';
       }
     }
 
