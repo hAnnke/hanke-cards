@@ -9,9 +9,12 @@
   <meta name="theme-color" content="#090d18">
   <meta name="description" content="HankeCards – немецкий словарь с карточками и интервальным повторением.">
   <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/hankecards-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/hankecards-512.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./HankeCards-apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="Hanke Cards">
   <meta name="application-name" content="Hanke Cards">
+  <meta name="apple-mobile-web-app-title" content="HankeCards">
   <title>HankeCards</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -405,8 +408,11 @@
       min-width:180px; justify-content:center;
     }
     .card-description { white-space:pre-wrap; line-height:1.5; overflow-wrap:anywhere; }
-    .app-tabbar { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
-    .app-tabbar::-webkit-scrollbar { display:none; }
+    .app-tabbar { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-behavior:smooth; }
+    .app-tabbar::-webkit-scrollbar { height:5px; }
+    .app-tabbar::-webkit-scrollbar-thumb { background:color-mix(in srgb, var(--text-muted) 35%, transparent); border-radius:999px; }
+    .app-tabbar { scrollbar-width:thin; scrollbar-color:color-mix(in srgb, var(--text-muted) 35%, transparent) transparent; }
+    @media (pointer: coarse) { .app-tabbar::-webkit-scrollbar { display:none; } .app-tabbar { scrollbar-width:none; } }
     .app-tabbar button { flex:0 0 68px; width:68px; min-width:68px; height:76px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
     .app-tabbar .nav-emoji { width:26px; height:26px; display:flex; align-items:center; justify-content:center; flex:0 0 26px; font-size:21px; line-height:1; }
     .app-tabbar .nav-label { display:flex; align-items:center; justify-content:center; width:100%; height:16px; line-height:16px; white-space:nowrap; font-size:10px; letter-spacing:-0.01em; }
@@ -3882,6 +3888,17 @@
       reader.readAsText(file);
     }
     restoreTabOrder();
+    // Desktop: map the vertical mouse wheel to the horizontally scrolling tab bar.
+    const desktopTabbar = document.querySelector('.app-tabbar');
+    if (desktopTabbar) {
+      desktopTabbar.addEventListener('wheel', (event) => {
+        if (desktopTabbar.scrollWidth <= desktopTabbar.clientWidth) return;
+        const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+        if (!delta) return;
+        event.preventDefault();
+        desktopTabbar.scrollLeft += delta;
+      }, { passive: false });
+    }
     normalizeSRSData();
     const quietModeToggle = document.getElementById('quiet-mode-toggle');
     if (quietModeToggle) quietModeToggle.checked = quietMode;
