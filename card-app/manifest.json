@@ -1,24 +1,42 @@
 {
-  "name": "Hanke Cards",
-  "short_name": "Hanke Cards",
-  "description": "Немецкий словарь, карточки и интервальное повторение.",
+  "id": "./",
+  "name": "HankeCards – German Vocabulary",
+  "short_name": "HankeCards",
+  "description": "Немецкий словарь с карточками и интервальным повторением.",
+  "lang": "ru",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#fff8f2",
-  "theme_color": "#d97855",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "background_color": "#090d18",
+  "theme_color": "#090d18",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "./HankeCards-icon-192.png",
+      "src": "./icons/hankecards-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./HankeCards-icon-512.png",
+      "src": "./icons/hankecards-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "./icons/hankecards-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
