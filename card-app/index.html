@@ -14,6 +14,7 @@
   <meta name="application-name" content="Hanke Cards">
   <title>HankeCards</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* =========================================================
        HANKECARDS 2.0 · STAGE 1
@@ -441,7 +442,55 @@
   <nav class="app-nav px-6 pb-4 flex items-center justify-center z-10 relative">
     <h1 class="app-brand text-base font-extrabold cursor-pointer tracking-tight" onclick="goHome()">Hanke Cards</h1>
     <div id="nav-actions" class="app-nav-actions text-sm font-semibold flex gap-2 items-center"></div>
+    <button id="account-open-btn" onclick="openAccountModal()" class="absolute left-5 top-1/2 -translate-y-1/2 btn-soft px-3 py-2 text-xs" aria-label="Аккаунт">👤 <span id="account-button-label">Войти</span></button>
   </nav>
+
+
+  <!-- ================= ACCOUNT / AUTH MODAL ================= -->
+  <div id="account-modal" class="hidden fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
+    <div class="theme-card border rounded-3xl p-5 w-full max-w-md max-h-[90dvh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <div>
+          <p class="home-eyebrow">HankeCards account</p>
+          <h2 id="account-modal-title" class="text-xl font-black mt-1">Аккаунт</h2>
+        </div>
+        <button onclick="closeAccountModal()" class="btn-soft px-3" aria-label="Закрыть">✕</button>
+      </div>
+
+      <div id="account-guest-panel">
+        <p class="text-sm theme-text-muted mb-4">Продолжай как гость или создай аккаунт, чтобы хранить колоды в облаке и открывать их на других устройствах.</p>
+        <div class="grid grid-cols-2 gap-2 mb-4">
+          <button id="auth-tab-login" onclick="setAuthMode('login')" class="btn-primary">Войти</button>
+          <button id="auth-tab-signup" onclick="setAuthMode('signup')" class="btn-secondary">Регистрация</button>
+        </div>
+        <form id="account-auth-form" class="space-y-3">
+          <label class="block text-xs font-semibold theme-text-muted">Имя пользователя <input id="auth-username" class="form-input w-full mt-1" autocomplete="nickname" maxlength="40" placeholder="Например, Yaroslav"></label>
+          <label class="block text-xs font-semibold theme-text-muted">Email <input id="auth-email" type="email" required class="form-input w-full mt-1" autocomplete="email" placeholder="name@example.com"></label>
+          <label class="block text-xs font-semibold theme-text-muted">Пароль <input id="auth-password" type="password" required minlength="8" class="form-input w-full mt-1" autocomplete="current-password" placeholder="Минимум 8 символов"></label>
+          <button id="auth-submit-btn" type="submit" class="btn-primary w-full">Войти</button>
+        </form>
+        <button onclick="sendPasswordReset()" class="btn-soft w-full mt-2 text-xs">Забыли пароль?</button>
+        <button onclick="continueAsGuest()" class="btn-secondary w-full mt-3">Продолжить как гость</button>
+        <p class="text-[11px] theme-text-muted mt-3 leading-relaxed">Гостевые данные остаются на этом устройстве. Перед выходом или очисткой браузера сделай резервную копию.</p>
+        <p id="auth-message" class="text-sm mt-3" aria-live="polite"></p>
+      </div>
+
+      <div id="account-user-panel" class="hidden">
+        <div class="theme-card border rounded-2xl p-4 mb-4">
+          <p class="text-xs theme-text-muted">Ты вошёл как</p>
+          <p id="account-user-name" class="font-bold text-lg mt-1"></p>
+          <p id="account-user-email" class="text-xs theme-text-muted mt-1 break-all"></p>
+          <p id="account-sync-status" class="text-xs theme-accent-text mt-3">Облачная синхронизация подключена</p>
+        </div>
+        <div class="space-y-2">
+          <button onclick="syncCloudNow()" class="btn-primary w-full">Синхронизировать сейчас</button>
+          <button onclick="downloadCloudBackup()" class="btn-secondary w-full">Скачать резервную копию</button>
+          <button onclick="signOutAccount()" class="btn-soft w-full">Выйти из аккаунта</button>
+        </div>
+        <p class="text-[11px] theme-text-muted mt-3">Колоды и прогресс синхронизируются между устройствами. Изменения на этом устройстве отправляются в облако автоматически.</p>
+      </div>
+    </div>
+  </div>
 
   <!-- ================= TOAST ================= -->
   <div id="toast" class="app-toast fixed bottom-28 left-1/2 -translate-x-1/2 theme-card border text-inherit px-6 py-3 rounded-full shadow-2xl z-[100] toast-enter pointer-events-none flex items-center gap-2 whitespace-nowrap">
@@ -1042,6 +1091,7 @@
     function setQuietMode(enabled) {
       quietMode = Boolean(enabled);
       localStorage.setItem(QUIET_MODE_KEY, String(quietMode));
+      if (typeof scheduleCloudSave === 'function') scheduleCloudSave();
       const toggle = document.getElementById('quiet-mode-toggle');
       if (toggle) toggle.checked = quietMode;
       showToast(quietMode ? 'Тихий режим включён: аудиозадания в быстром обучении отключены' : 'Тихий режим выключен');
@@ -1316,6 +1366,7 @@
     renderPracticeHub();
     function setTheme(themeName, isInit = false) {
       document.body.setAttribute('data-theme', themeName); localStorage.setItem('mytheme', themeName);
+      if (typeof scheduleCloudSave === 'function') scheduleCloudSave();
       if(!isInit) showToast('Тема обновлена ');
     }
 
@@ -2446,7 +2497,331 @@
       }
     }
 
-    function saveData() { localStorage.setItem('mydecks_v7', JSON.stringify(decks)); localStorage.setItem('mycards_v7', JSON.stringify(cards)); }
+    function saveData() {
+      localStorage.setItem('mydecks_v7', JSON.stringify(decks));
+      localStorage.setItem('mycards_v7', JSON.stringify(cards));
+      scheduleCloudSave();
+    }
+
+    // =====================================================
+    // Supabase account + cloud sync
+    // Guest mode remains local-only and preserves legacy keys.
+    // =====================================================
+    const SUPABASE_URL = 'https://rnestwewhcxiupiojibc.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_7EzOQVKrRHfEAbtYndSHLQ_G_ErtxbH';
+    const CLOUD_STATE_KEY = 'hankecards_cloud_state_v1';
+    let supabaseClient = null;
+    let currentAuthUser = null;
+    let cloudReady = false;
+    let cloudInitInProgress = false;
+    let cloudSaveTimer = null;
+    let cloudSaveInFlight = false;
+    let authMode = 'login';
+
+    function initSupabaseClient() {
+      try {
+        if (!window.supabase || !window.supabase.createClient) throw new Error('Supabase SDK не загрузился');
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+          const nextUser = session?.user || null;
+          currentAuthUser = nextUser;
+          updateAccountButton();
+          if (event === 'SIGNED_IN' && nextUser) {
+            setTimeout(() => handleSignedInUser(nextUser), 0);
+          }
+          if (event === 'SIGNED_OUT') {
+            cloudReady = false;
+            updateAccountButton();
+          }
+        });
+        supabaseClient.auth.getSession().then(({ data, error }) => {
+          if (error) console.warn('Supabase session:', error.message);
+          currentAuthUser = data?.session?.user || null;
+          updateAccountButton();
+          if (currentAuthUser) handleSignedInUser(currentAuthUser);
+        });
+      } catch (error) {
+        console.error('Supabase initialization failed:', error);
+        const label = document.getElementById('account-button-label');
+        if (label) label.textContent = 'Аккаунт недоступен';
+      }
+    }
+
+    function updateAccountButton() {
+      const label = document.getElementById('account-button-label');
+      if (label) label.textContent = currentAuthUser ? 'Профиль' : 'Войти';
+    }
+
+    function openAccountModal() {
+      const modal = document.getElementById('account-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      renderAccountPanel();
+    }
+
+    function closeAccountModal() {
+      const modal = document.getElementById('account-modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode === 'signup' ? 'signup' : 'login';
+      const signup = authMode === 'signup';
+      document.getElementById('auth-username').classList.toggle('hidden', !signup);
+      document.getElementById('auth-tab-login').className = signup ? 'btn-secondary' : 'btn-primary';
+      document.getElementById('auth-tab-signup').className = signup ? 'btn-primary' : 'btn-secondary';
+      document.getElementById('auth-submit-btn').textContent = signup ? 'Создать аккаунт' : 'Войти';
+      document.getElementById('auth-password').autocomplete = signup ? 'new-password' : 'current-password';
+      document.getElementById('auth-message').textContent = '';
+    }
+
+    function renderAccountPanel() {
+      const signedIn = Boolean(currentAuthUser);
+      document.getElementById('account-guest-panel').classList.toggle('hidden', signedIn);
+      document.getElementById('account-user-panel').classList.toggle('hidden', !signedIn);
+      if (signedIn) {
+        const metaName = currentAuthUser.user_metadata?.username || currentAuthUser.user_metadata?.name || '';
+        document.getElementById('account-user-name').textContent = metaName || currentAuthUser.email?.split('@')[0] || 'Пользователь';
+        document.getElementById('account-user-email').textContent = currentAuthUser.email || '';
+        document.getElementById('account-sync-status').textContent = cloudReady ? 'Облачная синхронизация активна' : 'Подготавливаем синхронизацию…';
+      } else {
+        setAuthMode(authMode);
+      }
+    }
+
+    function setAuthMessage(message, isError = false) {
+      const el = document.getElementById('auth-message');
+      if (!el) return;
+      el.textContent = message;
+      el.style.color = isError ? '#dc5555' : 'var(--accent)';
+    }
+
+    document.getElementById('account-auth-form')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!supabaseClient) return setAuthMessage('Не удалось подключиться к Supabase. Обнови страницу и попробуй ещё раз.', true);
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const username = document.getElementById('auth-username').value.trim();
+      const submit = document.getElementById('auth-submit-btn');
+      submit.disabled = true;
+      submit.textContent = 'Подожди…';
+      try {
+        if (authMode === 'signup') {
+          if (password.length < 8) throw new Error('Пароль должен содержать минимум 8 символов.');
+          const { data, error } = await supabaseClient.auth.signUp({
+            email, password,
+            options: {
+              data: { username: username || email.split('@')[0] },
+              emailRedirectTo: window.location.href
+            }
+          });
+          if (error) throw error;
+          if (data.session) {
+            setAuthMessage('Аккаунт создан. Выполняем вход…');
+          } else {
+            setAuthMessage('Аккаунт создан! Проверь почту и перейди по ссылке подтверждения.');
+          }
+        } else {
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          setAuthMessage('Вход выполнен!');
+        }
+      } catch (error) {
+        setAuthMessage(error.message || 'Не удалось выполнить операцию.', true);
+      } finally {
+        submit.disabled = false;
+        submit.textContent = authMode === 'signup' ? 'Создать аккаунт' : 'Войти';
+      }
+    });
+
+    async function sendPasswordReset() {
+      if (!supabaseClient) return setAuthMessage('Supabase пока недоступен.', true);
+      const email = document.getElementById('auth-email').value.trim();
+      if (!email) return setAuthMessage('Сначала введи email.', true);
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+        if (error) throw error;
+        setAuthMessage('Ссылка для восстановления отправлена на почту.');
+      } catch (error) {
+        setAuthMessage(error.message || 'Не удалось отправить письмо.', true);
+      }
+    }
+
+    function continueAsGuest() {
+      if (currentAuthUser) return;
+      closeAccountModal();
+      showToast('Ты используешь гостевой режим');
+    }
+
+    function buildCloudPayload() {
+      let statsHistory = {};
+      try { statsHistory = JSON.parse(localStorage.getItem(STATS_HISTORY_KEY) || '{}') || {}; } catch (_) {}
+      let dailyStats = null;
+      try { dailyStats = JSON.parse(localStorage.getItem(DAILY_STATS_KEY) || 'null'); } catch (_) {}
+      let settings = {};
+      try { settings = JSON.parse(localStorage.getItem('hankecards_user_settings_v1') || '{}') || {}; } catch (_) {}
+      return {
+        version: 1,
+        decks: decks,
+        cards: cards,
+        statsHistory,
+        dailyStats,
+        pointsBalance,
+        ownedRewards,
+        theme: document.body.getAttribute('data-theme') || 'light',
+        quietMode,
+        settings,
+        exportedAt: new Date().toISOString()
+      };
+    }
+
+    function applyCloudPayload(payload) {
+      if (!payload || !Array.isArray(payload.decks) || !Array.isArray(payload.cards)) {
+        throw new Error('Облачная копия имеет некорректный формат.');
+      }
+      const deckIds = new Set(payload.decks.map(d => String(d.id)));
+      if (payload.cards.some(c => !deckIds.has(String(c.deckId)))) {
+        throw new Error('В облачной копии обнаружены карточки без колоды.');
+      }
+      decks = payload.decks.map(d => ({ ...d }));
+      cards = payload.cards.map(c => ({ ...c }));
+      localStorage.setItem('mydecks_v7', JSON.stringify(decks));
+      localStorage.setItem('mycards_v7', JSON.stringify(cards));
+      if (payload.statsHistory && typeof payload.statsHistory === 'object') localStorage.setItem(STATS_HISTORY_KEY, JSON.stringify(payload.statsHistory));
+      if (payload.dailyStats) localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(payload.dailyStats));
+      if (Number.isFinite(Number(payload.pointsBalance))) {
+        pointsBalance = Math.max(0, Number(payload.pointsBalance));
+        localStorage.setItem(POINTS_KEY, String(pointsBalance));
+      }
+      if (Array.isArray(payload.ownedRewards)) {
+        ownedRewards = payload.ownedRewards.filter(x => typeof x === 'string');
+        localStorage.setItem(REWARDS_KEY, JSON.stringify(ownedRewards));
+      }
+      if (typeof payload.quietMode === 'boolean') {
+        quietMode = payload.quietMode;
+        localStorage.setItem(QUIET_MODE_KEY, String(quietMode));
+        const toggle = document.getElementById('quiet-mode-toggle');
+        if (toggle) toggle.checked = quietMode;
+      }
+      if (payload.theme && ['light', 'dark', 'peach'].includes(payload.theme)) setTheme(payload.theme, true);
+      normalizeSRSData();
+      renderDecks();
+      renderPracticeHub();
+      renderMastered();
+      renderStatistics();
+    }
+
+    async function handleSignedInUser(user) {
+      if (!supabaseClient || !user || cloudReady || cloudInitInProgress) return;
+      cloudInitInProgress = true;
+      const status = document.getElementById('account-sync-status');
+      if (status) status.textContent = 'Проверяем облачные данные…';
+      try {
+        const { data, error } = await supabaseClient
+          .from('user_cloud_state')
+          .select('payload, updated_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.payload) {
+          const useCloud = confirm('В аккаунте уже есть облачные данные. Нажми OK, чтобы загрузить их на это устройство. Нажми Отмена, чтобы отправить текущие локальные данные в облако вместо облачной копии.');
+          if (useCloud) {
+            applyCloudPayload(data.payload);
+            showToast('Облачные данные загружены');
+          } else {
+            await writeCloudState();
+            showToast('Локальные данные отправлены в облако');
+          }
+        } else {
+          const hasLocalData = decks.length > 0 || cards.length > 0;
+          if (hasLocalData) {
+            const uploadLocal = confirm('В облаке пока нет данных. Загрузить текущие колоды и карточки этого устройства в аккаунт?');
+            if (uploadLocal) await writeCloudState();
+          }
+        }
+        cloudReady = true;
+        cloudInitInProgress = false;
+        if (status) status.textContent = 'Облачная синхронизация активна';
+        renderAccountPanel();
+        closeAccountModal();
+      } catch (error) {
+        cloudInitInProgress = false;
+        console.error('HankeCards cloud sync:', error);
+        if (status) status.textContent = 'Ошибка синхронизации: ' + (error.message || 'неизвестная ошибка');
+        showToast('Не удалось загрузить облачные данные');
+      }
+    }
+
+    async function writeCloudState() {
+      if (!supabaseClient || !currentAuthUser) return;
+      const payload = buildCloudPayload();
+      const { error } = await supabaseClient.from('user_cloud_state').upsert({
+        user_id: currentAuthUser.id,
+        payload,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+    }
+
+    function scheduleCloudSave() {
+      if (!currentAuthUser || !cloudReady) return;
+      clearTimeout(cloudSaveTimer);
+      cloudSaveTimer = setTimeout(async () => {
+        if (cloudSaveInFlight) return scheduleCloudSave();
+        cloudSaveInFlight = true;
+        try {
+          await writeCloudState();
+          const status = document.getElementById('account-sync-status');
+          if (status) status.textContent = 'Все изменения синхронизированы';
+        } catch (error) {
+          console.error('Cloud save failed:', error);
+          const status = document.getElementById('account-sync-status');
+          if (status) status.textContent = 'Ошибка синхронизации. Проверь интернет.';
+        } finally {
+          cloudSaveInFlight = false;
+        }
+      }, 1400);
+    }
+
+    async function syncCloudNow() {
+      try {
+        if (!currentAuthUser) return;
+        await writeCloudState();
+        cloudReady = true;
+        document.getElementById('account-sync-status').textContent = 'Все изменения синхронизированы';
+        showToast('Синхронизация завершена');
+      } catch (error) {
+        showToast('Ошибка синхронизации: ' + (error.message || 'проверь настройки базы'));
+      }
+    }
+
+    function downloadCloudBackup() {
+      downloadJsonFile(buildCloudPayload(), `HankeCards_Cloud_Backup_${new Date().toISOString().slice(0,10)}.json`, 'Резервная копия скачана');
+    }
+
+    async function signOutAccount() {
+      if (!supabaseClient) return;
+      if (!confirm('Выйти из аккаунта? Локальная копия останется на этом устройстве.')) return;
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) return showToast('Не удалось выйти: ' + error.message);
+      currentAuthUser = null;
+      cloudReady = false;
+      updateAccountButton();
+      renderAccountPanel();
+      closeAccountModal();
+      showToast('Вы вышли из аккаунта. Локальные данные сохранены.');
+    }
+
+    window.addEventListener('online', () => {
+      if (currentAuthUser && cloudReady) syncCloudNow();
+    });
+
+    initSupabaseClient();
     function renderMastered() {
       const container = document.getElementById('mastered-container'); const masteredCards = cards.filter(c => c.srsLevel >= 4); container.innerHTML = '';
       if(masteredCards.length === 0) return container.innerHTML = '<p class="text-sm theme-text-muted">Пока тут пусто.</p>';
