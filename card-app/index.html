@@ -480,7 +480,19 @@
           <p class="text-xs theme-text-muted">Ты вошёл как</p>
           <p id="account-user-name" class="font-bold text-lg mt-1"></p>
           <p id="account-user-email" class="text-xs theme-text-muted mt-1 break-all"></p>
-          <p id="account-sync-status" class="text-xs theme-accent-text mt-3">Облачная синхронизация подключена</p>
+          <p id="account-created-at" class="text-[11px] theme-text-muted mt-2"></p>
+          <div class="grid grid-cols-3 gap-2 mt-4">
+            <div class="theme-card border rounded-xl p-2 text-center"><p id="profile-deck-count" class="text-lg font-black">0</p><p class="text-[10px] theme-text-muted">Колоды</p></div>
+            <div class="theme-card border rounded-xl p-2 text-center"><p id="profile-card-count" class="text-lg font-black">0</p><p class="text-[10px] theme-text-muted">Карточки</p></div>
+            <div class="theme-card border rounded-xl p-2 text-center"><p id="profile-coins-count" class="text-lg font-black">0</p><p class="text-[10px] theme-text-muted">Монеты 🪙</p></div>
+          </div>
+          <div class="theme-card border rounded-xl p-3 mt-3">
+            <div class="flex items-center gap-2">
+              <span id="account-sync-icon" aria-hidden="true">☁️</span>
+              <p id="account-sync-status" class="text-xs font-semibold">Подготавливаем синхронизацию…</p>
+            </div>
+            <p id="account-last-sync" class="text-[11px] theme-text-muted mt-1">Последняя синхронизация пока неизвестна</p>
+          </div>
         </div>
         <div class="space-y-2">
           <button onclick="syncCloudNow()" class="btn-primary w-full">Синхронизировать сейчас</button>
@@ -2592,6 +2604,51 @@
       document.getElementById('auth-message').textContent = '';
     }
 
+    const LAST_CLOUD_SYNC_KEY = 'hankecards_last_cloud_sync_v1';
+
+    function formatAccountDate(value) {
+      if (!value) return 'Дата регистрации неизвестна';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return 'Дата регистрации неизвестна';
+      return 'С нами с ' + date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function formatSyncDate(value) {
+      if (!value) return 'Последняя синхронизация пока неизвестна';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return 'Последняя синхронизация пока неизвестна';
+      return 'Последняя синхронизация: ' + date.toLocaleString('ru-RU', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function setCloudSyncStatus(state, detail) {
+      const status = document.getElementById('account-sync-status');
+      const icon = document.getElementById('account-sync-icon');
+      const last = document.getElementById('account-last-sync');
+      const states = {
+        syncing: { icon: '🔄', text: 'Синхронизация…' },
+        synced: { icon: '☁️', text: 'Все изменения сохранены' },
+        offline: { icon: '📴', text: 'Нет подключения к интернету' },
+        error: { icon: '⚠️', text: 'Ошибка синхронизации' },
+        pending: { icon: '⏳', text: 'Ожидаем синхронизацию' }
+      };
+      const current = states[state] || states.pending;
+      if (icon) icon.textContent = current.icon;
+      if (status) status.textContent = detail || current.text;
+      if (last) last.textContent = formatSyncDate(localStorage.getItem(LAST_CLOUD_SYNC_KEY));
+    }
+
+    function renderProfileMetrics() {
+      const deckCount = document.getElementById('profile-deck-count');
+      const cardCount = document.getElementById('profile-card-count');
+      const coinsCount = document.getElementById('profile-coins-count');
+      if (deckCount) deckCount.textContent = String(decks.length);
+      if (cardCount) cardCount.textContent = String(cards.length);
+      if (coinsCount) coinsCount.textContent = String(pointsBalance);
+    }
+
     function renderAccountPanel() {
       const signedIn = Boolean(currentAuthUser);
       document.getElementById('account-guest-panel').classList.toggle('hidden', signedIn);
@@ -2600,7 +2657,9 @@
         const metaName = currentAuthUser.user_metadata?.username || currentAuthUser.user_metadata?.name || '';
         document.getElementById('account-user-name').textContent = metaName || currentAuthUser.email?.split('@')[0] || 'Пользователь';
         document.getElementById('account-user-email').textContent = currentAuthUser.email || '';
-        document.getElementById('account-sync-status').textContent = cloudReady ? 'Облачная синхронизация активна' : 'Подготавливаем синхронизацию…';
+        document.getElementById('account-created-at').textContent = formatAccountDate(currentAuthUser.created_at);
+        renderProfileMetrics();
+        setCloudSyncStatus(cloudReady ? (navigator.onLine ? 'synced' : 'offline') : 'pending');
       } else {
         setAuthMode(authMode);
       }
@@ -2734,8 +2793,7 @@
     async function handleSignedInUser(user) {
       if (!supabaseClient || !user || cloudReady || cloudInitInProgress) return;
       cloudInitInProgress = true;
-      const status = document.getElementById('account-sync-status');
-      if (status) status.textContent = 'Проверяем облачные данные…';
+      setCloudSyncStatus('syncing', 'Проверяем облачные данные…');
       try {
         const { data, error } = await supabaseClient
           .from('user_cloud_state')
@@ -2761,13 +2819,13 @@
         }
         cloudReady = true;
         cloudInitInProgress = false;
-        if (status) status.textContent = 'Облачная синхронизация активна';
+        setCloudSyncStatus('synced');
         renderAccountPanel();
         closeAccountModal();
       } catch (error) {
         cloudInitInProgress = false;
         console.error('HankeCards cloud sync:', error);
-        if (status) status.textContent = 'Ошибка синхронизации: ' + (error.message || 'неизвестная ошибка');
+        setCloudSyncStatus('error', 'Ошибка загрузки: ' + (error.message || 'неизвестная ошибка'));
         showToast('Не удалось загрузить облачные данные');
       }
     }
@@ -2781,22 +2839,28 @@
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
       if (error) throw error;
+      localStorage.setItem(LAST_CLOUD_SYNC_KEY, new Date().toISOString());
+      setCloudSyncStatus('synced');
+      renderProfileMetrics();
     }
 
     function scheduleCloudSave() {
       if (!currentAuthUser || !cloudReady) return;
       clearTimeout(cloudSaveTimer);
+      if (!navigator.onLine) {
+        setCloudSyncStatus('offline');
+        return;
+      }
+      setCloudSyncStatus('pending');
       cloudSaveTimer = setTimeout(async () => {
         if (cloudSaveInFlight) return scheduleCloudSave();
         cloudSaveInFlight = true;
+        setCloudSyncStatus('syncing');
         try {
           await writeCloudState();
-          const status = document.getElementById('account-sync-status');
-          if (status) status.textContent = 'Все изменения синхронизированы';
         } catch (error) {
           console.error('Cloud save failed:', error);
-          const status = document.getElementById('account-sync-status');
-          if (status) status.textContent = 'Ошибка синхронизации. Проверь интернет.';
+          setCloudSyncStatus(navigator.onLine ? 'error' : 'offline', error.message || undefined);
         } finally {
           cloudSaveInFlight = false;
         }
@@ -2806,11 +2870,13 @@
     async function syncCloudNow() {
       try {
         if (!currentAuthUser) return;
+        setCloudSyncStatus('syncing');
         await writeCloudState();
         cloudReady = true;
-        document.getElementById('account-sync-status').textContent = 'Все изменения синхронизированы';
+        renderAccountPanel();
         showToast('Синхронизация завершена');
       } catch (error) {
+        setCloudSyncStatus(navigator.onLine ? 'error' : 'offline', error.message || undefined);
         showToast('Ошибка синхронизации: ' + (error.message || 'проверь настройки базы'));
       }
     }
@@ -2834,6 +2900,9 @@
 
     window.addEventListener('online', () => {
       if (currentAuthUser && cloudReady) syncCloudNow();
+    });
+    window.addEventListener('offline', () => {
+      if (currentAuthUser) setCloudSyncStatus('offline');
     });
 
     initSupabaseClient();
