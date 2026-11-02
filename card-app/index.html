@@ -531,7 +531,7 @@
     </section>
     <section class="theme-card border rounded-3xl p-4 mt-4">
       <p class="text-sm font-bold mb-2">Как проходит тренировка?</p>
-      <p class="text-xs theme-text-muted leading-relaxed">Приложение случайно смешивает карточки, тесты, письменные задания и аудирование. Одно и то же слово может встретиться несколько раз, если слов в колодах меньше выбранного количества заданий.</p>
+      <p class="text-xs theme-text-muted leading-relaxed">Приложение случайно смешивает карточки, тесты и письменные задания. Когда тихий режим выключен, в тренировку также добавляются упражнения с аудио. Одно и то же слово может встретиться несколько раз, если слов в колодах меньше выбранного количества заданий.</p>
     </section>
   </main>
 
@@ -722,11 +722,11 @@
       <label for="quiet-mode-toggle" class="flex items-start justify-between gap-4 cursor-pointer">
         <span class="min-w-0">
           <span class="block font-bold text-sm">Тихий режим</span>
-          <span class="block text-xs theme-text-muted mt-1">Я сейчас не могу говорить. Не предлагать задания, в которых нужно произносить слова вслух.</span>
+          <span class="block text-xs theme-text-muted mt-1">Я сейчас не могу слушать звук. В быстром обучении не предлагать задания с аудио.</span>
         </span>
         <input id="quiet-mode-toggle" type="checkbox" class="mt-1 h-5 w-5 accent-current shrink-0" onchange="setQuietMode(this.checked)">
       </label>
-      <p class="text-xs theme-text-muted mt-3">Аудирование и письменные диктанты останутся доступны: для них достаточно слушать и печатать.</p>
+      <p class="text-xs theme-text-muted mt-3">В быстром обучении аудирование и задания с озвучиванием будут исключены. Обычные письменные задания останутся доступны.</p>
     </div>
 
     <h2 class="text-2xl font-black tracking-tight mb-6">Данные</h2>
@@ -1024,7 +1024,7 @@
       localStorage.setItem(QUIET_MODE_KEY, String(quietMode));
       const toggle = document.getElementById('quiet-mode-toggle');
       if (toggle) toggle.checked = quietMode;
-      showToast(quietMode ? 'Тихий режим включён: устные задания отключены' : 'Тихий режим выключен');
+      showToast(quietMode ? 'Тихий режим включён: аудиозадания в быстром обучении отключены' : 'Тихий режим выключен');
     }
 
     function isSpeakingPracticeAllowed() {
@@ -1627,7 +1627,7 @@
       const source = cards.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
       if (!source.length) return showToast('Сначала добавь хотя бы одну карточку');
       const count = Math.max(10, Math.min(50, Number(document.getElementById('quick-learning-count')?.value) || 20));
-      const types = ['flip', 'choice', 'write', 'listen-choice', 'listen-write'];
+      const types = quietMode ? ['flip', 'choice', 'write'] : ['flip', 'choice', 'write', 'listen-choice', 'listen-write'];
       quickTasks = [];
       for (let i = 0; i < count; i++) {
         const card = source[Math.floor(Math.random() * source.length)];
