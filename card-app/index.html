@@ -524,6 +524,9 @@
     <button onclick="switchMainTab('settings')" id="tab-settings" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">⚙️</span><span class="nav-label">Настройки</span>
     </button>
+    <button onclick="openAccountModal()" id="tab-profile" class="hidden flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
+      <span class="nav-emoji" aria-hidden="true">👤</span><span class="nav-label">Профиль</span>
+    </button>
   </div>
 
   <!-- ================= VIEW: DECKS (HOME) ================= -->
@@ -1392,7 +1395,7 @@
       hideAllViews(); 
       document.getElementById(`view-${tab}`).classList.remove('hidden');
       
-      ['home', 'quick', 'practice', 'achievements', 'games', 'statistics', 'mastered', 'settings'].forEach(t => {
+      ['home', 'quick', 'practice', 'achievements', 'games', 'statistics', 'mastered', 'settings', 'profile'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if (!btn) return;
         btn.classList.toggle('active-tab', t === tab);
@@ -2552,7 +2555,12 @@
 
     function updateAccountButton() {
       const label = document.getElementById('account-button-label');
-      if (label) label.textContent = currentAuthUser ? 'Профиль' : 'Войти';
+      const headerButton = document.getElementById('account-open-btn');
+      const profileTab = document.getElementById('tab-profile');
+      const signedIn = Boolean(currentAuthUser);
+      if (headerButton) headerButton.classList.toggle('hidden', signedIn);
+      if (profileTab) profileTab.classList.toggle('hidden', !signedIn);
+      if (label) label.textContent = 'Войти';
     }
 
     function openAccountModal() {
