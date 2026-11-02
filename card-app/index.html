@@ -679,6 +679,26 @@
       </div>
     </section>
 
+    <section class="mb-5">
+      <h3 class="font-bold text-base mb-3">Состояние словаря</h3>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Всего слов</p><p id="stats-vocab-total" class="text-xl font-black mt-1">0</p></div>
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">Выучено</p><p id="stats-vocab-mastered" class="text-xl font-black mt-1">0</p></div>
+        <div class="home-stat"><p class="text-[10px] theme-text-muted font-bold uppercase">К повторению</p><p id="stats-vocab-due" class="text-xl font-black mt-1">0</p></div>
+      </div>
+      <div class="home-stat p-4 mt-3">
+        <div class="flex items-center justify-between mb-2"><span class="text-sm font-bold">Общий прогресс словаря</span><span id="stats-vocab-progress-label" class="text-xs theme-text-muted">0%</span></div>
+        <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--card-border)"><div id="stats-vocab-progress" class="h-full rounded-full" style="width:0%;background:var(--accent)"></div></div>
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <h3 class="font-bold text-base mb-3">Сложные слова</h3>
+      <div id="stats-weak-words" class="space-y-2">
+        <p class="text-xs theme-text-muted">Пока нет слов с ошибками.</p>
+      </div>
+    </section>
+
     <section class="home-stat p-4">
       <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm">Последние 7 дней</h3><span class="text-[10px] theme-text-muted">Ответы в день</span></div>
       <div id="stats-week-chart" class="stats-week-chart" aria-label="График ответов за последние семь дней"></div>
@@ -1216,6 +1236,52 @@
       const lifetime = getLearningTotals();
       setText('stats-total-answers', lifetime.total);
       setText('stats-study-streak', getStudyStreak());
+
+      const vocabTotal = cards.length;
+      const vocabMastered = cards.filter(card => Number(card.srsLevel) >= 4).length;
+      const vocabDue = cards.filter(card => Number(card.nextReview || 0) <= Date.now()).length;
+      const vocabProgress = vocabTotal ? Math.round(vocabMastered / vocabTotal * 100) : 0;
+      setText('stats-vocab-total', vocabTotal);
+      setText('stats-vocab-mastered', vocabMastered);
+      setText('stats-vocab-due', vocabDue);
+      setText('stats-vocab-progress-label', `${vocabProgress}%`);
+      const progressBar = document.getElementById('stats-vocab-progress');
+      if (progressBar) progressBar.style.width = `${vocabProgress}%`;
+
+      const weakContainer = document.getElementById('stats-weak-words');
+      if (weakContainer) {
+        weakContainer.innerHTML = '';
+        const weakWords = cards
+          .filter(card => (Number(card.weakCount) || 0) > 0)
+          .sort((a, b) => (Number(b.weakCount) || 0) - (Number(a.weakCount) || 0))
+          .slice(0, 5);
+        if (!weakWords.length) {
+          const empty = document.createElement('p');
+          empty.className = 'text-xs theme-text-muted';
+          empty.innerText = 'Пока нет слов с ошибками. Отличная работа!';
+          weakContainer.appendChild(empty);
+        } else {
+          weakWords.forEach(card => {
+            const item = document.createElement('div');
+            item.className = 'home-stat flex items-center justify-between gap-3 p-3';
+            const word = document.createElement('div');
+            word.className = 'min-w-0';
+            const front = document.createElement('p');
+            front.className = 'font-bold text-sm truncate';
+            front.innerText = String(card.front || '');
+            const back = document.createElement('p');
+            back.className = 'text-xs theme-text-muted truncate mt-1';
+            back.innerText = String(card.back || '');
+            word.append(front, back);
+            const count = document.createElement('span');
+            count.className = 'text-xs font-bold shrink-0';
+            count.innerText = `${Number(card.weakCount) || 0} ошибок`;
+            item.append(word, count);
+            weakContainer.appendChild(item);
+          });
+        }
+      }
+
       const chart = document.getElementById('stats-week-chart');
       if (chart) {
         const max = Math.max(1, ...days.map(day => day.correct + day.wrong));
