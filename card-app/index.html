@@ -434,9 +434,6 @@
       width:100%;
       text-align:center;
     }
-    .app-tabbar .tab-dragging { opacity: .45; transform: scale(.94); }
-    .app-tabbar .tab-drag-target { outline: 2px solid var(--accent); outline-offset: -3px; }
-    .app-tabbar button { touch-action: pan-x; user-select: none; -webkit-user-select: none; }
 </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
@@ -821,6 +818,28 @@
         <p class="text-xs theme-text-muted">Здесь появятся твои друзья.</p>
       </div>
     </section>
+    <section class="theme-card border rounded-2xl p-4 mt-5">
+      <h3 class="font-bold text-base">Обмен колодами 📦</h3>
+      <p class="text-xs theme-text-muted mt-1 mb-4">Отправляй свои колоды только подтверждённым друзьям. Получатель импортирует отдельную копию.</p>
+      <label for="deck-share-select" class="text-xs font-bold theme-text-muted block mb-2">Выбери колоду</label>
+      <select id="deck-share-select" class="form-input w-full mb-3"></select>
+      <label for="deck-share-friend" class="text-xs font-bold theme-text-muted block mb-2">Отправить другу</label>
+      <select id="deck-share-friend" class="form-input w-full mb-3"></select>
+      <button onclick="sendSelectedDeckShare()" class="btn-primary w-full">Отправить колоду</button>
+      <div class="border-t theme-border my-4"></div>
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="font-bold text-sm">Входящие предложения</h4>
+        <button onclick="loadDeckShares()" class="text-xs theme-accent-text font-bold">Обновить</button>
+      </div>
+      <div id="deck-share-incoming" class="space-y-2">
+        <p class="text-xs theme-text-muted">Загрузка…</p>
+      </div>
+      <h4 class="font-bold text-sm mt-5 mb-2">Отправленные</h4>
+      <div id="deck-share-outgoing" class="space-y-2">
+        <p class="text-xs theme-text-muted">Загрузка…</p>
+      </div>
+    </section>
+
     <p id="social-status" class="text-xs theme-text-muted text-center mt-5" aria-live="polite"></p>
   </main>
 
@@ -864,6 +883,24 @@
         <span class="text-xs font-bold">Теплая</span>
       </div>
     </div>
+
+    <section class="theme-card border rounded-2xl p-4 mb-8">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h3 class="font-bold text-sm">Порядок вкладок</h3>
+          <p class="text-xs theme-text-muted mt-1">Настрой, в каком порядке отображаются вкладки в нижнем меню.</p>
+        </div>
+        <button onclick="toggleTabOrderEditor()" id="tab-order-open-btn" class="btn-secondary text-xs px-3 py-2 shrink-0">Настроить</button>
+      </div>
+      <div id="tab-order-editor" class="hidden mt-4">
+        <div id="tab-order-list" class="space-y-2"></div>
+        <div class="flex gap-2 mt-4">
+          <button onclick="saveTabOrderFromSettings()" class="btn-primary flex-1">Сохранить</button>
+          <button onclick="resetTabOrder()" class="btn-secondary px-4">Сбросить</button>
+        </div>
+        <p class="text-[11px] theme-text-muted mt-3">Используй стрелки вверх и вниз, чтобы перемещать вкладки.</p>
+      </div>
+    </section>
 
     <h2 class="text-2xl font-black tracking-tight mb-4">Обучение</h2>
     <div class="theme-card border rounded-2xl p-4 mb-8">
@@ -1489,84 +1526,100 @@
       if(tab === 'social') loadSocialHub();
     }
     const TAB_ORDER_KEY = 'hankecards_tab_order_v1';
+    const TAB_LABELS = {
+      'tab-home': 'Колоды', 'tab-quick': 'Быстро', 'tab-practice': 'Практика',
+      'tab-social': 'Друзья', 'tab-achievements': 'Награды', 'tab-games': 'Игры',
+      'tab-statistics': 'Статистика', 'tab-mastered': 'Выучено',
+      'tab-settings': 'Настройки', 'tab-profile': 'Профиль'
+    };
 
-    function restoreTabOrder() {
+    function getTabButtons() {
       const bar = document.querySelector('.app-tabbar');
-      if (!bar) return;
-      const buttons = [...bar.querySelectorAll('button[id^="tab-"]')];
-      const defaults = buttons.map(button => button.id);
+      return bar ? [...bar.querySelectorAll('button[id^="tab-"]')] : [];
+    }
+
+    function getSavedTabOrder() {
+      const defaults = getTabButtons().map(button => button.id);
       let saved = [];
       try { saved = JSON.parse(localStorage.getItem(TAB_ORDER_KEY) || '[]'); } catch (_) {}
       if (!Array.isArray(saved)) saved = [];
-      const valid = [...saved.filter(id => defaults.includes(id)), ...defaults.filter(id => !saved.includes(id))];
-      valid.forEach(id => {
+      return [...saved.filter(id => defaults.includes(id)), ...defaults.filter(id => !saved.includes(id))];
+    }
+
+    function applyTabOrder(order) {
+      const bar = document.querySelector('.app-tabbar');
+      if (!bar) return;
+      const buttons = getTabButtons();
+      const ids = [...order.filter(id => buttons.some(button => button.id === id)),
+        ...buttons.map(button => button.id).filter(id => !order.includes(id))];
+      ids.forEach(id => {
         const button = document.getElementById(id);
         if (button) bar.append(button);
       });
     }
 
-    function saveTabOrder() {
-      const bar = document.querySelector('.app-tabbar');
-      if (!bar) return;
-      localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(
-        [...bar.querySelectorAll('button[id^="tab-"]')].map(button => button.id)
-      ));
+    function restoreTabOrder() {
+      applyTabOrder(getSavedTabOrder());
     }
 
-    function enableTabReordering() {
-      const bar = document.querySelector('.app-tabbar');
-      if (!bar || bar.dataset.reorderReady === 'true') return;
-      bar.dataset.reorderReady = 'true';
-      let holdTimer = null, dragging = null, pointerId = null, moved = false, suppressClickUntil = 0;
+    let editingTabOrder = [];
 
-      bar.addEventListener('pointerdown', event => {
-        const button = event.target.closest('button[id^="tab-"]');
-        if (!button || button.classList.contains('hidden') || event.button > 0) return;
-        clearTimeout(holdTimer);
-        pointerId = event.pointerId;
-        moved = false;
-        holdTimer = setTimeout(() => {
-          dragging = button;
-          dragging.classList.add('tab-dragging');
-          if (navigator.vibrate) navigator.vibrate(25);
-          showToast('Перемещай вкладку в нужное место');
-        }, 2000);
+    function toggleTabOrderEditor(forceOpen) {
+      const panel = document.getElementById('tab-order-editor');
+      if (!panel) return;
+      const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !shouldOpen);
+      if (shouldOpen) renderTabOrderEditor();
+      const button = document.getElementById('tab-order-open-btn');
+      if (button) button.textContent = shouldOpen ? 'Скрыть' : 'Настроить';
+    }
+
+    function renderTabOrderEditor() {
+      const container = document.getElementById('tab-order-list');
+      if (!container) return;
+      if (!editingTabOrder.length) editingTabOrder = getSavedTabOrder();
+      container.replaceChildren();
+      editingTabOrder.forEach((id, index) => {
+        const row = document.createElement('div');
+        row.className = 'theme-card border rounded-xl p-3 flex items-center gap-3';
+        const number = document.createElement('span');
+        number.className = 'text-xs font-black theme-text-muted w-5';
+        number.textContent = String(index + 1);
+        const label = document.createElement('span');
+        label.className = 'text-sm font-semibold flex-1 min-w-0';
+        label.textContent = (getTabButtons().find(button => button.id === id)?.querySelector('.nav-emoji')?.textContent || '') + ' ' + (TAB_LABELS[id] || id);
+        const controls = document.createElement('div');
+        controls.className = 'flex gap-1';
+        [['↑', -1, 'Переместить вверх'], ['↓', 1, 'Переместить вниз']].forEach(([symbol, delta, aria]) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'btn-secondary w-9 h-9 rounded-lg font-black';
+          button.textContent = symbol;
+          button.setAttribute('aria-label', aria);
+          button.disabled = index + delta < 0 || index + delta >= editingTabOrder.length;
+          button.classList.toggle('opacity-30', button.disabled);
+          button.onclick = () => {
+            const target = index + delta;
+            [editingTabOrder[index], editingTabOrder[target]] = [editingTabOrder[target], editingTabOrder[index]];
+            renderTabOrderEditor();
+          };
+          controls.append(button);
+        });
+        row.append(number, label, controls);
+        container.append(row);
       });
+    }
 
-      bar.addEventListener('pointermove', event => {
-        if (!dragging || event.pointerId !== pointerId) return;
-        moved = true;
-        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('button[id^="tab-"]');
-        if (!target || target === dragging || target.parentElement !== bar || target.classList.contains('hidden')) return;
-        const rect = target.getBoundingClientRect();
-        bar.insertBefore(dragging, event.clientX > rect.left + rect.width / 2 ? target.nextSibling : target);
-        bar.querySelectorAll('.tab-drag-target').forEach(el => el.classList.remove('tab-drag-target'));
-        target.classList.add('tab-drag-target');
-      });
+    function saveTabOrderFromSettings() {
+      applyTabOrder(editingTabOrder);
+      localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(getTabButtons().map(button => button.id)));
+      showToast('Порядок вкладок сохранён');
+      toggleTabOrderEditor(false);
+    }
 
-      const finishDrag = event => {
-        if (event.pointerId !== pointerId) return;
-        clearTimeout(holdTimer);
-        if (dragging) {
-          dragging.classList.remove('tab-dragging');
-          bar.querySelectorAll('.tab-drag-target').forEach(el => el.classList.remove('tab-drag-target'));
-          if (moved) {
-            saveTabOrder();
-            suppressClickUntil = Date.now() + 450;
-            showToast('Порядок вкладок сохранён');
-          }
-        }
-        dragging = null;
-        pointerId = null;
-      };
-      bar.addEventListener('pointerup', finishDrag);
-      bar.addEventListener('pointercancel', finishDrag);
-      bar.addEventListener('click', event => {
-        if (Date.now() < suppressClickUntil) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-      }, true);
+    function resetTabOrder() {
+      editingTabOrder = getTabButtons().map(button => button.id);
+      renderTabOrderEditor();
     }
 
     function goHome() { switchMainTab('home'); }
@@ -2783,6 +2836,8 @@
         }
         socialProfileCache = new Map(profiles.map(profile => [profile.user_id, profile]));
         renderSocialLists(rows, id);
+        populateDeckShareSelectors();
+        await loadDeckShares();
         socialStatus('');
       } catch (error) {
         console.error('Social hub:', error);
@@ -2879,6 +2934,181 @@
         const wrap = socialProfileCard(profile);
         friends.append(wrap);
       });
+    }
+
+    // Deck sharing: server validates friendship and stores only the explicitly selected deck.
+    function populateDeckShareSelectors() {
+      const deckSelect = document.getElementById('deck-share-select');
+      const friendSelect = document.getElementById('deck-share-friend');
+      if (!deckSelect || !friendSelect) return;
+      deckSelect.replaceChildren();
+      decks.forEach(deck => {
+        const option = document.createElement('option');
+        option.value = deck.id;
+        option.textContent = deck.name || 'Без названия';
+        deckSelect.append(option);
+      });
+      friendSelect.replaceChildren();
+      const accepted = socialFriendRows.filter(row => row.status === 'accepted');
+      accepted.forEach(row => {
+        const friendId = row.requester_id === currentAuthUser?.id ? row.addressee_id : row.requester_id;
+        const profile = socialProfileCache.get(friendId);
+        if (!profile) return;
+        const option = document.createElement('option');
+        option.value = friendId;
+        option.textContent = (profile.display_name || profile.username || 'Друг') + ' (@' + (profile.username || 'user') + ')';
+        friendSelect.append(option);
+      });
+      if (!decks.length) {
+        const option = document.createElement('option');
+        option.textContent = 'Нет доступных колод';
+        option.value = '';
+        deckSelect.append(option);
+      }
+      if (!friendSelect.options.length) {
+        const option = document.createElement('option');
+        option.textContent = 'Сначала добавь друга';
+        option.value = '';
+        friendSelect.append(option);
+      }
+    }
+
+    async function sendSelectedDeckShare() {
+      if (!currentAuthUser || !supabaseClient) return showToast('Сначала войди в аккаунт');
+      const deckId = document.getElementById('deck-share-select')?.value;
+      const friendId = document.getElementById('deck-share-friend')?.value;
+      const deck = decks.find(item => String(item.id) === String(deckId));
+      if (!deck || !friendId) return showToast('Выбери колоду и друга');
+      const deckCards = cards.filter(card => String(card.deckId) === String(deck.id));
+      if (!confirm(`Отправить другу колоду «${deck.name}» (${deckCards.length} карточек)?`)) return;
+      try {
+        const { error } = await supabaseClient.rpc('send_friend_deck_share', {
+          p_receiver_id: friendId,
+          p_deck_name: String(deck.name || 'Колода').slice(0, 120),
+          p_deck_payload: { icon: deck.icon || 'book' },
+          p_cards_payload: deckCards.map(card => ({
+            front: String(card.front || ''),
+            back: String(card.back || ''),
+            gender: card.gender || '',
+            description: card.description || ''
+          }))
+        });
+        if (error) throw error;
+        showToast('Предложение отправлено 📦');
+        await loadDeckShares();
+      } catch (error) {
+        console.error('Deck share send:', error);
+        showToast(error.message || 'Не удалось отправить колоду');
+      }
+    }
+
+    function renderDeckShareRows(containerId, rows, incoming) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.replaceChildren();
+      if (!rows?.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs theme-text-muted';
+        empty.textContent = incoming ? 'Новых предложений пока нет.' : 'Ты ещё не отправлял колоды.';
+        container.append(empty);
+        return;
+      }
+      rows.forEach(row => {
+        const item = document.createElement('div');
+        item.className = 'theme-card border rounded-xl p-3';
+        const title = document.createElement('p');
+        title.className = 'font-bold text-sm';
+        title.textContent = row.deck_name || 'Колода';
+        const detail = document.createElement('p');
+        detail.className = 'text-[11px] theme-text-muted mt-1';
+        const person = incoming ? (row.sender_name || row.sender_username || 'Пользователь') : (row.receiver_name || row.receiver_username || 'Друг');
+        detail.textContent = (incoming ? 'От: ' : 'Кому: ') + person + ' · ' + (row.card_count || 0) + ' карточек';
+        item.append(title, detail);
+        if (incoming && row.status === 'pending') {
+          const actions = document.createElement('div');
+          actions.className = 'flex gap-2 mt-3';
+          const accept = document.createElement('button');
+          accept.className = 'btn-primary flex-1 text-xs';
+          accept.textContent = 'Принять';
+          accept.onclick = () => acceptDeckShare(row.id);
+          const reject = document.createElement('button');
+          reject.className = 'btn-secondary flex-1 text-xs';
+          reject.textContent = 'Отклонить';
+          reject.onclick = () => rejectDeckShare(row.id);
+          actions.append(accept, reject);
+          item.append(actions);
+        } else {
+          const status = document.createElement('p');
+          status.className = 'text-[11px] theme-text-muted mt-2';
+          status.textContent = row.status === 'pending' ? 'Ожидает ответа' : row.status === 'accepted' ? 'Принято' : 'Отклонено';
+          item.append(status);
+        }
+        container.append(item);
+      });
+    }
+
+    async function loadDeckShares() {
+      if (!currentAuthUser || !supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient.rpc('list_my_friend_deck_shares');
+        if (error) throw error;
+        const rows = Array.isArray(data) ? data : [];
+        renderDeckShareRows('deck-share-incoming', rows.filter(row => row.receiver_id === currentAuthUser.id), true);
+        renderDeckShareRows('deck-share-outgoing', rows.filter(row => row.sender_id === currentAuthUser.id), false);
+      } catch (error) {
+        console.error('Deck share list:', error);
+        ['deck-share-incoming', 'deck-share-outgoing'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = 'Не удалось загрузить предложения. Проверь SQL-миграцию.';
+        });
+      }
+    }
+
+    async function acceptDeckShare(shareId) {
+      try {
+        const { data, error } = await supabaseClient.rpc('accept_friend_deck_share', { p_share_id: shareId });
+        if (error) throw error;
+        const snapshot = data?.snapshot || data;
+        if (!snapshot || !Array.isArray(snapshot.cards)) throw new Error('В полученной колоде нет корректного списка карточек');
+        const baseName = String(snapshot.deck_name || 'Колода друга').slice(0, 120);
+        const newDeckId = makeUniqueId('deck');
+        let newName = baseName + ' (от друга)';
+        if (decks.some(deck => deck.name === newName)) newName += ' ' + new Date().toLocaleDateString('ru-RU');
+        decks.push({ id: newDeckId, name: newName, icon: snapshot.deck_payload?.icon || 'book' });
+        snapshot.cards.forEach(card => cards.push({
+          id: makeUniqueId('card'),
+          deckId: newDeckId,
+          front: String(card.front || ''),
+          back: String(card.back || ''),
+          gender: card.gender || '',
+          description: card.description || '',
+          srsLevel: 0,
+          nextReview: Date.now(),
+          weakCount: 0,
+          srsEase: 2,
+          srsIntervalDays: 0,
+          srsReps: 0,
+          srsLapses: 0
+        }));
+        saveData();
+        renderDecks();
+        showToast('Колода добавлена в твою библиотеку 🎉');
+        await loadDeckShares();
+      } catch (error) {
+        console.error('Deck share accept:', error);
+        showToast(error.message || 'Не удалось принять колоду');
+      }
+    }
+
+    async function rejectDeckShare(shareId) {
+      try {
+        const { error } = await supabaseClient.rpc('reject_friend_deck_share', { p_share_id: shareId });
+        if (error) throw error;
+        showToast('Предложение отклонено');
+        await loadDeckShares();
+      } catch (error) {
+        showToast(error.message || 'Не удалось отклонить предложение');
+      }
     }
 
     async function saveMySocialUsername() {
@@ -3510,7 +3740,6 @@
     });
 
     restoreTabOrder();
-    enableTabReordering();
     initSupabaseClient();
     function renderMastered() {
       const container = document.getElementById('mastered-container'); const masteredCards = cards.filter(c => c.srsLevel >= 4); container.innerHTML = '';
@@ -3652,6 +3881,7 @@
       };
       reader.readAsText(file);
     }
+    restoreTabOrder();
     normalizeSRSData();
     const quietModeToggle = document.getElementById('quiet-mode-toggle');
     if (quietModeToggle) quietModeToggle.checked = quietMode;
