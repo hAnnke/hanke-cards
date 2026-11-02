@@ -408,7 +408,25 @@
       min-width:180px; justify-content:center;
     }
     .card-description { white-space:pre-wrap; line-height:1.5; overflow-wrap:anywhere; }
-    .app-tabbar { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-behavior:smooth; }
+    .app-tabbar {
+      display:flex; flex-wrap:nowrap; overflow-x:auto !important; overflow-y:hidden;
+      -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; scroll-behavior:smooth;
+      scrollbar-width:thin;
+    }
+    .tabbar-scroll-control {
+      display:none; position:fixed; z-index:45; bottom:42px; width:34px; height:34px;
+      border-radius:50%; border:1px solid var(--card-border); color:var(--text-color);
+      background:var(--surface-solid); box-shadow:var(--glass-shadow);
+      font-size:25px; line-height:1; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none;
+    }
+    .tabbar-scroll-control:disabled { opacity:.25; cursor:default; }
+    @media (min-width:700px) and (pointer:fine) {
+      .tabbar-scroll-control { display:flex; }
+      .tabbar-scroll-left { left:max(10px, calc(50% - 322px)); }
+      .tabbar-scroll-right { right:max(10px, calc(50% - 322px)); }
+      .app-tabbar { padding-left:34px !important; padding-right:34px !important; }
+    }
     .app-tabbar::-webkit-scrollbar { height:5px; }
     .app-tabbar::-webkit-scrollbar-thumb { background:color-mix(in srgb, var(--text-muted) 35%, transparent); border-radius:999px; }
     .app-tabbar { scrollbar-width:thin; scrollbar-color:color-mix(in srgb, var(--text-muted) 35%, transparent) transparent; }
@@ -516,8 +534,12 @@
     <span id="toast-msg" class="text-sm font-medium">Уведомление</span>
   </div>
 
+  <!-- Desktop navigation scroll controls -->
+  <button id="tabbar-scroll-left" class="tabbar-scroll-control tabbar-scroll-left" type="button" aria-label="Прокрутить вкладки влево" title="Влево">‹</button>
+  <button id="tabbar-scroll-right" class="tabbar-scroll-control tabbar-scroll-right" type="button" aria-label="Прокрутить вкладки вправо" title="Вправо">›</button>
+
   <!-- ================= FLOATING GLASS BOTTOM TABS ================= -->
-  <div class="app-tabbar fixed bottom-6 left-4 right-4 max-w-xl mx-auto border rounded-3xl flex justify-start overflow-x-auto p-2 z-40 text-[10px] font-semibold" role="navigation" aria-label="Основная навигация" style="scrollbar-width:none;">
+  <div class="app-tabbar fixed bottom-6 left-4 right-4 max-w-xl mx-auto border rounded-3xl flex justify-start overflow-x-auto p-2 z-40 text-[10px] font-semibold" role="navigation" aria-label="Основная навигация" tabindex="0">
     <button onclick="switchMainTab('home')" id="tab-home" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
       <span class="nav-emoji" aria-hidden="true">📚</span><span class="nav-label">Колоды</span>
     </button>
@@ -3888,16 +3910,47 @@
       reader.readAsText(file);
     }
     restoreTabOrder();
-    // Desktop: map the vertical mouse wheel to the horizontally scrolling tab bar.
+    // Desktop navigation: mouse wheel, keyboard arrows and visible chevron controls.
     const desktopTabbar = document.querySelector('.app-tabbar');
+    const tabbarLeft = document.getElementById('tabbar-scroll-left');
+    const tabbarRight = document.getElementById('tabbar-scroll-right');
+    function updateTabbarScrollControls() {
+      if (!desktopTabbar) return;
+      const maxScroll = Math.max(0, desktopTabbar.scrollWidth - desktopTabbar.clientWidth);
+      if (tabbarLeft) tabbarLeft.disabled = desktopTabbar.scrollLeft <= 2;
+      if (tabbarRight) tabbarRight.disabled = desktopTabbar.scrollLeft >= maxScroll - 2;
+      const canScroll = maxScroll > 2;
+      if (tabbarLeft) tabbarLeft.style.visibility = canScroll ? 'visible' : 'hidden';
+      if (tabbarRight) tabbarRight.style.visibility = canScroll ? 'visible' : 'hidden';
+    }
+    function scrollTabbar(direction) {
+      if (!desktopTabbar) return;
+      desktopTabbar.scrollBy({ left: direction * Math.max(180, desktopTabbar.clientWidth * 0.65), behavior: 'smooth' });
+      setTimeout(updateTabbarScrollControls, 250);
+    }
     if (desktopTabbar) {
       desktopTabbar.addEventListener('wheel', (event) => {
-        if (desktopTabbar.scrollWidth <= desktopTabbar.clientWidth) return;
         const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-        if (!delta) return;
+        if (!delta || desktopTabbar.scrollWidth <= desktopTabbar.clientWidth + 2) return;
         event.preventDefault();
         desktopTabbar.scrollLeft += delta;
+        updateTabbarScrollControls();
       }, { passive: false });
+      desktopTabbar.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+          event.preventDefault();
+          scrollTabbar(event.key === 'ArrowRight' ? 1 : -1);
+        }
+        if (event.key === 'Home' || event.key === 'End') {
+          event.preventDefault();
+          desktopTabbar.scrollTo({ left: event.key === 'Home' ? 0 : desktopTabbar.scrollWidth, behavior: 'smooth' });
+        }
+      });
+      desktopTabbar.addEventListener('scroll', updateTabbarScrollControls, { passive: true });
+      window.addEventListener('resize', updateTabbarScrollControls);
+      if (tabbarLeft) tabbarLeft.addEventListener('click', () => scrollTabbar(-1));
+      if (tabbarRight) tabbarRight.addEventListener('click', () => scrollTabbar(1));
+      requestAnimationFrame(updateTabbarScrollControls);
     }
     normalizeSRSData();
     const quietModeToggle = document.getElementById('quiet-mode-toggle');
