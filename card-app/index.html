@@ -1142,6 +1142,8 @@
       renderDailyStats();
       renderPracticeHub();
       if (!document.getElementById('view-statistics').classList.contains('hidden')) renderStatistics();
+      // Stats, daily totals and earned points are part of the cloud snapshot too.
+      scheduleCloudSave();
     }
 
     function getLearningTotals() {
@@ -1232,6 +1234,7 @@
       localStorage.setItem(POINTS_KEY, String(pointsBalance));
       localStorage.setItem(REWARDS_KEY, JSON.stringify(ownedRewards));
       renderGames();
+      scheduleCloudSave();
       showToast(`Получена награда: ${item.title}`);
     }
 
@@ -2723,6 +2726,9 @@
       renderPracticeHub();
       renderMastered();
       renderStatistics();
+      renderDailyStats();
+      renderGames();
+      renderAchievements();
     }
 
     async function handleSignedInUser(user) {
@@ -2852,6 +2858,10 @@
       if (!singleDeck) {
         payload.statsHistory = getStatsHistory();
         try { payload.dailyStats = JSON.parse(localStorage.getItem(DAILY_STATS_KEY) || 'null'); } catch (_) {}
+        payload.pointsBalance = pointsBalance;
+        payload.ownedRewards = [...ownedRewards];
+        payload.theme = document.body.getAttribute('data-theme') || 'light';
+        payload.quietMode = quietMode;
       }
       return payload;
     }
@@ -2935,6 +2945,19 @@
             if (Object.prototype.hasOwnProperty.call(parsed, 'dailyStats')) {
               localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(parsed.dailyStats));
             }
+            if (Number.isFinite(Number(parsed.pointsBalance))) {
+              pointsBalance = Math.max(0, Number(parsed.pointsBalance));
+              localStorage.setItem(POINTS_KEY, String(pointsBalance));
+            }
+            if (Array.isArray(parsed.ownedRewards)) {
+              ownedRewards = parsed.ownedRewards.filter(id => typeof id === 'string');
+              localStorage.setItem(REWARDS_KEY, JSON.stringify(ownedRewards));
+            }
+            if (typeof parsed.quietMode === 'boolean') {
+              quietMode = parsed.quietMode;
+              localStorage.setItem(QUIET_MODE_KEY, String(quietMode));
+            }
+            if (parsed.theme && ['light', 'dark', 'peach'].includes(parsed.theme)) setTheme(parsed.theme, true);
             showToast('Резервная копия восстановлена!');
           }
           saveData();
