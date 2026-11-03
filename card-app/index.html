@@ -1189,6 +1189,10 @@
   <script>
     let decks = JSON.parse(localStorage.getItem('mydecks_v7')) || [{ id: 'default', name: 'Мои слова' }];
     let cards = JSON.parse(localStorage.getItem('mycards_v7')) || [];
+    // Initialize shared state before any startup render functions can access it.
+    let selectedPracticeDeckIds = null;
+    let currentAuthUser = null;
+    let authMode = 'login';
     const SRS_INTERVALS = [1, 10, 1440, 5760]; 
     const SRS_GRADUATED_MIN_DAYS = 14;
     const SRS_GRADUATED_MAX_DAYS = 180;
@@ -1974,7 +1978,6 @@
       showToast('Добавлено! '); openDeck(currentDeckId);
     }
 
-    let selectedPracticeDeckIds = null;
     function getPracticeSourceCards() {
       if (!Array.isArray(selectedPracticeDeckIds)) return cards;
       return cards.filter(card => selectedPracticeDeckIds.includes(String(card.deckId)));
@@ -2855,12 +2858,10 @@
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_7EzOQVKrRHfEAbtYndSHLQ_G_ErtxbH';
     const CLOUD_STATE_KEY = 'hankecards_cloud_state_v1';
     let supabaseClient = null;
-    let currentAuthUser = null;
     let cloudReady = false;
     let cloudInitInProgress = false;
     let cloudSaveTimer = null;
     let cloudSaveInFlight = false;
-    let authMode = 'login';
 
     // HankeCards Social: public learning profile + friend requests.
     let socialBusy = false;
