@@ -499,6 +499,34 @@
 #public-profile-modal #public-profile-actions .btn-soft{background:rgba(255,255,255,.12)!important;border:1px solid rgba(255,255,255,.22);color:#f8fafc!important}
 #public-profile-modal>div>div:first-child>button{color:#fff!important;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);min-width:40px;min-height:40px}
 @media(max-width:380px){#public-profile-modal .hc-profile-panel{padding:14px}#public-profile-modal .hc-profile-stat-label{font-size:10px}#public-profile-modal .hc-profile-medal-list{grid-template-columns:1fr 1fr}}
+
+#public-profile-modal .hc-profile-panel[data-profile-design="card-pink-dream"],
+#public-profile-modal .hc-profile-panel[data-profile-design="card-lavender"],
+#public-profile-modal .hc-profile-panel[data-profile-design="card-ocean"],
+#public-profile-modal .hc-profile-panel[data-profile-design="card-sunset"]{color:#263044!important}
+#public-profile-modal .hc-profile-panel[data-profile-design="card-pink-dream"] .hc-profile-name,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-lavender"] .hc-profile-name,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-ocean"] .hc-profile-name,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-sunset"] .hc-profile-name,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-pink-dream"] .hc-profile-stat-value,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-lavender"] .hc-profile-stat-value,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-ocean"] .hc-profile-stat-value,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-sunset"] .hc-profile-stat-value,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-pink-dream"] .hc-profile-section-heading h3,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-lavender"] .hc-profile-section-heading h3,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-ocean"] .hc-profile-section-heading h3,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-sunset"] .hc-profile-section-heading h3,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-pink-dream"] .hc-profile-medal-copy strong,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-lavender"] .hc-profile-medal-copy strong,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-ocean"] .hc-profile-medal-copy strong,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-sunset"] .hc-profile-medal-copy strong,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-pink-dream"] .hc-profile-support strong,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-lavender"] .hc-profile-support strong,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-ocean"] .hc-profile-support strong,
+#public-profile-modal .hc-profile-panel[data-profile-design="card-sunset"] .hc-profile-support strong{color:#263044!important;text-shadow:none}
+#public-profile-modal .hc-profile-panel[data-profile-design^="card-"] .hc-profile-stat{border-color:rgba(30,41,59,.13)}
+#public-profile-modal .hc-profile-panel[data-profile-design^="card-"] .hc-profile-medal{background:rgba(255,255,255,.35);border-color:rgba(30,41,59,.12)}
+#public-profile-modal .hc-profile-panel[data-profile-design^="card-"] .hc-profile-support{background:rgba(255,255,255,.34);border-color:rgba(30,41,59,.12)}
 </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
@@ -1071,6 +1099,7 @@
       <button id="shop-filter-frames" onclick="setShopFilter('frame')" class="btn-primary px-4 py-2 rounded-xl text-xs font-bold">Рамки</button>
       <button id="shop-filter-skins" onclick="setShopFilter('skin')" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Карты</button>
       <button id="shop-filter-nickname" onclick="setShopFilter('nickname')" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Ники</button>
+      <button id="shop-filter-profileCard" onclick="setShopFilter(&quot;profileCard&quot;)" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Карточки профиля</button>
     </div>
     <div id="rewards-shop" class="grid grid-cols-2 gap-3"></div>
     <h3 class="font-black text-lg mt-6 mb-3">Моя коллекция</h3>
@@ -1500,6 +1529,16 @@
       ,{id:'nick-ruby',name:'Ruby Flame',type:'nickname',price:950,rarity:'Эпическая',desc:'Рубиново-красный градиент.',textStyle:'background:linear-gradient(90deg,#7f1d1d,#fb7185,#fda4af);-webkit-background-clip:text;background-clip:text;color:transparent'}
       ,{id:'nick-emerald',name:'Emerald',type:'nickname',price:1200,rarity:'Легендарная',desc:'Изумрудный перелив.',textStyle:'background:linear-gradient(90deg,#064e3b,#34d399,#a7f3d0);-webkit-background-clip:text;background-clip:text;color:transparent'}
       ,{id:'nick-prism',name:'Prism Master',type:'nickname',price:2400,rarity:'Мифическая',desc:'Многоцветный призматический ник.',textStyle:'background:linear-gradient(90deg,#f472b6,#a78bfa,#22d3ee,#facc15);-webkit-background-clip:text;background-clip:text;color:transparent'}
+
+      ,{id:'card-basic',name:'Plain Platform',type:'profileCard',price:0,rarity:'Базовая',desc:'Простой билет без украшений.',cardBg:'linear-gradient(145deg,#273244,#1b2533)',cardBorder:'rgba(148,163,184,.25)',cardShadow:'none'}
+      ,{id:'card-pink-dream',name:'Pink Dream',type:'profileCard',price:350,rarity:'Обычная',desc:'Нежный розовый градиент с мягким сиянием.',cardBg:'radial-gradient(circle at 12% 0%,rgba(255,255,255,.72),transparent 36%),linear-gradient(135deg,#fbcfe8 0%,#f9a8d4 42%,#c4b5fd 100%)',cardBorder:'rgba(255,255,255,.72)',cardShadow:'0 12px 32px rgba(236,72,153,.22)'}
+      ,{id:'card-lavender',name:'Lavender Haze',type:'profileCard',price:650,rarity:'Редкая',desc:'Лавандовый туман и прохладное сияние.',cardBg:'linear-gradient(135deg,#ddd6fe,#a78bfa 52%,#818cf8)',cardBorder:'rgba(221,214,254,.75)',cardShadow:'0 14px 34px rgba(139,92,246,.25)'}
+      ,{id:'card-ocean',name:'Ocean Glass',type:'profileCard',price:950,rarity:'Редкая',desc:'Стеклянные оттенки океана.',cardBg:'linear-gradient(135deg,#a5f3fc,#38bdf8 48%,#2563eb)',cardBorder:'rgba(186,230,253,.8)',cardShadow:'0 14px 34px rgba(14,165,233,.28)'}
+      ,{id:'card-emerald',name:'Emerald Garden',type:'profileCard',price:1450,rarity:'Эпическая',desc:'Глубокий изумруд с переливом.',cardBg:'linear-gradient(135deg,#064e3b,#047857 50%,#34d399)',cardBorder:'rgba(110,231,183,.65)',cardShadow:'0 16px 36px rgba(16,185,129,.25)'}
+      ,{id:'card-sunset',name:'Peach Sunset',type:'profileCard',price:1850,rarity:'Эпическая',desc:'Персиковый закат с розовым свечением.',cardBg:'linear-gradient(135deg,#fed7aa,#fb923c 48%,#f472b6)',cardBorder:'rgba(255,237,213,.8)',cardShadow:'0 16px 38px rgba(249,115,22,.28)'}
+      ,{id:'card-royal',name:'Royal Gold',type:'profileCard',price:2900,rarity:'Легендарная',desc:'Королевский чёрный и благородное золото.',cardBg:'linear-gradient(135deg,#292018,#59401c 55%,#a16207)',cardBorder:'rgba(250,204,21,.72)',cardShadow:'0 18px 42px rgba(234,179,8,.25)'}
+      ,{id:'card-aurora',name:'Aurora Borealis',type:'profileCard',price:3900,rarity:'Легендарная',desc:'Северное сияние над ночным небом.',cardBg:'radial-gradient(circle at 18% 0%,rgba(45,212,191,.45),transparent 38%),linear-gradient(145deg,#071b32,#123b50 55%,#31204f)',cardBorder:'rgba(94,234,212,.65)',cardShadow:'0 18px 42px rgba(45,212,191,.25)'}
+      ,{id:'card-prism',name:'Prism Royal',type:'profileCard',price:6200,rarity:'Мифическая',desc:'Многослойный призматический перелив.',cardBg:'linear-gradient(120deg,#164e63,#30204b 55%,#831843)',cardBorder:'rgba(216,180,254,.85)',cardShadow:'0 20px 48px rgba(167,139,250,.35)'}
     ];
     function readStoredObject(key, fallback) { try { const v=JSON.parse(localStorage.getItem(key)||'null'); return v&&typeof v==='object'?v:fallback; } catch(_){return fallback;} }
     let playerProgress = {...{xp:0,createdAt:Date.now(),lastStudyDate:null},...readStoredObject(PLAYER_PROGRESS_KEY,{})};
@@ -1510,7 +1549,7 @@
     function getLifetimeLearningTotals(){return {total:Number(playerProgress.totalAnswers)||0,correct:Number(playerProgress.totalCorrect)||0,wrong:Number(playerProgress.totalWrong)||0};}
     let unlockedAchievements = Array.isArray(readStoredObject(PLAYER_ACHIEVEMENTS_KEY,[])) ? readStoredObject(PLAYER_ACHIEVEMENTS_KEY,[]) : [];
     let playerInventory = Array.isArray(readStoredObject(PLAYER_INVENTORY_KEY,[])) ? readStoredObject(PLAYER_INVENTORY_KEY,[]) : [];
-    let playerEquipment = {...{frame:'frame-classic',skin:null,avatarAchievement:null,nicknameStyle:null},...readStoredObject(PLAYER_EQUIPMENT_KEY,{})};
+    let playerEquipment = {...{frame:'frame-classic',skin:null,avatarAchievement:null,nicknameStyle:null,profileCard:'card-basic'},...readStoredObject(PLAYER_EQUIPMENT_KEY,{})};
     if (!playerInventory.includes('frame-classic')) playerInventory.push('frame-classic');
     function savePlayerGameState() {
       localStorage.setItem(PLAYER_PROGRESS_KEY,JSON.stringify(playerProgress));
@@ -1556,12 +1595,12 @@
     }
     function getPublicCosmeticMeta() {
       const rank=getPlayerRank();
-      return [`__hc_frame=${playerEquipment.frame||'frame-classic'}`,`__hc_avatar=${playerEquipment.avatarAchievement||''}`,`__hc_nickname=${playerEquipment.nicknameStyle||''}`,`__hc_rank=${rank.id}`,`__hc_level=${getLevelProgress().level}`,`__hc_xp=${Number(playerProgress.xp)||0}`,`__hc_achievements=${unlockedAchievements.join(',')}`];
+      return [`__hc_frame=${playerEquipment.frame||'frame-classic'}`,`__hc_avatar=${playerEquipment.avatarAchievement||''}`,`__hc_nickname=${playerEquipment.nicknameStyle||''}`,`__hc_profileCard=${playerEquipment.profileCard||'card-basic'}`,`__hc_rank=${rank.id}`,`__hc_level=${getLevelProgress().level}`,`__hc_xp=${Number(playerProgress.xp)||0}`,`__hc_achievements=${unlockedAchievements.join(',')}`];
     }
     function readPublicCosmeticMeta(profile) {
       const badges=Array.isArray(profile?.reward_badges)?profile.reward_badges:[];
       const get=(key)=>badges.find(x=>typeof x==='string'&&x.startsWith(`__hc_${key}=`))?.slice((`__hc_${key}=`).length)||'';
-      return {frame:get('frame')||'frame-classic',avatar:get('avatar'),nickname:get('nickname'),rank:get('rank')||'bahnhof',level:Number(get('level'))||1,xp:Number(get('xp'))||0,achievements:get('achievements').split(',').filter(Boolean)};
+      return {frame:get('frame')||'frame-classic',avatar:get('avatar'),nickname:get('nickname'),profileCard:get('profileCard')||'card-basic',rank:get('rank')||'bahnhof',level:Number(get('level'))||1,xp:Number(get('xp'))||0,achievements:get('achievements').split(',').filter(Boolean)};
     }
     function makeSocialAvatar(profile) {
       const meta=readPublicCosmeticMeta(profile);
@@ -1753,10 +1792,10 @@
     function renderGames(){
       const pointsEl=document.getElementById('games-points');if(pointsEl)pointsEl.innerText=pointsBalance;
       const filter=currentShopFilter(),shop=document.getElementById('rewards-shop');
-      [['frames','frame'],['skins','skin'],['nickname','nickname']].forEach(([k,v])=>{const b=document.getElementById('shop-filter-'+k);if(b)b.className=(filter===v?'btn-primary':'btn-secondary')+' px-4 py-2 rounded-xl text-xs font-bold';});
+      [['frames','frame'],['skins','skin'],['nickname','nickname'],['profileCard','profileCard']].forEach(([k,v])=>{const b=document.getElementById('shop-filter-'+k);if(b)b.className=(filter===v?'btn-primary':'btn-secondary')+' px-4 py-2 rounded-xl text-xs font-bold';});
       if(shop)shop.innerHTML=COSMETIC_ITEMS.filter(x=>x.type===filter).map(item=>{
-        const owned=playerInventory.includes(item.id),equipped=playerEquipment.frame===item.id||playerEquipment.skin===item.id||playerEquipment.nicknameStyle===item.id,canBuy=pointsBalance>=item.price;
-        return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)">${item.type==='nickname'?`<div class="text-xl font-black" style="${item.textStyle}">HankeTest</div>`:`<div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div>`}</div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div>${equipped?'<div class="text-xs font-bold theme-accent-text">Используется ✓</div>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold">${canBuy?'Купить':'Не хватает монет'}</button>`}</div>`;
+        const owned=playerInventory.includes(item.id),equipped=playerEquipment.frame===item.id||playerEquipment.skin===item.id||playerEquipment.nicknameStyle===item.id||playerEquipment.profileCard===item.id,canBuy=pointsBalance>=item.price;
+        return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)">${item.type==='nickname'?`<div class="text-xl font-black" style="${item.textStyle}">HankeTest</div>`:item.type==='profileCard'?`<div class="w-full mx-2 rounded-xl p-3 text-left" style="background:${item.cardBg};border:1px solid ${item.cardBorder};box-shadow:${item.cardShadow};color:${['card-pink-dream','card-lavender','card-ocean','card-sunset'].includes(item.id)?'#263044':'#fff'}"><div class="text-[9px] opacity-75">PLAYER CARD</div><div class="font-black text-sm">HankeTest</div><div class="text-[9px] opacity-80">Level 12 · 2 450 XP</div></div>`:`<div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div>`}</div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div>${equipped?'<div class="text-xs font-bold theme-accent-text">Используется ✓</div>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold">${canBuy?'Купить':'Не хватает монет'}</button>`}</div>`;
       }).join('');
       const ownedEl=document.getElementById('owned-rewards');
       if(ownedEl){const owned=COSMETIC_ITEMS.filter(x=>playerInventory.includes(x.id));ownedEl.innerHTML=owned.length?owned.map(x=>`<div class="flex items-center justify-between py-2 border-b last:border-0" style="border-color:rgba(120,120,120,.15)"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black" style="${x.type==='nickname'?x.textStyle:frameStyle(x)}">${x.type==='nickname'?'Aa':''}</span><div><div class="font-bold">${x.name}</div><div class="text-[10px] theme-text-muted">${x.rarity}</div></div></div><span class="text-xs">${playerEquipment.frame===x.id||playerEquipment.skin===x.id||playerEquipment.nicknameStyle===x.id?'Надето':'В коллекции'}</span></div>`).join(''):'Пока ничего не приобретено.';}
@@ -1770,7 +1809,7 @@
     }
     function equipCosmetic(id){
       const item=COSMETIC_ITEMS.find(x=>x.id===id);if(!item||!playerInventory.includes(id))return;
-      if(item.type==='frame')playerEquipment.frame=id;else if(item.type==='nickname')playerEquipment.nicknameStyle=id;else playerEquipment.skin=id;
+      if(item.type==='frame')playerEquipment.frame=id;else if(item.type==='nickname')playerEquipment.nicknameStyle=id;else if(item.type==='profileCard')playerEquipment.profileCard=id;else playerEquipment.skin=id;
       savePlayerGameState();renderGames();renderPlayerCard();showToast(`${item.name} теперь используется`);scheduleCloudSave();if(currentAuthUser&&supabaseClient)syncPublicProfile().catch(err=>console.warn('Frame profile sync:',err.message));
     }
 
@@ -3828,6 +3867,8 @@
       const earned = PLAYER_ACHIEVEMENTS.filter(a=>earnedIds.includes(a.id));
       const panel = document.createElement('section');
       panel.className = 'hc-profile-panel';
+      const profileDesign=COSMETIC_ITEMS.find(x=>x.id===meta.profileCard&&x.type==='profileCard')||COSMETIC_ITEMS.find(x=>x.id==='card-basic');
+      if(profileDesign){panel.style.background=profileDesign.cardBg;panel.style.borderColor=profileDesign.cardBorder;panel.style.boxShadow=profileDesign.cardShadow;panel.dataset.profileDesign=profileDesign.id;}
       const hero = document.createElement('div');
       hero.className = 'hc-profile-hero';
       const avatar = makeSocialAvatar(profile);
