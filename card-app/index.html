@@ -1099,7 +1099,7 @@
       <button id="shop-filter-frames" onclick="setShopFilter('frame')" class="btn-primary px-4 py-2 rounded-xl text-xs font-bold">Рамки</button>
       <button id="shop-filter-skins" onclick="setShopFilter('skin')" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Карты</button>
       <button id="shop-filter-nickname" onclick="setShopFilter('nickname')" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Ники</button>
-      <button id="shop-filter-profileCard" onclick="setShopFilter(&quot;profileCard&quot;)" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Карточки профиля</button>
+      <button id="shop-filter-profileCard" onclick="setShopFilter(&quot;profileCard&quot;)" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Карточка</button>
     </div>
     <div id="rewards-shop" class="grid grid-cols-2 gap-3"></div>
     <h3 class="font-black text-lg mt-6 mb-3">Моя коллекция</h3>
@@ -1522,13 +1522,20 @@
       {id:'skin-midnight',name:'Midnight Cards',type:'skin',price:500,rarity:'Редкая',desc:'Ночное оформление учебных карточек.',style:'linear-gradient(135deg,#312e81,#111827)',glow:'0 0 12px rgba(99,102,241,.3)'},
       {id:'skin-aurora',name:'Aurora Cards',type:'skin',price:1100,rarity:'Эпическая',desc:'Северное сияние в оформлении карточек.',style:'linear-gradient(135deg,#0f766e,#4c1d95,#164e63)',glow:'0 0 16px rgba(45,212,191,.35)'}
 
-      ,{id:'nick-silver',name:'Silver Frost',type:'nickname',price:300,rarity:'Редкая',desc:'Холодный металлический серебряный ник.',textStyle:'background:linear-gradient(90deg,#64748b,#f8fafc,#94a3b8);-webkit-background-clip:text;background-clip:text;color:transparent'}
-      ,{id:'nick-gold',name:'Golden Legend',type:'nickname',price:850,rarity:'Эпическая',desc:'Золотой блеск для настоящей легенды.',textStyle:'background:linear-gradient(90deg,#92400e,#facc15,#fff7ad,#b45309);-webkit-background-clip:text;background-clip:text;color:transparent'}
-      ,{id:'nick-aurora',name:'Aurora',type:'nickname',price:650,rarity:'Эпическая',desc:'Перелив от бирюзового к фиолетовому.',textStyle:'background:linear-gradient(90deg,#22d3ee,#818cf8,#e879f9);-webkit-background-clip:text;background-clip:text;color:transparent'}
-      ,{id:'nick-neon',name:'Neon Pulse',type:'nickname',price:500,rarity:'Редкая',desc:'Яркий неоновый розово-голубой ник.',textStyle:'color:#22d3ee;text-shadow:0 0 5px #22d3ee,0 0 12px #ec4899'}
-      ,{id:'nick-ruby',name:'Ruby Flame',type:'nickname',price:950,rarity:'Эпическая',desc:'Рубиново-красный градиент.',textStyle:'background:linear-gradient(90deg,#7f1d1d,#fb7185,#fda4af);-webkit-background-clip:text;background-clip:text;color:transparent'}
-      ,{id:'nick-emerald',name:'Emerald',type:'nickname',price:1200,rarity:'Легендарная',desc:'Изумрудный перелив.',textStyle:'background:linear-gradient(90deg,#064e3b,#34d399,#a7f3d0);-webkit-background-clip:text;background-clip:text;color:transparent'}
-      ,{id:'nick-prism',name:'Prism Master',type:'nickname',price:2400,rarity:'Мифическая',desc:'Многоцветный призматический ник.',textStyle:'background:linear-gradient(90deg,#f472b6,#a78bfa,#22d3ee,#facc15);-webkit-background-clip:text;background-clip:text;color:transparent'}
+
+      ,{id:'nick-blue',name:'Blue',type:'nickname',price:100,rarity:'Обычная',desc:'Чистый насыщенный синий цвет.',textStyle:'color:#3b82f6'}
+      ,{id:'nick-pink',name:'Pink',type:'nickname',price:100,rarity:'Обычная',desc:'Яркий розовый цвет.',textStyle:'color:#ec4899'}
+      ,{id:'nick-red',name:'Red',type:'nickname',price:100,rarity:'Обычная',desc:'Классический красный цвет.',textStyle:'color:#ef4444'}
+      ,{id:'nick-green',name:'Green',type:'nickname',price:100,rarity:'Обычная',desc:'Свежий зелёный цвет.',textStyle:'color:#22c55e'}
+      ,{id:'nick-purple',name:'Purple',type:'nickname',price:150,rarity:'Обычная',desc:'Насыщенный фиолетовый цвет.',textStyle:'color:#a855f7'}
+      ,{id:'nick-orange',name:'Orange',type:'nickname',price:150,rarity:'Обычная',desc:'Тёплый оранжевый цвет.',textStyle:'color:#f97316'}
+      ,{id:'nick-silver',name:'Silver Gradient',type:'nickname',price:650,rarity:'Редкая',desc:'Холодный металлический серебряный градиент.',textStyle:'background:linear-gradient(90deg,#64748b,#f8fafc,#94a3b8);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-gold',name:'Golden Legend',type:'nickname',price:1400,rarity:'Эпическая',desc:'Золотой перелив с эффектом металла.',textStyle:'background:linear-gradient(90deg,#92400e,#facc15,#fff7ad,#b45309);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-aurora',name:'Aurora',type:'nickname',price:1250,rarity:'Эпическая',desc:'Градиент от бирюзового к фиолетовому.',textStyle:'background:linear-gradient(90deg,#22d3ee,#818cf8,#e879f9);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-neon',name:'Neon Pulse',type:'nickname',price:1100,rarity:'Эпическая',desc:'Неоновый розово-голубой перелив.',textStyle:'background:linear-gradient(90deg,#22d3ee,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 10px rgba(34,211,238,.3)'}
+      ,{id:'nick-ruby',name:'Ruby Flame',type:'nickname',price:1600,rarity:'Легендарная',desc:'Рубиново-красный градиент.',textStyle:'background:linear-gradient(90deg,#7f1d1d,#fb7185,#fda4af);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-emerald',name:'Emerald',type:'nickname',price:1900,rarity:'Легендарная',desc:'Изумрудный перелив.',textStyle:'background:linear-gradient(90deg,#064e3b,#34d399,#a7f3d0);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-prism',name:'Prism Master',type:'nickname',price:3200,rarity:'Мифическая',desc:'Многоцветный призматический ник.',textStyle:'background:linear-gradient(90deg,#f472b6,#a78bfa,#22d3ee,#facc15);-webkit-background-clip:text;background-clip:text;color:transparent'}
 
       ,{id:'card-basic',name:'Plain Platform',type:'profileCard',price:0,rarity:'Базовая',desc:'Простой билет без украшений.',cardBg:'linear-gradient(145deg,#273244,#1b2533)',cardBorder:'rgba(148,163,184,.25)',cardShadow:'none'}
       ,{id:'card-pink-dream',name:'Pink Dream',type:'profileCard',price:350,rarity:'Обычная',desc:'Нежный розовый градиент с мягким сиянием.',cardBg:'radial-gradient(circle at 12% 0%,rgba(255,255,255,.72),transparent 36%),linear-gradient(135deg,#fbcfe8 0%,#f9a8d4 42%,#c4b5fd 100%)',cardBorder:'rgba(255,255,255,.72)',cardShadow:'0 12px 32px rgba(236,72,153,.22)'}
@@ -1635,22 +1642,49 @@
         <div class="mt-4 flex justify-between text-xs font-bold"><span>${xp.toLocaleString('ru-RU')} XP</span><span>${level.current.toLocaleString('ru-RU')} / ${level.needed.toLocaleString('ru-RU')} XP</span></div>
         <div class="h-2.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden mt-2"><div class="h-full rounded-full" style="width:${level.percent}%;background:linear-gradient(90deg,#8b5cf6,#ec4899)"></div></div>
         <div class="grid grid-cols-3 gap-2 mt-4"><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${mastered}</div><div class="text-[10px] theme-text-muted">Освоено слов</div></div><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${streak} 🔥</div><div class="text-[10px] theme-text-muted">Дней подряд</div></div><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${pointsBalance} 🪙</div><div class="text-[10px] theme-text-muted">Монеты</div></div></div>
-        <div class="mt-4 flex flex-wrap gap-2"><span class="text-xs px-3 py-1.5 rounded-full border" style="border-color:rgba(139,92,246,.45)">🏅 ${unlockedAchievements.length} медалей</span><span class="text-xs px-3 py-1.5 rounded-full border">🎨 ${playerInventory.filter(id=>id.startsWith('frame-')).length} рамок</span><span class="text-xs px-3 py-1.5 rounded-full border">🏆 ${PLAYER_RANKS[PLAYER_RANKS.length-1].xp.toLocaleString('ru-RU')} XP до легенды</span></div><div class="mt-4 flex items-center gap-2 flex-wrap"><label class="text-xs font-bold" for="player-avatar-achievement-select">Аватарка:</label><select class="player-avatar-achievement-select" class="input-field text-xs rounded-xl px-3 py-2 flex-1 min-w-[150px]"><option value="">Иконка текущего ранга</option>${PLAYER_ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=>`<option value="${a.id}" ${playerEquipment.avatarAchievement===a.id?'selected':''}>${a.icon} ${a.title}</option>`).join('')}</select><span class="text-[10px] theme-text-muted">Выбери открытую медаль</span></div>
+        <div class="mt-4 flex flex-wrap gap-2"><span class="text-xs px-3 py-1.5 rounded-full border" style="border-color:rgba(139,92,246,.45)">🏅 ${unlockedAchievements.length} медалей</span><span class="text-xs px-3 py-1.5 rounded-full border">🎨 ${playerInventory.filter(id=>id.startsWith('frame-')).length} рамок</span><span class="text-xs px-3 py-1.5 rounded-full border">🏆 ${PLAYER_RANKS[PLAYER_RANKS.length-1].xp.toLocaleString('ru-RU')} XP до легенды</span></div><div class="mt-4 flex items-center gap-3 flex-wrap"><span class="text-xs font-bold">Аватарка:</span><button type="button" onclick="openAvatarPicker()" class="btn-secondary text-xs rounded-xl px-3 py-2 font-bold">🏅 Выбрать значок</button><span class="text-[10px] theme-text-muted">Сейчас: ${selectedAchievement?selectedAchievement.icon+' '+selectedAchievement.title:'значок ранга'}</span></div>
       </div>`;
       if(el)el.innerHTML=cardHtml;
       if(accountEl)accountEl.innerHTML=cardHtml.replace('mb-5','mb-0');
     }
 
-    document.addEventListener('change', event => {
-      if(!event.target?.classList?.contains('player-avatar-achievement-select')) return;
-      const value=event.target.value||null;
-      if(value&&!unlockedAchievements.includes(value)) return showToast('Сначала открой это достижение');
-      playerEquipment.avatarAchievement=value;
-      savePlayerGameState();
-      renderPlayerCard();
-      if(currentAuthUser&&supabaseClient) syncPublicProfile().then(()=>loadSocialHub()).catch(err=>console.warn('Avatar sync:',err.message));
-      showToast(value?'Аватарка обновлена 🏅':'Возвращена аватарка ранга');
-    });
+
+
+    let pendingAvatarAchievement = playerEquipment.avatarAchievement || null;
+    function openAvatarPicker(){
+      pendingAvatarAchievement=playerEquipment.avatarAchievement||null;
+      document.getElementById('avatar-picker-modal')?.remove();
+      const modal=document.createElement('div');
+      modal.id='avatar-picker-modal';
+      modal.className='fixed inset-0 z-[9999] flex items-center justify-center p-4';
+      modal.style.cssText='background:rgba(2,6,23,.78);backdrop-filter:blur(8px)';
+      const unlocked=PLAYER_ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id));
+      const options=[{id:'',title:'Значок ранга',icon:getRankAvatarIcon(getPlayerRank().id)},...unlocked.map(a=>({id:a.id,title:a.title,icon:a.icon}))];
+      const selected=options.find(x=>x.id===pendingAvatarAchievement)||options[0];
+      modal.innerHTML=`<div class="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-3xl p-5 border shadow-2xl" style="background:#111827;color:#f8fafc;border-color:rgba(255,255,255,.18)"><div class="flex items-center justify-between mb-2"><div><div class="text-lg font-black">Выбор аватарки</div><div class="text-xs text-slate-400">Примерь значок перед сохранением</div></div><button type="button" onclick="closeAvatarPicker()" class="w-9 h-9 rounded-full bg-white/10 text-white">✕</button></div><div class="rounded-2xl p-5 my-4 text-center" style="background:linear-gradient(145deg,#1e293b,#312e81)"><div id="avatar-picker-preview" class="text-6xl">${selected.icon}</div><div id="avatar-picker-preview-name" class="font-black mt-2">${selected.title}</div><div class="text-[10px] text-slate-300 mt-1">Предпросмотр</div></div><div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="avatar-picker-options">${options.map(o=>`<button type="button" data-avatar-id="${o.id}" onclick="previewAvatarAchievement('${o.id}')" class="rounded-xl p-3 border text-center" style="border-color:${o.id===pendingAvatarAchievement?'#a78bfa':'rgba(255,255,255,.12)'};background:${o.id===pendingAvatarAchievement?'rgba(139,92,246,.25)':'rgba(255,255,255,.06)'}"><div class="text-3xl">${o.icon}</div><div class="text-[10px] font-bold mt-1 leading-tight">${o.title}</div></button>`).join('')}</div><div class="flex gap-2 mt-5"><button type="button" onclick="closeAvatarPicker()" class="flex-1 rounded-xl py-3 font-bold bg-white/10 text-white">Отмена</button><button type="button" onclick="saveAvatarAchievement()" class="flex-1 rounded-xl py-3 font-black text-white" style="background:linear-gradient(100deg,#7c3aed,#4f46e5)">Сохранить</button></div></div>`;
+      document.body.append(modal);
+    }
+    function previewAvatarAchievement(id){
+      if(id&&!unlockedAchievements.includes(id))return;
+      pendingAvatarAchievement=id||null;
+      const a=PLAYER_ACHIEVEMENTS.find(x=>x.id===id);
+      const icon=a?.icon||getRankAvatarIcon(getPlayerRank().id);
+      const name=a?.title||'Значок ранга';
+      const preview=document.getElementById('avatar-picker-preview'),label=document.getElementById('avatar-picker-preview-name');
+      if(preview)preview.textContent=icon;if(label)label.textContent=name;
+      document.querySelectorAll('#avatar-picker-options button').forEach(b=>{
+        const active=(b.dataset.avatarId||'')===(id||'');
+        b.style.borderColor=active?'#a78bfa':'rgba(255,255,255,.12)';
+        b.style.background=active?'rgba(139,92,246,.25)':'rgba(255,255,255,.06)';
+      });
+    }
+    function closeAvatarPicker(){document.getElementById('avatar-picker-modal')?.remove();}
+    function saveAvatarAchievement(){
+      playerEquipment.avatarAchievement=pendingAvatarAchievement;
+      savePlayerGameState();renderPlayerCard();closeAvatarPicker();
+      if(currentAuthUser&&supabaseClient)syncPublicProfile().then(()=>loadSocialHub()).catch(err=>console.warn('Avatar sync:',err.message));
+      showToast(playerEquipment.avatarAchievement?'Аватарка обновлена 🏅':'Возвращена аватарка ранга');
+    }
 
     const QUIET_MODE_KEY = 'hankecards_quiet_mode_v1';
     let quietMode = localStorage.getItem(QUIET_MODE_KEY) === 'true';
@@ -1765,7 +1799,7 @@
     }
 
     function currentShopFilter(){return window.hankeShopFilter||'frame';}
-    function setShopFilter(filter){window.hankeShopFilter=['frame','skin','nickname'].includes(filter)?filter:'frame';renderGames();}
+    function setShopFilter(filter){window.hankeShopFilter=['frame','skin','nickname','profileCard'].includes(filter)?filter:'frame';renderGames();}
     function getEquippedNicknameStyle(){return COSMETIC_ITEMS.find(x=>x.id===playerEquipment.nicknameStyle&&x.type==='nickname')||null;}
     function applyNicknameStyle(element, styleId){const item=COSMETIC_ITEMS.find(x=>x.id===styleId&&x.type==='nickname');if(item?.textStyle)element.style.cssText+=`;${item.textStyle}`;}
 
@@ -1795,7 +1829,7 @@
       [['frames','frame'],['skins','skin'],['nickname','nickname'],['profileCard','profileCard']].forEach(([k,v])=>{const b=document.getElementById('shop-filter-'+k);if(b)b.className=(filter===v?'btn-primary':'btn-secondary')+' px-4 py-2 rounded-xl text-xs font-bold';});
       if(shop)shop.innerHTML=COSMETIC_ITEMS.filter(x=>x.type===filter).map(item=>{
         const owned=playerInventory.includes(item.id),equipped=playerEquipment.frame===item.id||playerEquipment.skin===item.id||playerEquipment.nicknameStyle===item.id||playerEquipment.profileCard===item.id,canBuy=pointsBalance>=item.price;
-        return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)">${item.type==='nickname'?`<div class="text-xl font-black" style="${item.textStyle}">HankeTest</div>`:item.type==='profileCard'?`<div class="w-full mx-2 rounded-xl p-3 text-left" style="background:${item.cardBg};border:1px solid ${item.cardBorder};box-shadow:${item.cardShadow};color:${['card-pink-dream','card-lavender','card-ocean','card-sunset'].includes(item.id)?'#263044':'#fff'}"><div class="text-[9px] opacity-75">PLAYER CARD</div><div class="font-black text-sm">HankeTest</div><div class="text-[9px] opacity-80">Level 12 · 2 450 XP</div></div>`:`<div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div>`}</div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div>${equipped?'<div class="text-xs font-bold theme-accent-text">Используется ✓</div>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold">${canBuy?'Купить':'Не хватает монет'}</button>`}</div>`;
+        return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)">${item.type==='nickname'?`<div class="text-xl font-black" style="${item.textStyle}">LexiLearner</div>`:item.type==='profileCard'?`<div class="w-full mx-2 rounded-xl p-3 text-left" style="background:${item.cardBg};border:1px solid ${item.cardBorder};box-shadow:${item.cardShadow};color:${['card-pink-dream','card-lavender','card-ocean','card-sunset'].includes(item.id)?'#263044':'#fff'}"><div class="text-[9px] opacity-75">PLAYER CARD</div><div class="font-black text-sm">LexiLearner</div><div class="text-[9px] opacity-80">Level 12 · 2 450 XP</div></div>`:`<div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div>`}</div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div>${equipped?'<div class="text-xs font-bold theme-accent-text">Используется ✓</div>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold">${canBuy?'Купить':'Не хватает монет'}</button>`}</div>`;
       }).join('');
       const ownedEl=document.getElementById('owned-rewards');
       if(ownedEl){const owned=COSMETIC_ITEMS.filter(x=>playerInventory.includes(x.id));ownedEl.innerHTML=owned.length?owned.map(x=>`<div class="flex items-center justify-between py-2 border-b last:border-0" style="border-color:rgba(120,120,120,.15)"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black" style="${x.type==='nickname'?x.textStyle:frameStyle(x)}">${x.type==='nickname'?'Aa':''}</span><div><div class="font-bold">${x.name}</div><div class="text-[10px] theme-text-muted">${x.rarity}</div></div></div><span class="text-xs">${playerEquipment.frame===x.id||playerEquipment.skin===x.id||playerEquipment.nicknameStyle===x.id?'Надето':'В коллекции'}</span></div>`).join(''):'Пока ничего не приобретено.';}
