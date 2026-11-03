@@ -471,7 +471,7 @@
 
 
   <!-- ================= ACCOUNT / AUTH MODAL ================= -->
-  <div id="account-modal" class="hidden fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
+  <div id="account-modal" onclick="if(event.target===this)closeAccountModal()" class="hidden fixed inset-0 z-[120] bg-black/45 backdrop-blur-sm items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
     <div class="theme-card border rounded-3xl p-5 w-full max-w-md max-h-[90dvh] overflow-y-auto shadow-2xl">
       <div class="flex items-center justify-between gap-3 mb-4">
         <div>
@@ -624,10 +624,12 @@
       </div>
       <button onclick="startQuickLearning()" class="btn-primary w-full mt-3">Начать быстрое обучение</button>
     </section>
-    <section class="theme-card border rounded-3xl p-4 mt-4">
-      <p class="text-sm font-bold mb-2">Как проходит тренировка?</p>
-      <p class="text-xs theme-text-muted leading-relaxed">Приложение случайно смешивает карточки, тесты и письменные задания. Когда тихий режим выключен, в тренировку также добавляются упражнения с аудио. Одно и то же слово может встретиться несколько раз, если слов в колодах меньше выбранного количества заданий.</p>
-    </section>
+    <details class="theme-card border rounded-2xl p-4 mt-3">
+      <summary class="text-sm font-bold cursor-pointer list-none flex items-center justify-between gap-3">
+        <span>Как проходит тренировка?</span><span class="theme-text-muted text-lg">⌄</span>
+      </summary>
+      <p class="text-xs theme-text-muted leading-relaxed mt-3">Приложение случайно смешивает карточки, тесты и письменные задания. Когда тихий режим выключен, в тренировку также добавляются упражнения с аудио. Одно и то же слово может встретиться несколько раз, если слов в колодах меньше выбранного количества заданий.</p>
+    </details>
   </main>
 
   <!-- ================= VIEW: PRACTICE & PROGRESS ================= -->
@@ -636,6 +638,19 @@
       <p class="home-eyebrow mb-2">Lernen & Wiederholen</p>
       <h2 class="text-3xl font-black tracking-tight">Практика</h2>
       <p class="text-sm theme-text-muted mt-2">Выбери подходящий способ повторения.</p>
+    </section>
+    <section class="theme-card border rounded-2xl p-4 mb-5">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div><h3 class="font-bold text-sm">Колоды для практики</h3><p id="practice-deck-selection-count" class="text-xs theme-text-muted mt-1">Выбраны все колоды</p></div>
+        <button onclick="togglePracticeDeckPicker()" class="btn-secondary text-xs px-3 py-2">Изменить</button>
+      </div>
+      <div id="practice-deck-picker" class="hidden">
+        <div class="flex gap-2 mb-3">
+          <button onclick="setPracticeDeckSelection(true)" class="btn-soft text-xs px-3 py-2">Выбрать все</button>
+          <button onclick="setPracticeDeckSelection(false)" class="btn-soft text-xs px-3 py-2">Снять все</button>
+        </div>
+        <div id="practice-deck-options" class="space-y-2"></div>
+      </div>
     </section>
     <div class="grid grid-cols-2 gap-3 mb-6">
       <button onclick="startAllDueStudy()" class="practice-tile text-left">
@@ -670,7 +685,7 @@
   </main>
 
   <!-- ================= MODAL: DECK OPTIONS ================= -->
-  <div id="deck-menu-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] hidden flex-col justify-end">
+  <div id="deck-menu-modal" onclick="if(event.target===this)closeDeckMenu()" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] hidden flex-col justify-end">
     <div class="theme-card w-full max-w-md mx-auto rounded-t-3xl border-t p-6 transform transition-transform shadow-2xl">
       <h3 id="menu-deck-title" class="text-lg font-bold mb-4 border-b border-black/10 dark:border-white/10 pb-4">Опции колоды</h3>
       <button onclick="renameDeck()" class="modal-action">
@@ -710,7 +725,7 @@
   </div>
 
   <!-- ================= MODAL: CREATE DECK ================= -->
-  <div id="create-deck-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[210] hidden items-center justify-center p-5">
+  <div id="create-deck-modal" onclick="if(event.target===this)closeCreateDeck()" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[210] hidden items-center justify-center p-5">
     <div class="theme-card w-full max-w-sm rounded-[28px] border p-5 shadow-2xl create-deck-panel">
       <div class="flex items-center justify-between mb-5">
         <div>
@@ -825,8 +840,49 @@
   <!-- ================= VIEW: SOCIAL ================= -->
   <main id="view-social" class="hidden flex-1 flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
     <p class="home-eyebrow mb-2">HankeCards Social</p>
-    <h2 class="text-3xl font-black tracking-tight">Друзья 👥</h2>
+    <h2 class="text-3xl font-black tracking-tight text-center">Друзья 👥</h2>
     <p class="text-sm theme-text-muted mt-2 mb-5">Находи других учеников, добавляй в друзья и следи за их прогрессом.</p>
+
+    <section>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-base">Мои друзья</h3>
+        <span id="social-friend-count" class="text-xs theme-text-muted">0</span>
+      </div>
+      <div id="social-friends" class="space-y-2">
+        <p class="text-xs theme-text-muted">Здесь появятся твои друзья.</p>
+      </div>
+    </section>
+    <section class="mb-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-base">Заявки</h3>
+        <span id="social-request-count" class="text-xs theme-text-muted">0</span>
+      </div>
+      <div id="social-requests" class="space-y-2">
+        <p class="text-xs theme-text-muted">Пока нет заявок.</p>
+      </div>
+    </section>
+
+    <details class="theme-card border rounded-2xl p-4 mt-5">
+      <summary class="font-bold text-base cursor-pointer list-none flex justify-between items-center">История и обмен колодами 📦 <span class="theme-text-muted">⌄</span></summary>
+      <div class="mt-3">
+      <p class="text-xs theme-text-muted mt-1 mb-4">Отправляй свои колоды только подтверждённым друзьям. Получатель импортирует отдельную копию.</p>
+      <p class="text-xs theme-text-muted mb-4">Предложения, которые тебе отправили друзья, появятся здесь. Чтобы отправить свою колоду, открой меню «⋯» рядом с ней на главной странице.</p>
+      <div class="border-t theme-border my-4"></div>
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="font-bold text-sm">Входящие предложения</h4>
+        <button onclick="loadDeckShares()" class="text-xs theme-accent-text font-bold">Обновить</button>
+      </div>
+      <div id="deck-share-incoming" class="space-y-2">
+        <p class="text-xs theme-text-muted">Загрузка…</p>
+      </div>
+      <h4 class="font-bold text-sm mt-5 mb-2">Отправленные</h4>
+      <div id="deck-share-outgoing" class="space-y-2">
+        <p class="text-xs theme-text-muted">Загрузка…</p>
+      </div>
+      </div>
+    </details>
+
+    <p id="social-status" class="text-xs theme-text-muted text-center mt-5" aria-live="polite"></p>
 
     <section class="theme-card border rounded-2xl p-4 mb-4">
       <p class="text-xs font-bold theme-text-muted mb-2">Твой публичный адрес</p>
@@ -847,44 +903,7 @@
       <div id="social-search-results" class="space-y-2 mt-3"></div>
     </section>
 
-    <section class="mb-5">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-bold text-base">Заявки</h3>
-        <span id="social-request-count" class="text-xs theme-text-muted">0</span>
-      </div>
-      <div id="social-requests" class="space-y-2">
-        <p class="text-xs theme-text-muted">Пока нет заявок.</p>
-      </div>
-    </section>
 
-    <section>
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-bold text-base">Мои друзья</h3>
-        <span id="social-friend-count" class="text-xs theme-text-muted">0</span>
-      </div>
-      <div id="social-friends" class="space-y-2">
-        <p class="text-xs theme-text-muted">Здесь появятся твои друзья.</p>
-      </div>
-    </section>
-    <section class="theme-card border rounded-2xl p-4 mt-5">
-      <h3 class="font-bold text-base">Обмен колодами 📦</h3>
-      <p class="text-xs theme-text-muted mt-1 mb-4">Отправляй свои колоды только подтверждённым друзьям. Получатель импортирует отдельную копию.</p>
-      <p class="text-xs theme-text-muted mb-4">Предложения, которые тебе отправили друзья, появятся здесь. Чтобы отправить свою колоду, открой меню «⋯» рядом с ней на главной странице.</p>
-      <div class="border-t theme-border my-4"></div>
-      <div class="flex items-center justify-between mb-2">
-        <h4 class="font-bold text-sm">Входящие предложения</h4>
-        <button onclick="loadDeckShares()" class="text-xs theme-accent-text font-bold">Обновить</button>
-      </div>
-      <div id="deck-share-incoming" class="space-y-2">
-        <p class="text-xs theme-text-muted">Загрузка…</p>
-      </div>
-      <h4 class="font-bold text-sm mt-5 mb-2">Отправленные</h4>
-      <div id="deck-share-outgoing" class="space-y-2">
-        <p class="text-xs theme-text-muted">Загрузка…</p>
-      </div>
-    </section>
-
-    <p id="social-status" class="text-xs theme-text-muted text-center mt-5" aria-live="polite"></p>
   </main>
 
   <!-- ================= PUBLIC PROFILE MODAL ================= -->
@@ -1009,7 +1028,7 @@
   <main id="view-deck" class="hidden flex-1 flex flex-col p-6 overflow-y-auto w-full max-w-md mx-auto pb-32">
     <div class="theme-card rounded-3xl p-6 mb-6 border shadow-sm pt-2">
       <h2 class="text-xs theme-text-muted uppercase tracking-wider mb-1 font-bold">Колода</h2>
-      <h3 id="deck-title" class="text-2xl font-black tracking-tight mb-4">Название</h3>
+      <h3 id="deck-title" class="text-2xl font-black tracking-tight mb-1 text-center">Название</h3>
       <div class="grid grid-cols-2 gap-3 mb-6">
         <div class="bg-black/5 dark:bg-white/5 rounded-2xl p-4 border theme-card">
           <p class="text-2xl font-black theme-accent-text" id="deck-due">0</p>
@@ -1022,7 +1041,7 @@
       </div>
       <div class="space-y-3">
         <div class="action-row">
-          <button onclick="startStudy()" class="btn-primary w-full">
+          <button onclick="startStudy()" class="btn-secondary w-full">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.8A2.8 2.8 0 0 1 7.8 3H20v16H7.8A2.8 2.8 0 0 1 5 16.2z"/><path d="M9 8h7M9 12h7"/></svg>Учить
           </button>
           <button onclick="startWeakPractice('deck')" class="btn-secondary w-full">
@@ -1119,7 +1138,7 @@
         <p class="text-sm theme-text-muted mt-3">Как это будет по-немецки?</p>
       </div>
       <div id="quiz-options" class="grid gap-3"></div>
-      <div id="quiz-feedback" class="hidden rounded-2xl border p-4 mt-5 text-sm font-semibold" aria-live="polite"></div>
+      <div id="quiz-feedback" class="hidden fixed left-1/2 -translate-x-1/2 bottom-28 z-[160] max-w-[min(90vw,390px)] rounded-full px-4 py-2 text-xs font-bold shadow-xl text-center pointer-events-none" aria-live="polite"></div>
       <button id="quiz-next-btn" onclick="continueChoiceQuiz()" class="hidden w-full btn-primary mt-5 py-4">Следующее слово</button>
     </section>
     <div class="flex-1 relative flex justify-center items-center perspective-1000 w-full max-w-sm mx-auto" id="card-area">
@@ -1405,6 +1424,7 @@
       if (accuracyEl) accuracyEl.innerText = accuracy;
     }
     function renderPracticeHub() {
+      renderPracticeDeckPicker();
       const dueCount = cards.filter(card => Number(card.nextReview || 0) <= Date.now()).length;
       const weakCount = cards.filter(card => (Number(card.weakCount) || 0) > 0).length;
       const genderCount = cards.filter(card => isArticleWord(card)).length;
@@ -1689,6 +1709,10 @@
       const container = document.getElementById('decks-container');
       container.innerHTML = '';
       let totalDue = 0;
+      if (Array.isArray(selectedPracticeDeckIds)) {
+        selectedPracticeDeckIds = selectedPracticeDeckIds.filter(id => decks.some(deck => String(deck.id) === id));
+        decks.forEach(deck => { if (!selectedPracticeDeckIds.includes(String(deck.id))) selectedPracticeDeckIds.push(String(deck.id)); });
+      }
       decks.forEach(deck => {
         const deckCards = cards.filter(c => c.deckId === deck.id && c.srsLevel < 4);
         const dueCount = deckCards.filter(c => c.nextReview <= Date.now()).length;
@@ -1844,7 +1868,17 @@
       document.getElementById('deck-title').innerText = deck.name; document.getElementById('deck-due').innerText = dueCards.length; document.getElementById('deck-total').innerText = deckCards.length;
       const vocabSearch = document.getElementById('deck-vocab-search');
       if (vocabSearch) vocabSearch.value = '';
-      document.getElementById('nav-actions').innerHTML = `<button onclick="openAddCard()" class="btn-secondary" style="min-height:40px;padding:0 13px;font-size:12px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Добавить</button>`;
+      document.getElementById('nav-actions').innerHTML = '';
+      let addButton = document.getElementById('deck-add-card-button');
+      if (!addButton) {
+        addButton = document.createElement('button');
+        addButton.id = 'deck-add-card-button';
+        addButton.className = 'btn-secondary mx-auto mt-3 mb-1';
+        addButton.innerHTML = '<span class="inline-flex items-center justify-center gap-2"><span class="text-lg leading-none">＋</span>Добавить</span>';
+        addButton.onclick = openAddCard;
+        const title = document.getElementById('deck-title');
+        title.insertAdjacentElement('afterend', addButton);
+      }
       renderDeckVocab();
     }
     function openAddCard() { hideAllViews(); document.getElementById('view-add').classList.remove('hidden'); document.getElementById('nav-actions').innerHTML = `<button onclick="openDeck('${currentDeckId}')" class="font-bold text-xs">Назад</button>`; }
@@ -1940,11 +1974,63 @@
       showToast('Добавлено! '); openDeck(currentDeckId);
     }
 
+    let selectedPracticeDeckIds = null;
+    function getPracticeSourceCards() {
+      if (!Array.isArray(selectedPracticeDeckIds)) return cards;
+      return cards.filter(card => selectedPracticeDeckIds.includes(String(card.deckId)));
+    }
+    function renderPracticeDeckPicker() {
+      const list = document.getElementById('practice-deck-options');
+      if (!list) return;
+      if (!Array.isArray(selectedPracticeDeckIds)) selectedPracticeDeckIds = decks.map(deck => String(deck.id));
+      list.replaceChildren();
+      decks.forEach(deck => {
+        const label = document.createElement('label');
+        label.className = 'flex items-center gap-3 py-2 text-sm cursor-pointer';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox'; checkbox.className = 'accent-current w-4 h-4';
+        checkbox.checked = selectedPracticeDeckIds.includes(String(deck.id));
+        checkbox.addEventListener('change', () => {
+          selectedPracticeDeckIds = checkbox.checked
+            ? [...new Set([...selectedPracticeDeckIds, String(deck.id)])]
+            : selectedPracticeDeckIds.filter(id => id !== String(deck.id));
+          updatePracticeDeckSelectionLabel();
+        });
+        const name = document.createElement('span'); name.className = 'flex-1'; name.textContent = deck.name;
+        const count = document.createElement('span'); count.className = 'text-xs theme-text-muted';
+        count.textContent = String(cards.filter(card => String(card.deckId) === String(deck.id)).length);
+        label.append(checkbox, name, count); list.append(label);
+      });
+      updatePracticeDeckSelectionLabel();
+    }
+    function updatePracticeDeckSelectionLabel() {
+      const label = document.getElementById('practice-deck-selection-count');
+      if (!label) return;
+      const total = decks.length, selected = (selectedPracticeDeckIds || []).length;
+      label.textContent = selected === total ? 'Выбраны все колоды' : selected === 0 ? 'Колоды не выбраны' : `Выбрано: ${selected} из ${total}`;
+    }
+    function togglePracticeDeckPicker() {
+      const panel = document.getElementById('practice-deck-picker');
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) renderPracticeDeckPicker();
+    }
+    function setPracticeDeckSelection(all) {
+      selectedPracticeDeckIds = all ? decks.map(deck => String(deck.id)) : [];
+      renderPracticeDeckPicker();
+    }
+    function requirePracticeDecks() {
+      const source = getPracticeSourceCards();
+      if (!source.length) showToast('Выбери хотя бы одну колоду с карточками');
+      return source;
+    }
+
     function startAllDueStudy() {
       quizMode = false;
       practiceMode = false;
       practiceReturnView = 'practice';
-      studyQueue = cards.filter(card => Number(card.nextReview || 0) <= Date.now())
+      const source = requirePracticeDecks();
+      if (!source.length) return;
+      studyQueue = source.filter(card => Number(card.nextReview || 0) <= Date.now())
         .sort((a, b) => Number(a.nextReview || 0) - Number(b.nextReview || 0));
       if (!studyQueue.length) return showToast('Сейчас нет слов для повторения');
       initialQueueLength = studyQueue.length;
@@ -1970,7 +2056,7 @@
 
     function startFreePractice(scope = 'deck') {
       quizMode = false;
-      const source = scope === 'all' ? cards : cards.filter(c => c.deckId === currentDeckId);
+      const source = scope === 'all' ? requirePracticeDecks() : cards.filter(c => c.deckId === currentDeckId);
       const shuffled = [...source].sort(() => Math.random() - 0.5);
       if (!shuffled.length) return showToast('Пока нет слов для практики');
       practiceMode = 'free';
@@ -1986,7 +2072,7 @@
 
     function startWeakPractice(scope = 'deck') {
       quizMode = false;
-      const source = scope === 'all' ? cards : cards.filter(c => c.deckId === currentDeckId);
+      const source = scope === 'all' ? requirePracticeDecks() : cards.filter(c => c.deckId === currentDeckId);
       const weakCards = source.filter(card => (Number(card.weakCount) || 0) > 0)
         .sort((a, b) => (Number(b.weakCount) || 0) - (Number(a.weakCount) || 0));
       if (!weakCards.length) return showToast('Пока нет слов с ошибками');
@@ -2109,6 +2195,18 @@
       if(bar) bar.style.width=`${initialQueueLength?quizAnsweredCount/initialQueueLength*100:0}%`;
     }
 
+    function showAnswerFeedback(correct, message) {
+      const feedback = document.getElementById('quiz-feedback');
+      if (!feedback) return;
+      feedback.className = `fixed left-1/2 -translate-x-1/2 bottom-28 z-[160] max-w-[min(90vw,390px)] rounded-full px-4 py-2 text-xs font-bold shadow-xl text-center pointer-events-none ${correct ? 'bg-green-600 text-white' : 'bg-rose-600 text-white'}`;
+      feedback.textContent = message;
+      feedback.classList.remove('hidden');
+    }
+    function clearAnswerFeedback() {
+      const feedback = document.getElementById('quiz-feedback');
+      if (feedback) feedback.classList.add('hidden');
+    }
+
     function answerQuickTask(correct) {
       if(quizAwaitingNext||!currentQuickTask) return;
       quizAwaitingNext=true;
@@ -2117,9 +2215,7 @@
       else card.weakCount=(Number(card.weakCount)||0)+1;
       recordAnswer(correct); saveData(); quizAnsweredCount++;
       const feedback=document.getElementById('quiz-feedback');
-      feedback.classList.remove('hidden');
-      feedback.className=`rounded-2xl border p-4 mt-5 text-sm font-semibold ${correct?'border-green-500/40 bg-green-500/10':'border-rose-500/40 bg-rose-500/10'}`;
-      feedback.innerText=correct?'Верно! Отличная работа.':`Правильный ответ: ${card.front} · ${card.back}`;
+      showAnswerFeedback(correct, correct ? 'Верно! Отличная работа.' : `Правильный ответ: ${card.front} · ${card.back}`);
       studyQueue.shift(); quickTaskTypes.shift();
       document.getElementById('study-counter').innerText=`Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const bar=document.getElementById('study-progress-fill'); if(bar) bar.style.width=`${quizAnsweredCount/initialQueueLength*100}%`;
@@ -2128,7 +2224,7 @@
     }
 
     function startChoiceQuiz(scope = 'deck') {
-      const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
+      const source = scope === 'all' ? requirePracticeDecks() : cards.filter(card => card.deckId === currentDeckId);
       if (source.length < 2) return showToast('Для теста нужно хотя бы 2 слова');
       quizMode = true;
       quizType = 'choice';
@@ -2150,7 +2246,7 @@
     }
 
     function startListeningQuiz(scope = 'all') {
-      const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
+      const source = scope === 'all' ? requirePracticeDecks() : cards.filter(card => card.deckId === currentDeckId);
       const eligible = source.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
       const translations = new Set(eligible.map(card => String(card.back).trim().toLocaleLowerCase()));
       if (eligible.length < 2 || translations.size < 2) return showToast('Для аудирования нужно хотя бы 2 карточки с разными переводами');
@@ -2227,18 +2323,14 @@
         button.disabled = true;
         if (button.dataset.translation.toLocaleLowerCase() === correctTranslation.toLocaleLowerCase()) button.classList.add('quiz-correct');
       });
-      const feedback = document.getElementById('quiz-feedback');
-      feedback.classList.remove('hidden');
       if (correct) {
         quizCorrectCount++;
         card.weakCount = Math.max(0, (Number(card.weakCount) || 0) - 1);
-        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-green-500/40 bg-green-500/10';
-        feedback.innerText = 'Верно! Ты правильно распознал слово на слух.';
+        showAnswerFeedback(true, 'Верно! На слух распознано правильно.');
       } else {
         selectedButton.classList.add('quiz-wrong');
         card.weakCount = (Number(card.weakCount) || 0) + 1;
-        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-rose-500/40 bg-rose-500/10';
-        feedback.innerText = `Правильный перевод: ${correctTranslation}. Немецкое слово: ${card.front}`;
+        showAnswerFeedback(false, `Правильный перевод: ${correctTranslation} · ${card.front}`);
       }
       recordAnswer(correct);
       saveData();
@@ -2252,7 +2344,7 @@
     }
 
     function startDictationQuiz(scope = 'all') {
-      const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
+      const source = scope === 'all' ? requirePracticeDecks() : cards.filter(card => card.deckId === currentDeckId);
       const eligible = source.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
       if (!eligible.length) return showToast('Пока нет карточек для диктанта');
       quizMode = true;
@@ -2341,17 +2433,13 @@
       if (input) input.disabled = true;
       if (submitButton) submitButton.disabled = true;
 
-      const feedback = document.getElementById('quiz-feedback');
-      feedback.classList.remove('hidden');
       if (correct) {
         quizCorrectCount++;
         card.weakCount = Math.max(0, (Number(card.weakCount) || 0) - 1);
-        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-green-500/40 bg-green-500/10';
-        feedback.innerText = 'Отлично! Ты правильно записал услышанное.';
+        showAnswerFeedback(true, 'Отлично! Ответ записан правильно.');
       } else {
         card.weakCount = (Number(card.weakCount) || 0) + 1;
-        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-rose-500/40 bg-rose-500/10';
-        feedback.innerText = `Правильное написание: ${card.front}`;
+        showAnswerFeedback(false, `Правильное написание: ${card.front}`);
       }
       recordAnswer(correct);
       saveData();
@@ -2365,7 +2453,7 @@
     }
 
     function startGenderQuiz(scope = 'all') {
-      const source = scope === 'all' ? cards : cards.filter(card => card.deckId === currentDeckId);
+      const source = scope === 'all' ? requirePracticeDecks() : cards.filter(card => card.deckId === currentDeckId);
       const eligible = source.filter(isArticleWord);
       if (!eligible.length) return showToast('Пока нет слов с указанным артиклем');
       quizMode = true;
@@ -2425,18 +2513,14 @@
         button.disabled = true;
         if (button.dataset.gender === correctGender) button.classList.add('quiz-correct');
       });
-      const feedback = document.getElementById('quiz-feedback');
-      feedback.classList.remove('hidden');
       if (correct) {
         quizCorrectCount++;
         card.weakCount = Math.max(0, (Number(card.weakCount) || 0) - 1);
-        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-green-500/40 bg-green-500/10';
-        feedback.innerText = 'Верно! Запомни артикль вместе со словом.';
+        showAnswerFeedback(true, 'Верно! Артикль выбран правильно.');
       } else {
         selectedButton.classList.add('quiz-wrong');
         card.weakCount = (Number(card.weakCount) || 0) + 1;
-        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-rose-500/40 bg-rose-500/10';
-        feedback.innerText = `Неверно. Правильно: ${correctGender} ${String(card.front || '').replace(/^(der|die|das)\\s+/i, '').trim()}`;
+        showAnswerFeedback(false, `Правильно: ${correctGender} ${String(card.front || '').replace(/^(der|die|das)\\s+/i, '').trim()}`);
       }
       recordAnswer(correct);
       saveData();
@@ -2450,6 +2534,7 @@
     }
 
     function renderChoiceQuestion() {
+      clearAnswerFeedback();
       if (quizType === 'gender') return renderGenderQuestion();
       if (quizType === 'listening') return renderListeningQuestion();
       if (quizType === 'dictation') return renderDictationQuestion();
@@ -2491,18 +2576,14 @@
         button.disabled = true;
         if (button.dataset.cardId === String(correctCard.id)) button.classList.add('quiz-correct');
       });
-      const feedback = document.getElementById('quiz-feedback');
-      feedback.classList.remove('hidden');
       if (correct) {
         quizCorrectCount++;
         correctCard.weakCount = Math.max(0, (Number(correctCard.weakCount) || 0) - 1);
-        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-green-500/40 bg-green-500/10';
-        feedback.innerText = 'Верно! Отличная работа.';
+        showAnswerFeedback(true, 'Верно! Отличная работа.');
       } else {
         selectedButton.classList.add('quiz-wrong');
         correctCard.weakCount = (Number(correctCard.weakCount) || 0) + 1;
-        feedback.className = 'rounded-2xl border p-4 mt-5 text-sm font-semibold border-rose-500/40 bg-rose-500/10';
-        feedback.innerText = `Не совсем. Правильный ответ: ${correctCard.front}`;
+        showAnswerFeedback(false, `Правильный ответ: ${correctCard.front}`);
       }
       recordAnswer(correct);
       saveData();
@@ -2540,6 +2621,7 @@
     }
 
     function loadNextCard() {
+      clearAnswerFeedback();
       if (studyQueue.length === 0) {
         const wasQuiz = quizMode;
         const wasPractice = practiceMode;
@@ -2841,6 +2923,10 @@
         p_study_streak: stats.study_streak
       });
       if (error) throw error;
+      const badgeSync = await supabaseClient.from('public_profile_badges').upsert({
+        user_id: currentAuthUser.id, reward_badges: ownedRewards
+      }, { onConflict: 'user_id' });
+      if (badgeSync.error) console.warn('Badge sync skipped:', badgeSync.error.message);
     }
 
     async function loadSocialHub() {
@@ -2877,6 +2963,12 @@
             .in('user_id', otherIds);
           if (result.error) throw result.error;
           profiles = result.data || [];
+          const badgeResult = await supabaseClient.from('public_profile_badges')
+            .select('user_id, reward_badges').in('user_id', otherIds);
+          if (!badgeResult.error) {
+            const badgeMap = new Map((badgeResult.data || []).map(row => [row.user_id, row.reward_badges || []]));
+            profiles.forEach(profile => { profile.reward_badges = badgeMap.get(profile.user_id) || []; });
+          }
         }
         socialProfileCache = new Map(profiles.map(profile => [profile.user_id, profile]));
         renderSocialLists(rows, id);
@@ -3302,7 +3394,51 @@
       }
     }
 
+    function buildBadgeDisplay(rewardIds) {
+      const wrap = document.createElement('div');
+      wrap.className = 'grid grid-cols-1 gap-2 mt-3';
+      const ids = Array.isArray(rewardIds) ? rewardIds : [];
+      const owned = REWARD_CATALOG.filter(item => ids.includes(item.id));
+      if (!owned.length) {
+        const empty = document.createElement('p'); empty.className = 'text-xs theme-text-muted';
+        empty.textContent = 'Пока нет полученных значков.'; wrap.append(empty); return wrap;
+      }
+      owned.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'theme-card border rounded-xl p-3 flex items-center gap-3';
+        const icon = document.createElement('span'); icon.className = 'text-2xl'; icon.textContent = item.icon;
+        const textWrap = document.createElement('div');
+        const title = document.createElement('p'); title.className = 'text-sm font-bold'; title.textContent = item.title;
+        const desc = document.createElement('p'); desc.className = 'text-xs theme-text-muted'; desc.textContent = item.description;
+        textWrap.append(title,desc); row.append(icon,textWrap); wrap.append(row);
+      });
+      return wrap;
+    }
+    function renderOwnBadgeSection() {
+      const account = document.getElementById('account-modal');
+      if (!account) return;
+      const panel = account.querySelector('#account-signedin-panel');
+      if (!panel) return;
+      let section = document.getElementById('account-owned-badges');
+      if (!section) {
+        section = document.createElement('section'); section.id='account-owned-badges';
+        section.className='theme-card border rounded-2xl p-4 mt-4';
+        const heading=document.createElement('h3'); heading.className='font-bold text-sm'; heading.textContent='Мои значки';
+        section.append(heading); panel.append(section);
+      }
+      section.replaceChildren();
+      const heading=document.createElement('h3'); heading.className='font-bold text-sm'; heading.textContent='Мои значки';
+      section.append(heading, buildBadgeDisplay(ownedRewards));
+    }
+
     async function openPublicProfile(profile) {
+      if (currentAuthUser && supabaseClient && !Array.isArray(profile.reward_badges)) {
+        try {
+          const badgeResult = await supabaseClient.from('public_profile_badges')
+            .select('reward_badges').eq('user_id', profile.user_id).maybeSingle();
+          profile.reward_badges = badgeResult.data?.reward_badges || [];
+        } catch (_) { profile.reward_badges = []; }
+      }
       activePublicProfile = profile;
       const modal = document.getElementById('public-profile-modal');
       const content = document.getElementById('public-profile-content');
@@ -3449,6 +3585,19 @@
       modal.classList.remove('flex');
     }
 
+    // Close dialog overlays by clicking their backdrop.
+    document.addEventListener('click', (event) => {
+      const overlayIds = ['account-modal','public-profile-modal','deck-share-picker-modal','create-deck-modal','deck-menu-modal'];
+      const overlay = event.target;
+      if (!overlay || !overlayIds.includes(overlay.id)) return;
+      if (event.target !== overlay) return;
+      if (overlay.id === 'account-modal') closeAccountModal();
+      else if (overlay.id === 'public-profile-modal') closePublicProfile();
+      else if (overlay.id === 'deck-share-picker-modal') closeDeckSharePicker();
+      else if (overlay.id === 'create-deck-modal') closeCreateDeck();
+      else if (overlay.id === 'deck-menu-modal') closeDeckMenu();
+    });
+
     function initSupabaseClient() {
       try {
         if (!window.supabase || !window.supabase.createClient) throw new Error('Supabase SDK не загрузился');
@@ -3498,6 +3647,7 @@
       modal.classList.remove('hidden');
       modal.classList.add('flex');
       renderAccountPanel();
+      renderOwnBadgeSection();
     }
 
     function closeAccountModal() {
