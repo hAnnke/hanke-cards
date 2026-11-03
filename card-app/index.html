@@ -1197,6 +1197,127 @@
     const SRS_GRADUATED_MIN_DAYS = 14;
     const SRS_GRADUATED_MAX_DAYS = 180;
     const SRS_DEFAULT_EASE = 2.0;
+    const HYBRID_SRS_INTERVALS = [1, 10, 1440, 5760];
+    const HYBRID_SRS_MAX_SESSION_RETRIES = 2;
+    let srsSessionAttempts = new Map();
+
+    function ensureHybridSRS(card) {
+      if (!card) return null;
+      const level = Math.max(0, Number(card.srsLevel) || 0);
+      const hadHybridSRS = Boolean(card.srs && typeof card.srs === 'object');
+      if (!hadHybridSRS) card.srs = {};
+      const srs = card.srs;
+      if (typeof srs.masteredBothDirections !== 'boolean') srs.masteredBothDirections = level >= 4 && !hadHybridSRS;
+      srs.state = level >= 4 && srs.masteredBothDirections ? 'review' : (level > 0 ? 'learning' : 'new');
+      srs.level = level;
+      srs.intervalMinutes = Math.max(0, Number(srs.intervalMinutes) || 0);
+      srs.totalReviews = Math.max(0, Number(srs.totalReviews) || Number(card.srsReps) || 0);
+      srs.correctReviews = Math.max(0, Number(srs.correctReviews) || 0);
+      srs.lapses = Math.max(0, Number(srs.lapses) || Number(card.srsLapses) || 0);
+      srs.directionStats = srs.directionStats && typeof srs.directionStats === 'object' ? srs.directionStats : {};
+      ['deToNative', 'nativeToDe', 'grammar'].forEach(key => {
+        const stat = srs.directionStats[key] || {};
+        srs.directionStats[key] = {
+          correct: Math.max(0, Number(stat.correct) || 0),
+          wrong: Math.max(0, Number(stat.wrong) || 0)
+        };
+      });
+      srs.history = Array.isArray(srs.history) ? srs.history.slice(-30) : [];
+      return srs;
+    }
+
+    function getSRSDirectionForMode(mode) {
+      if (mode === 'choice' || mode === 'dictation' || mode === 'spelling' || mode === 'quick-write' || mode === 'quick-choice' || mode === 'quick-listen-write') return 'nativeToDe';
+      if (mode === 'gender') return 'grammar';
+      return 'deToNative';
+    }
+
+    function applyHybridSRSReview(card, correct, direction = 'deToNative', sourceMode = 'practice') {
+      if (!card) return false;
+      const now = Date.now();
+      const srs = ensureHybridSRS(card);
+      const directionKey = ['deToNative', 'nativeToDe', 'grammar'].includes(direction) ? direction : 'deToNative';
+      const stat = srs.directionStats[directionKey];
+      srs.totalReviews++;
+      if (correct) {
+        srs.correctReviews++;
+        stat.correct++;
+        srs.history.push({ at: now, correct: true, direction: directionKey, mode: sourceMode });
+        srs.history = srs.history.slice(-30);
+        srsSessionAttempts.delete(String(card.id));
+
+        if (Number(card.srsLevel) >= 4) {
+          const previous = clampSRS(card.srsIntervalDays || SRS_GRADUATED_MIN_DAYS, SRS_GRADUATED_MIN_DAYS, SRS_GRADUATED_MAX_DAYS);
+          const ease = clampSRS(card.srsEase || SRS_DEFAULT_EASE, 1.3, 2.7);
+          card.srsEase = Math.min(2.7, ease + 0.03);
+          card.srsIntervalDays = Math.min(SRS_GRADUATED_MAX_DAYS, Math.max(SRS_GRADUATED_MIN_DAYS, Math.round(previous * ease)));
+          card.srsReps = Math.max(4, Number(card.srsReps) || 4) + 1;
+          card.nextReview = now + card.srsIntervalDays * 86400000;
+        } else {
+          card.srsLevel = Math.min(4, Math.max(0, Number(card.srsLevel) || 0) + 1);
+          card.srsReps = Math.max(0, Number(card.srsReps) || 0) + 1;
+          if (card.srsLevel >= 4) {
+            const directionsReady =
+              srs.directionStats.deToNative.correct >= 2 &&
+              srs.directionStats.nativeToDe.correct >= 2;
+            if (directionsReady) {
+              graduateSRSCard(card, now);
+              srs.masteredBothDirections = true;
+            } else {
+              // Keep the card at the final learning step until both directions are demonstrated.
+              card.srsLevel = 3;
+              card.srsIntervalDays = 0;
+              card.nextReview = now + HYBRID_SRS_INTERVALS[3] * 60000;
+              srs.masteredBothDirections = false;
+            }
+          } else {
+            const minutes = HYBRID_SRS_INTERVALS[card.srsLevel] || HYBRID_SRS_INTERVALS[0];
+            card.nextReview = now + minutes * 60000;
+            card.srsIntervalDays = 0;
+          }
+        }
+        srs.state = Number(card.srsLevel) >= 4 && srs.masteredBothDirections ? 'review' : 'learning';
+      } else {
+        stat.wrong++;
+        srs.lapses++;
+        srs.history.push({ at: now, correct: false, direction: directionKey, mode: sourceMode });
+        srs.history = srs.history.slice(-30);
+        if (Number(card.srsLevel) >= 4) {
+          card.srsEase = clampSRS((card.srsEase || SRS_DEFAULT_EASE) - 0.2, 1.3, 2.7);
+          card.srsLapses = (Number(card.srsLapses) || 0) + 1;
+        } else {
+          card.srsLapses = (Number(card.srsLapses) || 0) + 1;
+        }
+        card.srsLevel = Math.max(0, (Number(card.srsLevel) || 0) - 1);
+        srs.masteredBothDirections = false;
+        card.srsIntervalDays = 0;
+        card.nextReview = now + HYBRID_SRS_INTERVALS[0] * 60000;
+        srs.state = 'relearning';
+      }
+
+      card.srs = srs;
+      srs.level = Math.max(0, Number(card.srsLevel) || 0);
+      srs.intervalMinutes = Math.max(0, Math.round((Number(card.nextReview) - now) / 60000));
+      srs.lapses = Math.max(srs.lapses, Number(card.srsLapses) || 0);
+      return !correct && registerSRSRetry(card);
+    }
+
+    function isHybridCardMastered(card) {
+      if (!card) return false;
+      const srs = ensureHybridSRS(card);
+      return Number(card.srsLevel) >= 4 && srs.masteredBothDirections === true;
+    }
+
+    function registerSRSRetry(card) {
+      const id = String(card.id);
+      const attempts = (srsSessionAttempts.get(id) || 0) + 1;
+      srsSessionAttempts.set(id, attempts);
+      return attempts <= HYBRID_SRS_MAX_SESSION_RETRIES;
+    }
+
+    function resetSRSSessionAttempts() {
+      srsSessionAttempts = new Map();
+    }
 
     function clampSRS(value, min, max) {
       return Math.min(max, Math.max(min, Number(value) || min));
@@ -1206,6 +1327,7 @@
       let changed = false;
       const now = Date.now();
       cards.forEach(card => {
+        ensureHybridSRS(card);
         const level = Math.max(0, Number(card.srsLevel) || 0);
         if (level >= 4) {
           if (!Number.isFinite(Number(card.srsEase))) { card.srsEase = SRS_DEFAULT_EASE; changed = true; }
@@ -1355,7 +1477,7 @@
 
     function renderAchievements() {
       const totals = getLearningTotals();
-      const mastered = cards.filter(card => Number(card.srsLevel) >= 4).length;
+      const mastered = cards.filter(isHybridCardMastered).length;
       const streak = getStudyStreak();
       const items = [
         { title: 'Первый ответ', detail: 'Ответь на 1 вопрос', current: totals.total, target: 1, icon: '🌱' },
@@ -1476,7 +1598,7 @@
       setText('stats-study-streak', getStudyStreak());
 
       const vocabTotal = cards.length;
-      const vocabMastered = cards.filter(card => Number(card.srsLevel) >= 4).length;
+      const vocabMastered = cards.filter(isHybridCardMastered).length;
       const vocabDue = cards.filter(card => Number(card.nextReview || 0) <= Date.now()).length;
       const vocabProgress = vocabTotal ? Math.round(vocabMastered / vocabTotal * 100) : 0;
       setText('stats-vocab-total', vocabTotal);
@@ -1719,7 +1841,7 @@
         decks.forEach(deck => { if (!selectedPracticeDeckIds.includes(String(deck.id))) selectedPracticeDeckIds.push(String(deck.id)); });
       }
       decks.forEach(deck => {
-        const deckCards = cards.filter(c => c.deckId === deck.id && c.srsLevel < 4);
+        const deckCards = cards.filter(c => c.deckId === deck.id && !isHybridCardMastered(c));
         const dueCount = deckCards.filter(c => c.nextReview <= Date.now()).length;
         totalDue += dueCount;
         const tile = document.createElement('div');
@@ -1869,7 +1991,7 @@
 
     function openDeck(id) {
       currentDeckId = id; hideAllViews(); document.getElementById('view-deck').classList.remove('hidden');
-      const deck = decks.find(d => d.id === id), allDeckCards = cards.filter(c => c.deckId === id), deckCards = allDeckCards.filter(c => Number(c.srsLevel) < 4), dueCards = allDeckCards.filter(c => Number(c.nextReview || 0) <= Date.now());
+      const deck = decks.find(d => d.id === id), allDeckCards = cards.filter(c => c.deckId === id), deckCards = allDeckCards.filter(c => !isHybridCardMastered(c)), dueCards = allDeckCards.filter(c => Number(c.nextReview || 0) <= Date.now());
       document.getElementById('deck-title').innerText = deck.name; document.getElementById('deck-due').innerText = dueCards.length; document.getElementById('deck-total').innerText = deckCards.length;
       const vocabSearch = document.getElementById('deck-vocab-search');
       if (vocabSearch) vocabSearch.value = '';
@@ -2031,6 +2153,7 @@
     }
 
     function startAllDueStudy() {
+      resetSRSSessionAttempts();
       quizMode = false;
       practiceMode = false;
       practiceReturnView = 'practice';
@@ -2047,6 +2170,7 @@
     }
 
     function startStudy() {
+      resetSRSSessionAttempts();
       quizMode = false;
       practiceMode = false;
       practiceReturnView = 'deck';
@@ -2061,6 +2185,7 @@
     }
 
     function startFreePractice(scope = 'deck') {
+      resetSRSSessionAttempts();
       quizMode = false;
       const source = scope === 'all' ? requirePracticeDecks() : cards.filter(c => c.deckId === currentDeckId);
       const shuffled = [...source].sort(() => Math.random() - 0.5);
@@ -2072,11 +2197,12 @@
       initialQueueLength = studyQueue.length;
       hideAllViews();
       document.getElementById('view-study').classList.remove('hidden');
-      document.getElementById('study-mode-label').innerText = 'Свободная практика · Без SRS';
+      document.getElementById('study-mode-label').innerText = 'Свободная практика · SRS обновляется';
       loadNextCard();
     }
 
     function startWeakPractice(scope = 'deck') {
+      resetSRSSessionAttempts();
       quizMode = false;
       const source = scope === 'all' ? requirePracticeDecks() : cards.filter(c => c.deckId === currentDeckId);
       const weakCards = source.filter(card => (Number(card.weakCount) || 0) > 0)
@@ -2095,6 +2221,7 @@
 
 
     function startQuickLearning() {
+      resetSRSSessionAttempts();
       const source = cards.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
       if (!source.length) return showToast('Сначала добавь хотя бы одну карточку');
       const count = Math.max(10, Math.min(50, Number(document.getElementById('quick-learning-count')?.value) || 20));
@@ -2219,10 +2346,13 @@
       const card=currentQuickTask.card;
       if(correct){quizCorrectCount++;card.weakCount=Math.max(0,(Number(card.weakCount)||0)-1);}
       else card.weakCount=(Number(card.weakCount)||0)+1;
-      recordAnswer(correct); saveData(); quizAnsweredCount++;
+      recordAnswer(correct);
+      const srsRequeue = applyHybridSRSReview(card, correct, getSRSDirectionForMode(({flip:'deToNative',choice:'quick-choice',write:'quick-write','listen-choice':'deToNative','listen-write':'quick-listen-write'}[currentQuickTask.type] || 'deToNative')), 'quick'); saveData(); quizAnsweredCount++;
       const feedback=document.getElementById('quiz-feedback');
       showAnswerFeedback(correct, correct ? 'Верно! Отличная работа.' : `Правильный ответ: ${card.front} · ${card.back}`);
-      studyQueue.shift(); quickTaskTypes.shift();
+      studyQueue.shift();
+      const answeredTaskType = quickTaskTypes.shift();
+      if (srsRequeue) { studyQueue.push(card); quickTaskTypes.push(answeredTaskType); }
       document.getElementById('study-counter').innerText=`Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const bar=document.getElementById('study-progress-fill'); if(bar) bar.style.width=`${quizAnsweredCount/initialQueueLength*100}%`;
       const next=document.getElementById('quiz-next-btn'); next.classList.remove('hidden');
@@ -2230,6 +2360,7 @@
     }
 
     function startChoiceQuiz(scope = 'deck') {
+      resetSRSSessionAttempts();
       const source = scope === 'all' ? requirePracticeDecks() : cards.filter(card => card.deckId === currentDeckId);
       if (source.length < 2) return showToast('Для теста нужно хотя бы 2 слова');
       quizMode = true;
@@ -2252,6 +2383,7 @@
     }
 
     function startListeningQuiz(scope = 'all') {
+      resetSRSSessionAttempts();
       const source = scope === 'all' ? requirePracticeDecks() : cards.filter(card => card.deckId === currentDeckId);
       const eligible = source.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
       const translations = new Set(eligible.map(card => String(card.back).trim().toLocaleLowerCase()));
@@ -2339,9 +2471,11 @@
         showAnswerFeedback(false, `Правильный перевод: ${correctTranslation} · ${card.front}`);
       }
       recordAnswer(correct);
+      const srsRequeue = applyHybridSRSReview(card, correct, 'deToNative', 'listening');
       saveData();
       quizAnsweredCount++;
       studyQueue.shift();
+      if (srsRequeue) studyQueue.push(card);
       document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const progressFill = document.getElementById('study-progress-fill');
       if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
@@ -2350,6 +2484,7 @@
     }
 
     function startDictationQuiz(scope = 'all') {
+      resetSRSSessionAttempts();
       const source = scope === 'all' ? requirePracticeDecks() : cards.filter(card => card.deckId === currentDeckId);
       const eligible = source.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
       if (!eligible.length) return showToast('Пока нет карточек для диктанта');
@@ -2448,9 +2583,11 @@
         showAnswerFeedback(false, `Правильное написание: ${card.front}`);
       }
       recordAnswer(correct);
+      const srsRequeue = applyHybridSRSReview(card, correct, 'nativeToDe', 'dictation');
       saveData();
       quizAnsweredCount++;
       studyQueue.shift();
+      if (srsRequeue) studyQueue.push(card);
       document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const progressFill = document.getElementById('study-progress-fill');
       if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
@@ -2459,6 +2596,7 @@
     }
 
     function startGenderQuiz(scope = 'all') {
+      resetSRSSessionAttempts();
       const source = scope === 'all' ? requirePracticeDecks() : cards.filter(card => card.deckId === currentDeckId);
       const eligible = source.filter(isArticleWord);
       if (!eligible.length) return showToast('Пока нет слов с указанным артиклем');
@@ -2529,9 +2667,11 @@
         showAnswerFeedback(false, `Правильно: ${correctGender} ${String(card.front || '').replace(/^(der|die|das)\\s+/i, '').trim()}`);
       }
       recordAnswer(correct);
+      const srsRequeue = applyHybridSRSReview(card, correct, 'grammar', 'gender');
       saveData();
       quizAnsweredCount++;
       studyQueue.shift();
+      if (srsRequeue) studyQueue.push(card);
       document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const progressFill = document.getElementById('study-progress-fill');
       if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
@@ -2592,9 +2732,11 @@
         showAnswerFeedback(false, `Правильный ответ: ${correctCard.front}`);
       }
       recordAnswer(correct);
+      const srsRequeue = applyHybridSRSReview(correctCard, correct, 'nativeToDe', 'choice');
       saveData();
       quizAnsweredCount++;
       studyQueue.shift();
+      if (srsRequeue) studyQueue.push(correctCard);
       document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const progressFill = document.getElementById('study-progress-fill');
       if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
@@ -2723,6 +2865,7 @@
       document.getElementById('study-known-btn').disabled = true;
       if (practiceMode) {
         const answeredCard = cards[cardIndex];
+        const srsRequeue = applyHybridSRSReview(answeredCard, direction === 'right', 'deToNative', practiceMode === 'weak' ? 'weak-practice' : 'free-practice');
         if (direction === 'right') {
           recordAnswer(true);
           if (practiceMode === 'weak') answeredCard.weakCount = Math.max(0, (Number(answeredCard.weakCount) || 0) - 1);
@@ -2730,45 +2873,27 @@
         } else {
           recordAnswer(false);
           if (practiceMode === 'weak') answeredCard.weakCount = Math.max(1, Number(answeredCard.weakCount) || 0);
-          studyQueue.push(studyQueue.shift());
-          showToast('Это слово ещё вернётся');
+          studyQueue.shift();
+          if (srsRequeue) studyQueue.push(answeredCard);
+          showToast(srsRequeue ? 'Это слово ещё вернётся' : 'Слово сохранено для следующего повторения');
         }
-        if (practiceMode === 'weak') saveData();
+        saveData();
       } else {
         if (direction === 'right') {
           recordAnswer(true);
           const answered = cards[cardIndex];
-          const now = Date.now();
           answered.weakCount = Math.max(0, (Number(answered.weakCount) || 0) - 1);
-
-          if (Number(answered.srsLevel) >= 4) {
-            const nextDays = scheduleGraduatedReview(answered, now);
-            showToast(`Отлично! Следующий контроль через ${nextDays} дн.`);
-          } else {
-            answered.srsLevel = Math.min(4, Math.max(0, Number(answered.srsLevel) || 0) + 1);
-            if (answered.srsLevel >= 4) {
-              graduateSRSCard(answered, now);
-              showToast('Выучено! Проверим ещё раз через 14 дней');
-            } else {
-              const interval = SRS_INTERVALS[answered.srsLevel] || SRS_INTERVALS[0];
-              answered.nextReview = now + interval * 60 * 1000;
-            }
-          }
+          applyHybridSRSReview(answered, true, 'deToNative', 'flashcard');
+          if (isHybridCardMastered(answered)) showToast('Выучено в обоих направлениях! Следующее повторение запланировано');
           studyQueue.shift();
         } else {
           recordAnswer(false);
           const answered = cards[cardIndex];
           answered.weakCount = (Number(answered.weakCount) || 0) + 1;
-          if (Number(answered.srsLevel) >= 4) {
-            answered.srsLapses = (Number(answered.srsLapses) || 0) + 1;
-            answered.srsEase = clampSRS((answered.srsEase || SRS_DEFAULT_EASE) - 0.2, 1.3, 2.7);
-          }
-          answered.srsLevel = 0;
-          answered.srsIntervalDays = 0;
-          answered.srsReps = 0;
-          answered.nextReview = Date.now();
-          studyQueue.push(studyQueue.shift());
-          showToast('Повторим ещё раз');
+          const srsRequeue = applyHybridSRSReview(answered, false, 'deToNative', 'flashcard');
+          studyQueue.shift();
+          if (srsRequeue) studyQueue.push(answered);
+          showToast(srsRequeue ? 'Повторим ещё раз' : 'Слово сохранено для следующего повторения');
         }
         saveData();
       }
@@ -2814,6 +2939,7 @@
 
     let spellQueue = [], currentSpellCard = null;
     function startSpellingMode() {
+      resetSRSSessionAttempts();
       spellQueue = cards.filter(c => c.deckId === currentDeckId).sort(() => Math.random() - 0.5);
       if (spellQueue.length === 0) return showToast('Нет слов для тренировки');
       hideAllViews(); document.getElementById('view-spell').classList.remove('hidden'); loadNextSpell();
@@ -2832,6 +2958,7 @@
       const expected = normalizeSpelling(currentSpellCard.front);
       if (input && input === expected) {
         recordAnswer(true);
+        applyHybridSRSReview(currentSpellCard, true, 'nativeToDe', 'spelling');
         currentSpellCard.weakCount = Math.max(0, (Number(currentSpellCard.weakCount) || 0) - 1);
         saveData();
         showToast('Правильно!');
@@ -2839,10 +2966,12 @@
         loadNextSpell();
       } else {
         recordAnswer(false);
+        const srsRequeue = applyHybridSRSReview(currentSpellCard, false, 'nativeToDe', 'spelling');
         currentSpellCard.weakCount = (Number(currentSpellCard.weakCount) || 0) + 1;
         saveData();
         showToast(`Правильный ответ: ${currentSpellCard.front}`);
-        spellQueue.push(spellQueue.shift());
+        const failedCard = spellQueue.shift();
+        if (srsRequeue) spellQueue.push(failedCard);
         loadNextSpell();
       }
     }
@@ -2882,7 +3011,7 @@
 
     function getPublicStatsSnapshot() {
       const totals = getLearningTotals();
-      const mastered = cards.filter(card => Number(card.srsLevel) >= 4).length;
+      const mastered = cards.filter(isHybridCardMastered).length;
       const accuracy = totals.total ? Math.round((totals.correct / totals.total) * 100) : 0;
       return {
         decks_count: decks.length,
@@ -3982,7 +4111,7 @@
     restoreTabOrder();
     initSupabaseClient();
     function renderMastered() {
-      const container = document.getElementById('mastered-container'); const masteredCards = cards.filter(c => c.srsLevel >= 4); container.innerHTML = '';
+      const container = document.getElementById('mastered-container'); const masteredCards = cards.filter(isHybridCardMastered); container.innerHTML = '';
       if(masteredCards.length === 0) return container.innerHTML = '<p class="text-sm theme-text-muted">Пока тут пусто.</p>';
       masteredCards.forEach(c => { container.innerHTML += `<div class="theme-card border p-4 rounded-2xl flex justify-between items-center shadow-sm"><div><p class="font-bold">${c.front}</p><p class="text-xs theme-text-muted">${c.back}</p></div><span class="text-2xl"></span></div>`; });
     }
