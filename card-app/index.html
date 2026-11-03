@@ -1423,21 +1423,21 @@
       { id:'legende', title:'Legende der Sprache', xp:80000, subtitle:'Легендарный путь, который не пройти за неделю' }
     ];
     const PLAYER_ACHIEVEMENTS = [
-      {id:'first_word',title:'Первое слово',desc:'Добавь хотя бы одну карточку',icon:'🌱',test:()=>cards.length>=1,xp:20,coins:10,rarity:'Обычное'},
-      {id:'first_answer',title:'Первый контакт',desc:'Дай первый ответ в тренировке',icon:'👋',test:()=>getLifetimeLearningTotals().total>=1,xp:20,coins:10,rarity:'Обычное'},
-      {id:'answers_50',title:'Разговорился',desc:'Дай 50 ответов',icon:'💬',test:()=>getLifetimeLearningTotals().total>=50,xp:50,coins:25,rarity:'Обычное'},
-      {id:'answers_250',title:'Болтун Bahnhof',desc:'Дай 250 ответов',icon:'🚉',test:()=>getLifetimeLearningTotals().total>=250,xp:100,coins:50,rarity:'Редкое'},
-      {id:'answers_1000',title:'Без слов не останусь',desc:'Дай 1 000 ответов',icon:'🗣️',test:()=>getLifetimeLearningTotals().total>=1000,xp:250,coins:120,rarity:'Эпическое'},
-      {id:'streak_3',title:'Вошёл во вкус',desc:'Занимайся 3 дня подряд',icon:'🔥',test:()=>getStudyStreak()>=3,xp:40,coins:20,rarity:'Обычное'},
-      {id:'streak_7',title:'Неделя на рельсах',desc:'Занимайся 7 дней подряд',icon:'🚆',test:()=>getStudyStreak()>=7,xp:100,coins:60,rarity:'Редкое'},
-      {id:'streak_30',title:'Месяц без остановки',desc:'Занимайся 30 дней подряд',icon:'🗓️',test:()=>getStudyStreak()>=30,xp:350,coins:180,rarity:'Эпическое'},
-      {id:'master_1',title:'Первый Stammgast',desc:'Освой первую карточку в обоих направлениях',icon:'🥉',test:()=>cards.filter(isHybridCardMastered).length>=1,xp:50,coins:30,rarity:'Обычное'},
-      {id:'master_10',title:'Словарный багаж',desc:'Освой 10 карточек в обоих направлениях',icon:'🧳',test:()=>cards.filter(isHybridCardMastered).length>=10,xp:150,coins:80,rarity:'Редкое'},
-      {id:'master_50',title:'Лексический профи',desc:'Освой 50 карточек в обоих направлениях',icon:'🏅',test:()=>cards.filter(isHybridCardMastered).length>=50,xp:400,coins:200,rarity:'Эпическое'},
-      {id:'master_100',title:'Живая энциклопедия',desc:'Освой 100 карточек в обоих направлениях',icon:'🏆',test:()=>cards.filter(isHybridCardMastered).length>=100,xp:900,coins:450,rarity:'Легендарное'},
-      {id:'deck_5',title:'Коллекционер колод',desc:'Создай 5 колод',icon:'🗂️',test:()=>decks.length>=5,xp:80,coins:40,rarity:'Редкое'},
-      {id:'accuracy_90',title:'Точность швейцарских часов',desc:'Достигни 90% точности минимум на 100 ответах',icon:'⌚',test:()=>{const t=getLifetimeLearningTotals();return t.total>=100&&t.correct/t.total>=.9},xp:200,coins:100,rarity:'Эпическое'},
-      {id:'comeback',title:'Возвращение на платформу',desc:'Занимайся после перерыва минимум в 7 дней',icon:'🎟️',test:()=>{let h=getStatsHistory(),ks=Object.keys(h).sort();return ks.length>=2&&((new Date(ks[ks.length-1])-new Date(ks[ks.length-2]))/86400000)>=7},xp:100,coins:50,rarity:'Редкое',secret:true}
+      {id:'first_word',title:'Первое слово',desc:'Добавь хотя бы одну карточку',icon:'🌱',test:()=>cards.length>=1,xp:20,coins:5,rarity:'Обычное'},
+      {id:'first_answer',title:'Первый контакт',desc:'Дай первый ответ в тренировке',icon:'👋',test:()=>getLifetimeLearningTotals().total>=1,xp:20,coins:5,rarity:'Обычное'},
+      {id:'answers_50',title:'Разговорился',desc:'Дай 50 ответов',icon:'💬',test:()=>getLifetimeLearningTotals().total>=50,xp:50,coins:12,rarity:'Обычное'},
+      {id:'answers_250',title:'Болтун Bahnhof',desc:'Дай 250 ответов',icon:'🚉',test:()=>getLifetimeLearningTotals().total>=250,xp:100,coins:25,rarity:'Редкое'},
+      {id:'answers_1000',title:'Без слов не останусь',desc:'Дай 1 000 ответов',icon:'🗣️',test:()=>getLifetimeLearningTotals().total>=1000,xp:250,coins:60,rarity:'Эпическое'},
+      {id:'streak_3',title:'Вошёл во вкус',desc:'Занимайся 3 дня подряд',icon:'🔥',test:()=>getStudyStreak()>=3,xp:40,coins:10,rarity:'Обычное'},
+      {id:'streak_7',title:'Неделя на рельсах',desc:'Занимайся 7 дней подряд',icon:'🚆',test:()=>getStudyStreak()>=7,xp:100,coins:30,rarity:'Редкое'},
+      {id:'streak_30',title:'Месяц без остановки',desc:'Занимайся 30 дней подряд',icon:'🗓️',test:()=>getStudyStreak()>=30,xp:350,coins:90,rarity:'Эпическое'},
+      {id:'master_1',title:'Первый Stammgast',desc:'Освой первую карточку в обоих направлениях',icon:'🥉',test:()=>cards.filter(isHybridCardMastered).length>=1,xp:50,coins:15,rarity:'Обычное'},
+      {id:'master_10',title:'Словарный багаж',desc:'Освой 10 карточек в обоих направлениях',icon:'🧳',test:()=>cards.filter(isHybridCardMastered).length>=10,xp:150,coins:40,rarity:'Редкое'},
+      {id:'master_50',title:'Лексический профи',desc:'Освой 50 карточек в обоих направлениях',icon:'🏅',test:()=>cards.filter(isHybridCardMastered).length>=50,xp:400,coins:100,rarity:'Эпическое'},
+      {id:'master_100',title:'Живая энциклопедия',desc:'Освой 100 карточек в обоих направлениях',icon:'🏆',test:()=>cards.filter(isHybridCardMastered).length>=100,xp:900,coins:225,rarity:'Легендарное'},
+      {id:'deck_5',title:'Коллекционер колод',desc:'Создай 5 колод',icon:'🗂️',test:()=>decks.length>=5,xp:80,coins:20,rarity:'Редкое'},
+      {id:'accuracy_90',title:'Точность швейцарских часов',desc:'Достигни 90% точности минимум на 100 ответах',icon:'⌚',test:()=>{const t=getLifetimeLearningTotals();return t.total>=100&&t.correct/t.total>=.9},xp:200,coins:50,rarity:'Эпическое'},
+      {id:'comeback',title:'Возвращение на платформу',desc:'Занимайся после перерыва минимум в 7 дней',icon:'🎟️',test:()=>{let h=getStatsHistory(),ks=Object.keys(h).sort();return ks.length>=2&&((new Date(ks[ks.length-1])-new Date(ks[ks.length-2]))/86400000)>=7},xp:100,coins:25,rarity:'Редкое',secret:true}
     ];
     const COSMETIC_ITEMS = [
       {id:'frame-classic',name:'Classic',type:'frame',price:0,rarity:'Базовая',desc:'Спокойная классическая рамка.',style:'linear-gradient(135deg,#94a3b8,#64748b)',glow:'0 0 0 3px rgba(148,163,184,.22)'},
@@ -1460,7 +1460,7 @@
     function getLifetimeLearningTotals(){return {total:Number(playerProgress.totalAnswers)||0,correct:Number(playerProgress.totalCorrect)||0,wrong:Number(playerProgress.totalWrong)||0};}
     let unlockedAchievements = Array.isArray(readStoredObject(PLAYER_ACHIEVEMENTS_KEY,[])) ? readStoredObject(PLAYER_ACHIEVEMENTS_KEY,[]) : [];
     let playerInventory = Array.isArray(readStoredObject(PLAYER_INVENTORY_KEY,[])) ? readStoredObject(PLAYER_INVENTORY_KEY,[]) : [];
-    let playerEquipment = {...{frame:'frame-classic',skin:null},...readStoredObject(PLAYER_EQUIPMENT_KEY,{})};
+    let playerEquipment = {...{frame:'frame-classic',skin:null,avatarAchievement:null},...readStoredObject(PLAYER_EQUIPMENT_KEY,{})};
     if (!playerInventory.includes('frame-classic')) playerInventory.push('frame-classic');
     function savePlayerGameState() {
       localStorage.setItem(PLAYER_PROGRESS_KEY,JSON.stringify(playerProgress));
@@ -1482,9 +1482,10 @@
     }
     function addPlayerXP(amount,reason='Учебная активность') {
       const n=Math.max(0,Math.floor(Number(amount)||0)); if(!n)return;
-      const before=getPlayerLevel(); playerProgress.xp=(Number(playerProgress.xp)||0)+n; savePlayerGameState();
-      const after=getPlayerLevel(); if(after>before) showToast(`Новый уровень ${after}! +${n} XP`);
+      const before=getPlayerLevel(), beforeRank=getPlayerRank().id; playerProgress.xp=(Number(playerProgress.xp)||0)+n; savePlayerGameState();
+      const after=getPlayerLevel(), afterRank=getPlayerRank().id; if(after>before) showToast(`Новый уровень ${after}! +${n} XP`);
       scheduleCloudSave();
+      if(currentAuthUser&&supabaseClient&&(after>before||afterRank!==beforeRank)) syncPublicProfile().catch(err=>console.warn('Progress profile sync:',err.message));
     }
     function getEquippedFrame() { return COSMETIC_ITEMS.find(x=>x.id===playerEquipment.frame)||COSMETIC_ITEMS[0]; }
     function frameStyle(item=getEquippedFrame()) { return `background:${item.style};box-shadow:${item.glow};`; }
@@ -1498,27 +1499,69 @@
           showToast(`${a.icon} Достижение «${a.title}»! +${a.xp} XP · +${a.coins} 🪙`);
         }
       });
-      if(changed){localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();scheduleCloudSave();}
+      if(changed){localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();scheduleCloudSave();if(currentAuthUser&&supabaseClient)syncPublicProfile().catch(err=>console.warn('Achievement profile sync:',err.message));}
     }
+    function getRankAvatarIcon(rankId) {
+      return ({bahnhof:'🚉',auslander:'🧳',anfanger:'🌱',pendler:'🚆',stammgast:'☕',wortjager:'🔎',sprachakrobat:'🎭',berner_profi:'🏔️',legende:'👑'})[rankId]||'🚉';
+    }
+    function getPublicCosmeticMeta() {
+      const rank=getPlayerRank();
+      return [`__hc_frame=${playerEquipment.frame||'frame-classic'}`,`__hc_avatar=${playerEquipment.avatarAchievement||''}`,`__hc_rank=${rank.id}`,`__hc_level=${getLevelProgress().level}`,`__hc_xp=${Number(playerProgress.xp)||0}`,`__hc_achievements=${unlockedAchievements.join(',')}`];
+    }
+    function readPublicCosmeticMeta(profile) {
+      const badges=Array.isArray(profile?.reward_badges)?profile.reward_badges:[];
+      const get=(key)=>badges.find(x=>typeof x==='string'&&x.startsWith(`__hc_${key}=`))?.slice((`__hc_${key}=`).length)||'';
+      return {frame:get('frame')||'frame-classic',avatar:get('avatar'),rank:get('rank')||'bahnhof',level:Number(get('level'))||1,xp:Number(get('xp'))||0,achievements:get('achievements').split(',').filter(Boolean)};
+    }
+    function makeSocialAvatar(profile) {
+      const meta=readPublicCosmeticMeta(profile);
+      const frame=COSMETIC_ITEMS.find(x=>x.id===meta.frame)||COSMETIC_ITEMS[0];
+      const achievement=PLAYER_ACHIEVEMENTS.find(x=>x.id===meta.avatar&&meta.achievements.includes(x.id));
+      const icon=achievement?.icon||getRankAvatarIcon(meta.rank);
+      const avatar=document.createElement('div');
+      avatar.className='w-12 h-12 rounded-full p-[3px] shrink-0';
+      avatar.style.cssText=frameStyle(frame);
+      const inner=document.createElement('div');
+      inner.className='w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-xl';
+      inner.textContent=icon;
+      avatar.title=`${getPlayerRankById(meta.rank)} · уровень ${meta.level}`;
+      avatar.append(inner);
+      return avatar;
+    }
+    function getPlayerRankById(id) { return PLAYER_RANKS.find(x=>x.id===id)?.title||PLAYER_RANKS[0].title; }
+
     function renderPlayerCard() {
       const el=document.getElementById('player-progression-card');
       const accountEl=document.getElementById('player-account-card');
       if(!el&&!accountEl)return;
       const xp=Number(playerProgress.xp)||0, level=getLevelProgress(xp), rank=getPlayerRank(xp), frame=getEquippedFrame();
       const mastered=cards.filter(isHybridCardMastered).length, streak=getStudyStreak();
+      const selectedAchievement=PLAYER_ACHIEVEMENTS.find(a=>a.id===playerEquipment.avatarAchievement&&unlockedAchievements.includes(a.id));
+      const ownAvatarIcon=selectedAchievement?.icon||getRankAvatarIcon(rank.id);
       const cardHtml=`<div class="rounded-3xl p-5 border theme-card mb-5">
         <div class="flex items-center gap-4">
-          <div class="w-20 h-20 rounded-full p-[4px] shrink-0" style="${frameStyle(frame)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-3xl">🚉</div></div>
+          <div class="w-20 h-20 rounded-full p-[4px] shrink-0" style="${frameStyle(frame)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-3xl">${ownAvatarIcon}</div></div>
           <div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-[.2em] theme-text-muted font-black">ТВОЙ ПУТЬ</div><div class="text-xl font-black leading-tight">${rank.title}</div><div class="text-xs theme-text-muted mt-1">${rank.subtitle}</div><div class="text-sm font-bold mt-2">Уровень ${level.level}</div></div>
         </div>
         <div class="mt-4 flex justify-between text-xs font-bold"><span>${xp.toLocaleString('ru-RU')} XP</span><span>${level.current.toLocaleString('ru-RU')} / ${level.needed.toLocaleString('ru-RU')} XP</span></div>
         <div class="h-2.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden mt-2"><div class="h-full rounded-full" style="width:${level.percent}%;background:linear-gradient(90deg,#8b5cf6,#ec4899)"></div></div>
         <div class="grid grid-cols-3 gap-2 mt-4"><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${mastered}</div><div class="text-[10px] theme-text-muted">Освоено слов</div></div><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${streak} 🔥</div><div class="text-[10px] theme-text-muted">Дней подряд</div></div><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${pointsBalance} 🪙</div><div class="text-[10px] theme-text-muted">Монеты</div></div></div>
-        <div class="mt-4 flex flex-wrap gap-2"><span class="text-xs px-3 py-1.5 rounded-full border" style="border-color:rgba(139,92,246,.45)">🏅 ${unlockedAchievements.length} медалей</span><span class="text-xs px-3 py-1.5 rounded-full border">🎨 ${playerInventory.filter(id=>id.startsWith('frame-')).length} рамок</span><span class="text-xs px-3 py-1.5 rounded-full border">🏆 ${PLAYER_RANKS[PLAYER_RANKS.length-1].xp.toLocaleString('ru-RU')} XP до легенды</span></div>
+        <div class="mt-4 flex flex-wrap gap-2"><span class="text-xs px-3 py-1.5 rounded-full border" style="border-color:rgba(139,92,246,.45)">🏅 ${unlockedAchievements.length} медалей</span><span class="text-xs px-3 py-1.5 rounded-full border">🎨 ${playerInventory.filter(id=>id.startsWith('frame-')).length} рамок</span><span class="text-xs px-3 py-1.5 rounded-full border">🏆 ${PLAYER_RANKS[PLAYER_RANKS.length-1].xp.toLocaleString('ru-RU')} XP до легенды</span></div><div class="mt-4 flex items-center gap-2 flex-wrap"><label class="text-xs font-bold" for="player-avatar-achievement-select">Аватарка:</label><select class="player-avatar-achievement-select" class="input-field text-xs rounded-xl px-3 py-2 flex-1 min-w-[150px]"><option value="">Иконка текущего ранга</option>${PLAYER_ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id)).map(a=>`<option value="${a.id}" ${playerEquipment.avatarAchievement===a.id?'selected':''}>${a.icon} ${a.title}</option>`).join('')}</select><span class="text-[10px] theme-text-muted">Выбери открытую медаль</span></div>
       </div>`;
       if(el)el.innerHTML=cardHtml;
       if(accountEl)accountEl.innerHTML=cardHtml.replace('mb-5','mb-0');
     }
+
+    document.addEventListener('change', event => {
+      if(!event.target?.classList?.contains('player-avatar-achievement-select')) return;
+      const value=event.target.value||null;
+      if(value&&!unlockedAchievements.includes(value)) return showToast('Сначала открой это достижение');
+      playerEquipment.avatarAchievement=value;
+      savePlayerGameState();
+      renderPlayerCard();
+      if(currentAuthUser&&supabaseClient) syncPublicProfile().then(()=>loadSocialHub()).catch(err=>console.warn('Avatar sync:',err.message));
+      showToast(value?'Аватарка обновлена 🏅':'Возвращена аватарка ранга');
+    });
 
     const QUIET_MODE_KEY = 'hankecards_quiet_mode_v1';
     let quietMode = localStorage.getItem(QUIET_MODE_KEY) === 'true';
@@ -1559,7 +1602,7 @@
     }
     function recordAnswer(correct) {
       if (correct) {
-        pointsBalance += 5;
+        pointsBalance += 2;
         addPlayerXP(4, 'Правильный ответ');
       }
       localStorage.setItem(POINTS_KEY, String(pointsBalance));
@@ -1650,7 +1693,7 @@
       const day=localDateKey();if(!playerProgress.questClaims[day])playerProgress.questClaims[day]=[];
       if(playerProgress.questClaims[day].includes(index))return;
       playerProgress.questClaims[day].push(index);
-      const rewards=[{xp:20,coins:10},{xp:30,coins:15},{xp:25,coins:15}][index];
+      const rewards=[{xp:20,coins:4},{xp:30,coins:6},{xp:25,coins:5}][index];
       addPlayerXP(rewards.xp,'Ежедневное задание');pointsBalance+=rewards.coins;
       localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();renderGames();showToast(`Задание выполнено! +${rewards.xp} XP · +${rewards.coins} 🪙`);
     }
@@ -1675,7 +1718,7 @@
     function equipCosmetic(id){
       const item=COSMETIC_ITEMS.find(x=>x.id===id);if(!item||!playerInventory.includes(id))return;
       if(item.type==='frame')playerEquipment.frame=id;else playerEquipment.skin=id;
-      savePlayerGameState();renderGames();renderPlayerCard();showToast(`${item.name} теперь используется`);scheduleCloudSave();
+      savePlayerGameState();renderGames();renderPlayerCard();showToast(`${item.name} теперь используется`);scheduleCloudSave();if(currentAuthUser&&supabaseClient)syncPublicProfile().catch(err=>console.warn('Frame profile sync:',err.message));
     }
 
     function buyReward(rewardId) {
@@ -3208,7 +3251,7 @@
       });
       if (error) throw error;
       const badgeSync = await supabaseClient.from('public_profile_badges').upsert({
-        user_id: currentAuthUser.id, reward_badges: ownedRewards
+        user_id: currentAuthUser.id, reward_badges: [...ownedRewards.filter(x=>!String(x).startsWith('__hc_')),...getPublicCosmeticMeta()]
       }, { onConflict: 'user_id' });
       if (badgeSync.error) console.warn('Badge sync skipped:', badgeSync.error.message);
     }
@@ -3269,9 +3312,7 @@
     function socialProfileCard(profile, actionHtml = '') {
       const card = document.createElement('div');
       card.className = 'theme-card border rounded-2xl p-3 flex items-center gap-3';
-      const avatar = document.createElement('div');
-      avatar.className = 'w-11 h-11 rounded-full theme-card border flex items-center justify-center text-xl shrink-0';
-      avatar.textContent = '👤';
+      const avatar = makeSocialAvatar(profile);
       const info = document.createElement('div');
       info.className = 'min-w-0 flex-1';
       const name = document.createElement('p');
