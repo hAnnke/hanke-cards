@@ -458,6 +458,47 @@
       width:100%;
       text-align:center;
     }
+
+/* Stage 41: one premium, readable player profile */
+#public-profile-modal .theme-modal{background:rgba(9,16,32,.98)!important;color:#f8fafc!important;border:1px solid rgba(255,255,255,.16);box-shadow:0 24px 80px rgba(0,0,0,.45);padding:14px!important}
+#public-profile-modal #public-profile-content{color:#f8fafc!important}
+#public-profile-modal .hc-profile-panel{border-radius:26px;padding:18px;background:linear-gradient(155deg,#172554 0%,#111827 48%,#24143e 100%);border:1px solid rgba(191,219,254,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 14px 38px rgba(0,0,0,.25);overflow:hidden}
+#public-profile-modal .hc-profile-hero{text-align:center;padding:4px 0 18px;position:relative}
+#public-profile-modal .hc-profile-avatar{width:104px;height:104px;margin:0 auto 12px;border-radius:50%;padding:5px;display:block;box-shadow:0 0 0 5px rgba(255,255,255,.07),0 12px 28px rgba(0,0,0,.3)}
+#public-profile-modal .hc-profile-avatar-inner{width:100%;height:100%;border-radius:50%;background:linear-gradient(145deg,#263b61,#0b1225);display:flex;align-items:center;justify-content:center;font-size:42px;color:#fff;border:1px solid rgba(255,255,255,.25)}
+#public-profile-modal .hc-profile-name{font-size:27px;line-height:1.12;font-weight:950;letter-spacing:-.035em;color:#fff!important;text-shadow:0 2px 14px rgba(0,0,0,.28);overflow-wrap:anywhere}
+#public-profile-modal .hc-profile-handle{font-size:12px;color:#cbd5e1!important;margin-top:5px}
+#public-profile-modal .hc-profile-rank{display:inline-flex;margin-top:11px;padding:7px 12px;border-radius:999px;background:rgba(129,140,248,.18);border:1px solid rgba(165,180,252,.32);color:#e0e7ff!important;font-size:11px;font-weight:800}
+#public-profile-modal .hc-profile-xp{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:13px}
+#public-profile-modal .hc-profile-xp span{font-size:11px;font-weight:800;color:#e2e8f0!important;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 10px}
+#public-profile-modal .hc-profile-stats{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;padding:7px 0;border-top:1px solid rgba(255,255,255,.15);border-bottom:1px solid rgba(255,255,255,.15)}
+#public-profile-modal .hc-profile-stat{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0;padding:11px 1px;border-bottom:1px solid rgba(255,255,255,.09)}
+#public-profile-modal .hc-profile-stat:nth-last-child(-n+2){border-bottom:0}
+#public-profile-modal .hc-profile-stat-label{font-size:11px;color:#cbd5e1!important;white-space:nowrap}
+#public-profile-modal .hc-profile-stat-value{font-size:16px;color:#fff!important;font-weight:900;font-variant-numeric:tabular-nums}
+#public-profile-modal .hc-profile-medals{padding-top:17px}
+#public-profile-modal .hc-profile-section-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+#public-profile-modal .hc-profile-section-heading h3{font-size:14px;font-weight:900;color:#fff!important}
+#public-profile-modal .hc-profile-section-heading span{font-size:11px;color:#cbd5e1!important}
+#public-profile-modal .hc-profile-medal-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#public-profile-modal .hc-profile-medal{display:flex;align-items:center;gap:9px;min-width:0;padding:10px;border-radius:14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.13)}
+#public-profile-modal .hc-profile-medal-icon{font-size:25px;flex-shrink:0}
+#public-profile-modal .hc-profile-medal-copy{display:flex;flex-direction:column;min-width:0;gap:3px}
+#public-profile-modal .hc-profile-medal-copy strong{font-size:10px;line-height:1.25;color:#fff!important}
+#public-profile-modal .hc-profile-medal-copy small{font-size:9px;line-height:1.25;color:#cbd5e1!important}
+#public-profile-modal .hc-profile-empty{font-size:11px;color:#cbd5e1!important;padding:12px;border-radius:12px;background:rgba(255,255,255,.07)}
+#public-profile-modal .hc-profile-support{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding:12px 13px;border-radius:15px;background:linear-gradient(100deg,rgba(249,115,22,.2),rgba(255,255,255,.06));border:1px solid rgba(251,146,60,.25)}
+#public-profile-modal .hc-profile-support>div{display:flex;flex-direction:column;gap:3px}
+#public-profile-modal .hc-profile-support strong{font-size:12px;color:#fff!important}
+#public-profile-modal .hc-profile-support small{font-size:10px;color:#cbd5e1!important}
+#public-profile-modal .hc-profile-support-count{font-size:22px!important;font-weight:950}
+#public-profile-modal .hc-profile-joined{font-size:10px;color:#94a3b8!important;text-align:center;margin-top:12px}
+#public-profile-modal #public-profile-actions{margin-top:12px}
+#public-profile-modal #public-profile-actions button{min-height:46px;font-weight:850;color:#fff!important;text-shadow:none;box-shadow:0 5px 16px rgba(0,0,0,.18)}
+#public-profile-modal #public-profile-actions .btn-primary{background:linear-gradient(100deg,#7c3aed,#4f46e5)!important;border:1px solid rgba(255,255,255,.2)}
+#public-profile-modal #public-profile-actions .btn-soft{background:rgba(255,255,255,.12)!important;border:1px solid rgba(255,255,255,.22);color:#f8fafc!important}
+#public-profile-modal>div>div:first-child>button{color:#fff!important;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);min-width:40px;min-height:40px}
+@media(max-width:380px){#public-profile-modal .hc-profile-panel{padding:14px}#public-profile-modal .hc-profile-stat-label{font-size:10px}#public-profile-modal .hc-profile-medal-list{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
@@ -709,7 +750,7 @@
   </div>
 
   <!-- ================= MODAL: SEND DECK TO FRIEND ================= -->
-  <div id="deck-share-picker-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[205] hidden items-end sm:items-center justify-center p-3" onclick="if(event.target===this)closeDeckSharePicker()">
+  <div id="deck-share-picker-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[205] hidden items-center justify-center p-3" onclick="if(event.target===this)closeDeckSharePicker()">
     <div class="theme-card w-full max-w-md rounded-3xl border p-5 shadow-2xl max-h-[82vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3">
         <div>
@@ -908,8 +949,8 @@
   </main>
 
   <!-- ================= PUBLIC PROFILE MODAL ================= -->
-  <div id="public-profile-modal" class="hidden fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm items-end sm:items-center justify-center p-3" onclick="if(event.target===this)closePublicProfile()">
-    <div class="theme-modal w-full max-w-md rounded-3xl p-5 max-h-[88vh] overflow-y-auto">
+  <div id="public-profile-modal" class="hidden fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm items-center justify-center p-3" onclick="if(event.target===this)closePublicProfile()">
+    <div class="theme-modal w-full max-w-md rounded-3xl p-5 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <span class="sr-only">Профиль друга</span>
         <button onclick="closePublicProfile()" class="btn-soft px-3" aria-label="Закрыть">✕</button>
@@ -3783,85 +3824,98 @@
       content.replaceChildren();
       const meta = readPublicCosmeticMeta(profile);
       const rank = PLAYER_RANKS.find(x=>x.id===meta.rank);
-      const avatar = makeSocialAvatar(profile);
-      avatar.className = 'w-24 h-24 rounded-full p-[5px] mx-auto';
-      avatar.firstElementChild.className = 'w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-4xl';
+      const earnedIds = meta.achievements || [];
+      const earned = PLAYER_ACHIEVEMENTS.filter(a=>earnedIds.includes(a.id));
+      const panel = document.createElement('section');
+      panel.className = 'hc-profile-panel';
       const hero = document.createElement('div');
-      hero.className = 'text-center pb-4';
+      hero.className = 'hc-profile-hero';
+      const avatar = makeSocialAvatar(profile);
+      avatar.className = 'hc-profile-avatar';
+      avatar.firstElementChild.className = 'hc-profile-avatar-inner';
       hero.append(avatar);
       const title = document.createElement('h2');
-      title.className = 'text-2xl font-black mt-3';
+      title.className = 'hc-profile-name';
       title.textContent = profile.display_name || profile.username || 'Ученик';
       applyNicknameStyle(title, meta.nickname);
       const username = document.createElement('p');
-      username.className = 'text-xs theme-text-muted mt-1';
+      username.className = 'hc-profile-handle';
       username.textContent = '@' + (profile.username || 'learner');
       const rankLine = document.createElement('p');
-      rankLine.className = 'text-xs font-bold theme-text-muted mt-2';
-      rankLine.textContent = `${rank?.title || 'Новоприбывший на Bahnhof'} · Уровень ${meta.level}`;
+      rankLine.className = 'hc-profile-rank';
+      rankLine.textContent = `${rank?.title || 'Новоприбывший на Bahnhof'}  ·  Уровень ${meta.level}`;
       hero.append(title, username, rankLine);
-      content.append(hero);
+      const xpLine = document.createElement('div');
+      xpLine.className = 'hc-profile-xp';
+      xpLine.innerHTML = `<span>⭐ ${Number(meta.xp||0).toLocaleString('ru-RU')} XP</span><span>🏅 ${earned.length} достижений</span>`;
+      hero.append(xpLine);
+      panel.append(hero);
+
       const metrics = [
         ['🪙', Number(profile.coins) || 0, 'Монеты'],
         ['📚', Number(profile.decks_count) || 0, 'Колоды'],
         ['🗂️', Number(profile.cards_count) || 0, 'Карточки'],
-        ['🏆', Number(profile.rewards_count) || 0, 'Награды'],
         ['🎯', Number(profile.answers_total) || 0, 'Ответы'],
         ['⭐', (Number(profile.accuracy) || 0) + '%', 'Точность'],
         ['🧠', Number(profile.mastered_count) || 0, 'Выучено'],
         ['🔥', Number(profile.study_streak) || 0, 'Дней подряд']
       ];
-      const grid = document.createElement('div');
-      grid.className = 'grid grid-cols-2 gap-2 mt-3';
-      metrics.forEach(([icon, value, label]) => {
-        const item = document.createElement('div');
-        item.className = 'theme-card border rounded-2xl p-3 min-h-[82px] flex flex-col justify-center';
-        const v = document.createElement('p');
-        v.className = 'text-xl font-black';
-        v.textContent = String(value);
-        const l = document.createElement('p');
-        l.className = 'text-[11px] theme-text-muted mt-1';
-        l.textContent = icon + ' ' + label;
-        item.append(v, l);
-        grid.append(item);
+      const stats = document.createElement('div');
+      stats.className = 'hc-profile-stats';
+      metrics.forEach(([icon,value,label])=>{
+        const row=document.createElement('div');
+        row.className='hc-profile-stat';
+        const left=document.createElement('span');left.className='hc-profile-stat-label';left.textContent=`${icon} ${label}`;
+        const right=document.createElement('strong');right.className='hc-profile-stat-value';right.textContent=String(value);
+        row.append(left,right);stats.append(row);
       });
-      const earnedIds = meta.achievements || [];
-      const earned = PLAYER_ACHIEVEMENTS.filter(a=>earnedIds.includes(a.id));
+      panel.append(stats);
+
       const medalSection = document.createElement('section');
-      medalSection.className = 'mt-5';
+      medalSection.className = 'hc-profile-medals';
+      const medalHeading = document.createElement('div');
+      medalHeading.className = 'hc-profile-section-heading';
       const medalTitle = document.createElement('h3');
-      medalTitle.className = 'font-black text-sm mb-3';
-      medalTitle.textContent = `Медали и достижения · ${earned.length}`;
-      const medalGrid = document.createElement('div');
-      medalGrid.className = 'grid grid-cols-4 gap-2';
+      medalTitle.textContent = 'Коллекция достижений';
+      const medalCount = document.createElement('span');
+      medalCount.textContent = `${earned.length} / ${PLAYER_ACHIEVEMENTS.length}`;
+      medalHeading.append(medalTitle,medalCount);
+      medalSection.append(medalHeading);
       if (earned.length) {
+        const medalGrid=document.createElement('div');
+        medalGrid.className='hc-profile-medal-list';
         earned.forEach(a=>{
           const medal=document.createElement('div');
-          medal.className='theme-card border rounded-xl p-2 text-center min-w-0';
-          const ico=document.createElement('div');ico.className='text-2xl';ico.textContent=a.icon;
-          const nm=document.createElement('div');nm.className='text-[9px] font-bold leading-tight mt-1';nm.textContent=a.title;
-          medal.title=a.desc||a.title;medal.append(ico,nm);medalGrid.append(medal);
+          medal.className='hc-profile-medal';
+          const ico=document.createElement('span');ico.className='hc-profile-medal-icon';ico.textContent=a.icon;
+          const textWrap=document.createElement('span');textWrap.className='hc-profile-medal-copy';
+          const nm=document.createElement('strong');nm.textContent=a.title;
+          const desc=document.createElement('small');desc.textContent=a.desc||'Достижение открыто';
+          textWrap.append(nm,desc);medal.append(ico,textWrap);medalGrid.append(medal);
         });
+        medalSection.append(medalGrid);
       } else {
-        const empty=document.createElement('p');empty.className='text-xs theme-text-muted col-span-4';empty.textContent='Пока нет открытых медалей. Первые достижения уже ждут!';medalGrid.append(empty);
+        const empty=document.createElement('p');empty.className='hc-profile-empty';empty.textContent='Пока нет открытых медалей. Первые достижения уже ждут!';medalSection.append(empty);
       }
-      medalSection.append(medalTitle,medalGrid);
-      content.append(medalSection);
-      const supportItem = document.createElement('div');
-      supportItem.className = 'theme-card border rounded-xl p-3 col-span-2';
-      const supportValue = document.createElement('p');
-      supportValue.id = 'public-profile-support-count';
-      supportValue.className = 'text-xl font-black';
-      supportValue.textContent = '…';
-      const supportLabel = document.createElement('p');
-      supportLabel.className = 'text-[11px] theme-text-muted mt-1';
-      supportLabel.textContent = '🔥 Получено огоньков поддержки';
-      supportItem.append(supportValue, supportLabel);
-      grid.append(supportItem);
+      panel.append(medalSection);
+
+      const supportRow=document.createElement('div');
+      supportRow.className='hc-profile-support';
+      const supportCopy=document.createElement('div');
+      const supportLabel=document.createElement('strong');supportLabel.textContent='Огоньки поддержки';
+      const supportHint=document.createElement('small');supportHint.textContent='Получено от друзей';
+      supportCopy.append(supportLabel,supportHint);
+      const supportValue=document.createElement('strong');
+      supportValue.id='public-profile-support-count';
+      supportValue.className='hc-profile-support-count';
+      supportValue.textContent='…';
+      supportRow.append(supportCopy,supportValue);
+      panel.append(supportRow);
       const joined = document.createElement('p');
-      joined.className = 'text-[11px] theme-text-muted mt-4';
-      joined.textContent = profile.created_at ? 'Участник с ' + new Date(profile.created_at).toLocaleDateString('ru-RU') : '';
-      content.append(grid, joined);
+      joined.className = 'hc-profile-joined';
+      joined.textContent = profile.created_at ? 'На платформе с ' + new Date(profile.created_at).toLocaleDateString('ru-RU') : '';
+      panel.append(joined);
+      content.append(panel);
       const actions = document.createElement('div');
       actions.id = 'public-profile-actions';
       actions.className = 'space-y-2 mt-5';
