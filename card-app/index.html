@@ -911,7 +911,7 @@
   <div id="public-profile-modal" class="hidden fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm items-end sm:items-center justify-center p-3" onclick="if(event.target===this)closePublicProfile()">
     <div class="theme-modal w-full max-w-md rounded-3xl p-5 max-h-[88vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-black">Профиль пользователя</h3>
+        <span class="sr-only">Профиль друга</span>
         <button onclick="closePublicProfile()" class="btn-soft px-3" aria-label="Закрыть">✕</button>
       </div>
       <div id="public-profile-content"></div>
@@ -1028,7 +1028,8 @@
     <div class="flex items-center justify-between mb-3"><h3 class="font-black text-lg">Витрина</h3><span class="text-xs theme-text-muted">Предметы навсегда</span></div>
     <div class="flex gap-2 mb-4">
       <button id="shop-filter-frames" onclick="setShopFilter('frame')" class="btn-primary px-4 py-2 rounded-xl text-xs font-bold">Рамки</button>
-      <button id="shop-filter-skins" onclick="setShopFilter('skin')" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Оформление</button>
+      <button id="shop-filter-skins" onclick="setShopFilter('skin')" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Карты</button>
+      <button id="shop-filter-nickname" onclick="setShopFilter('nickname')" class="btn-secondary px-4 py-2 rounded-xl text-xs font-bold">Ники</button>
     </div>
     <div id="rewards-shop" class="grid grid-cols-2 gap-3"></div>
     <h3 class="font-black text-lg mt-6 mb-3">Моя коллекция</h3>
@@ -1450,6 +1451,14 @@
       {id:'frame-prism',name:'Prism Legend',type:'frame',price:4200,rarity:'Мифическая',desc:'Переливающаяся призматическая рамка.',style:'linear-gradient(135deg,#22d3ee,#a78bfa,#f472b6,#facc15)',glow:'0 0 28px 8px rgba(167,139,250,.7)'},
       {id:'skin-midnight',name:'Midnight Cards',type:'skin',price:500,rarity:'Редкая',desc:'Ночное оформление учебных карточек.',style:'linear-gradient(135deg,#312e81,#111827)',glow:'0 0 12px rgba(99,102,241,.3)'},
       {id:'skin-aurora',name:'Aurora Cards',type:'skin',price:1100,rarity:'Эпическая',desc:'Северное сияние в оформлении карточек.',style:'linear-gradient(135deg,#0f766e,#4c1d95,#164e63)',glow:'0 0 16px rgba(45,212,191,.35)'}
+
+      ,{id:'nick-silver',name:'Silver Frost',type:'nickname',price:300,rarity:'Редкая',desc:'Холодный металлический серебряный ник.',textStyle:'background:linear-gradient(90deg,#64748b,#f8fafc,#94a3b8);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-gold',name:'Golden Legend',type:'nickname',price:850,rarity:'Эпическая',desc:'Золотой блеск для настоящей легенды.',textStyle:'background:linear-gradient(90deg,#92400e,#facc15,#fff7ad,#b45309);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-aurora',name:'Aurora',type:'nickname',price:650,rarity:'Эпическая',desc:'Перелив от бирюзового к фиолетовому.',textStyle:'background:linear-gradient(90deg,#22d3ee,#818cf8,#e879f9);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-neon',name:'Neon Pulse',type:'nickname',price:500,rarity:'Редкая',desc:'Яркий неоновый розово-голубой ник.',textStyle:'color:#22d3ee;text-shadow:0 0 5px #22d3ee,0 0 12px #ec4899'}
+      ,{id:'nick-ruby',name:'Ruby Flame',type:'nickname',price:950,rarity:'Эпическая',desc:'Рубиново-красный градиент.',textStyle:'background:linear-gradient(90deg,#7f1d1d,#fb7185,#fda4af);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-emerald',name:'Emerald',type:'nickname',price:1200,rarity:'Легендарная',desc:'Изумрудный перелив.',textStyle:'background:linear-gradient(90deg,#064e3b,#34d399,#a7f3d0);-webkit-background-clip:text;background-clip:text;color:transparent'}
+      ,{id:'nick-prism',name:'Prism Master',type:'nickname',price:2400,rarity:'Мифическая',desc:'Многоцветный призматический ник.',textStyle:'background:linear-gradient(90deg,#f472b6,#a78bfa,#22d3ee,#facc15);-webkit-background-clip:text;background-clip:text;color:transparent'}
     ];
     function readStoredObject(key, fallback) { try { const v=JSON.parse(localStorage.getItem(key)||'null'); return v&&typeof v==='object'?v:fallback; } catch(_){return fallback;} }
     let playerProgress = {...{xp:0,createdAt:Date.now(),lastStudyDate:null},...readStoredObject(PLAYER_PROGRESS_KEY,{})};
@@ -1460,7 +1469,7 @@
     function getLifetimeLearningTotals(){return {total:Number(playerProgress.totalAnswers)||0,correct:Number(playerProgress.totalCorrect)||0,wrong:Number(playerProgress.totalWrong)||0};}
     let unlockedAchievements = Array.isArray(readStoredObject(PLAYER_ACHIEVEMENTS_KEY,[])) ? readStoredObject(PLAYER_ACHIEVEMENTS_KEY,[]) : [];
     let playerInventory = Array.isArray(readStoredObject(PLAYER_INVENTORY_KEY,[])) ? readStoredObject(PLAYER_INVENTORY_KEY,[]) : [];
-    let playerEquipment = {...{frame:'frame-classic',skin:null,avatarAchievement:null},...readStoredObject(PLAYER_EQUIPMENT_KEY,{})};
+    let playerEquipment = {...{frame:'frame-classic',skin:null,avatarAchievement:null,nicknameStyle:null},...readStoredObject(PLAYER_EQUIPMENT_KEY,{})};
     if (!playerInventory.includes('frame-classic')) playerInventory.push('frame-classic');
     function savePlayerGameState() {
       localStorage.setItem(PLAYER_PROGRESS_KEY,JSON.stringify(playerProgress));
@@ -1506,12 +1515,12 @@
     }
     function getPublicCosmeticMeta() {
       const rank=getPlayerRank();
-      return [`__hc_frame=${playerEquipment.frame||'frame-classic'}`,`__hc_avatar=${playerEquipment.avatarAchievement||''}`,`__hc_rank=${rank.id}`,`__hc_level=${getLevelProgress().level}`,`__hc_xp=${Number(playerProgress.xp)||0}`,`__hc_achievements=${unlockedAchievements.join(',')}`];
+      return [`__hc_frame=${playerEquipment.frame||'frame-classic'}`,`__hc_avatar=${playerEquipment.avatarAchievement||''}`,`__hc_nickname=${playerEquipment.nicknameStyle||''}`,`__hc_rank=${rank.id}`,`__hc_level=${getLevelProgress().level}`,`__hc_xp=${Number(playerProgress.xp)||0}`,`__hc_achievements=${unlockedAchievements.join(',')}`];
     }
     function readPublicCosmeticMeta(profile) {
       const badges=Array.isArray(profile?.reward_badges)?profile.reward_badges:[];
       const get=(key)=>badges.find(x=>typeof x==='string'&&x.startsWith(`__hc_${key}=`))?.slice((`__hc_${key}=`).length)||'';
-      return {frame:get('frame')||'frame-classic',avatar:get('avatar'),rank:get('rank')||'bahnhof',level:Number(get('level'))||1,xp:Number(get('xp'))||0,achievements:get('achievements').split(',').filter(Boolean)};
+      return {frame:get('frame')||'frame-classic',avatar:get('avatar'),nickname:get('nickname'),rank:get('rank')||'bahnhof',level:Number(get('level'))||1,xp:Number(get('xp'))||0,achievements:get('achievements').split(',').filter(Boolean)};
     }
     function makeSocialAvatar(profile) {
       const meta=readPublicCosmeticMeta(profile);
@@ -1676,7 +1685,10 @@
     }
 
     function currentShopFilter(){return window.hankeShopFilter||'frame';}
-    function setShopFilter(filter){window.hankeShopFilter=filter==='skin'?'skin':'frame';renderGames();}
+    function setShopFilter(filter){window.hankeShopFilter=['frame','skin','nickname'].includes(filter)?filter:'frame';renderGames();}
+    function getEquippedNicknameStyle(){return COSMETIC_ITEMS.find(x=>x.id===playerEquipment.nicknameStyle&&x.type==='nickname')||null;}
+    function applyNicknameStyle(element, styleId){const item=COSMETIC_ITEMS.find(x=>x.id===styleId&&x.type==='nickname');if(item?.textStyle)element.style.cssText+=`;${item.textStyle}`;}
+
     function renderDailyQuests(){
       const el=document.getElementById('daily-quest-list');if(!el)return;
       const stats=getDailyStats(),tasks=[
@@ -1700,13 +1712,13 @@
     function renderGames(){
       const pointsEl=document.getElementById('games-points');if(pointsEl)pointsEl.innerText=pointsBalance;
       const filter=currentShopFilter(),shop=document.getElementById('rewards-shop');
-      ['frames','skins'].forEach(k=>{const b=document.getElementById('shop-filter-'+k);if(b)b.className=(filter===(k==='frames'?'frame':'skin')?'btn-primary':'btn-secondary')+' px-4 py-2 rounded-xl text-xs font-bold';});
+      [['frames','frame'],['skins','skin'],['nickname','nickname']].forEach(([k,v])=>{const b=document.getElementById('shop-filter-'+k);if(b)b.className=(filter===v?'btn-primary':'btn-secondary')+' px-4 py-2 rounded-xl text-xs font-bold';});
       if(shop)shop.innerHTML=COSMETIC_ITEMS.filter(x=>x.type===filter).map(item=>{
-        const owned=playerInventory.includes(item.id),equipped=playerEquipment.frame===item.id||playerEquipment.skin===item.id,canBuy=pointsBalance>=item.price;
-        return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)"><div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div></div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div>${equipped?'<div class="text-xs font-bold theme-accent-text">Используется ✓</div>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold">${canBuy?'Купить':'Не хватает монет'}</button>`}</div>`;
+        const owned=playerInventory.includes(item.id),equipped=playerEquipment.frame===item.id||playerEquipment.skin===item.id||playerEquipment.nicknameStyle===item.id,canBuy=pointsBalance>=item.price;
+        return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)">${item.type==='nickname'?`<div class="text-xl font-black" style="${item.textStyle}">HankeTest</div>`:`<div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div>`}</div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div>${equipped?'<div class="text-xs font-bold theme-accent-text">Используется ✓</div>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold">${canBuy?'Купить':'Не хватает монет'}</button>`}</div>`;
       }).join('');
       const ownedEl=document.getElementById('owned-rewards');
-      if(ownedEl){const owned=COSMETIC_ITEMS.filter(x=>playerInventory.includes(x.id));ownedEl.innerHTML=owned.length?owned.map(x=>`<div class="flex items-center justify-between py-2 border-b last:border-0" style="border-color:rgba(120,120,120,.15)"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full" style="${frameStyle(x)}"></span><div><div class="font-bold">${x.name}</div><div class="text-[10px] theme-text-muted">${x.rarity}</div></div></div><span class="text-xs">${playerEquipment.frame===x.id||playerEquipment.skin===x.id?'Надето':'В коллекции'}</span></div>`).join(''):'Пока ничего не приобретено.';}
+      if(ownedEl){const owned=COSMETIC_ITEMS.filter(x=>playerInventory.includes(x.id));ownedEl.innerHTML=owned.length?owned.map(x=>`<div class="flex items-center justify-between py-2 border-b last:border-0" style="border-color:rgba(120,120,120,.15)"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black" style="${x.type==='nickname'?x.textStyle:frameStyle(x)}">${x.type==='nickname'?'Aa':''}</span><div><div class="font-bold">${x.name}</div><div class="text-[10px] theme-text-muted">${x.rarity}</div></div></div><span class="text-xs">${playerEquipment.frame===x.id||playerEquipment.skin===x.id||playerEquipment.nicknameStyle===x.id?'Надето':'В коллекции'}</span></div>`).join(''):'Пока ничего не приобретено.';}
       renderDailyQuests();
     }
     function buyCosmetic(id){
@@ -1717,7 +1729,7 @@
     }
     function equipCosmetic(id){
       const item=COSMETIC_ITEMS.find(x=>x.id===id);if(!item||!playerInventory.includes(id))return;
-      if(item.type==='frame')playerEquipment.frame=id;else playerEquipment.skin=id;
+      if(item.type==='frame')playerEquipment.frame=id;else if(item.type==='nickname')playerEquipment.nicknameStyle=id;else playerEquipment.skin=id;
       savePlayerGameState();renderGames();renderPlayerCard();showToast(`${item.name} теперь используется`);scheduleCloudSave();if(currentAuthUser&&supabaseClient)syncPublicProfile().catch(err=>console.warn('Frame profile sync:',err.message));
     }
 
@@ -3318,6 +3330,7 @@
       const name = document.createElement('p');
       name.className = 'font-bold text-sm truncate';
       name.textContent = profile.display_name || profile.username || 'Ученик';
+      applyNicknameStyle(name, readPublicCosmeticMeta(profile).nickname);
       const username = document.createElement('p');
       username.className = 'text-xs theme-text-muted truncate';
       username.textContent = '@' + (profile.username || 'learner');
@@ -3518,7 +3531,7 @@
       }
       rows.forEach(row => {
         const item = document.createElement('div');
-        item.className = 'theme-card border rounded-xl p-3';
+        item.className = 'theme-card border rounded-2xl p-3 min-h-[82px] flex flex-col justify-center';
         const title = document.createElement('p');
         title.className = 'font-bold text-sm';
         title.textContent = row.deck_name || 'Колода';
@@ -3768,13 +3781,26 @@
       const modal = document.getElementById('public-profile-modal');
       const content = document.getElementById('public-profile-content');
       content.replaceChildren();
+      const meta = readPublicCosmeticMeta(profile);
+      const rank = PLAYER_RANKS.find(x=>x.id===meta.rank);
+      const avatar = makeSocialAvatar(profile);
+      avatar.className = 'w-24 h-24 rounded-full p-[5px] mx-auto';
+      avatar.firstElementChild.className = 'w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-4xl';
+      const hero = document.createElement('div');
+      hero.className = 'text-center pb-4';
+      hero.append(avatar);
       const title = document.createElement('h2');
-      title.className = 'text-2xl font-black';
+      title.className = 'text-2xl font-black mt-3';
       title.textContent = profile.display_name || profile.username || 'Ученик';
+      applyNicknameStyle(title, meta.nickname);
       const username = document.createElement('p');
       username.className = 'text-xs theme-text-muted mt-1';
       username.textContent = '@' + (profile.username || 'learner');
-      content.append(title, username);
+      const rankLine = document.createElement('p');
+      rankLine.className = 'text-xs font-bold theme-text-muted mt-2';
+      rankLine.textContent = `${rank?.title || 'Новоприбывший на Bahnhof'} · Уровень ${meta.level}`;
+      hero.append(title, username, rankLine);
+      content.append(hero);
       const metrics = [
         ['🪙', Number(profile.coins) || 0, 'Монеты'],
         ['📚', Number(profile.decks_count) || 0, 'Колоды'],
@@ -3786,10 +3812,10 @@
         ['🔥', Number(profile.study_streak) || 0, 'Дней подряд']
       ];
       const grid = document.createElement('div');
-      grid.className = 'grid grid-cols-2 gap-2 mt-5';
+      grid.className = 'grid grid-cols-2 gap-2 mt-3';
       metrics.forEach(([icon, value, label]) => {
         const item = document.createElement('div');
-        item.className = 'theme-card border rounded-xl p-3';
+        item.className = 'theme-card border rounded-2xl p-3 min-h-[82px] flex flex-col justify-center';
         const v = document.createElement('p');
         v.className = 'text-xl font-black';
         v.textContent = String(value);
@@ -3799,6 +3825,28 @@
         item.append(v, l);
         grid.append(item);
       });
+      const earnedIds = meta.achievements || [];
+      const earned = PLAYER_ACHIEVEMENTS.filter(a=>earnedIds.includes(a.id));
+      const medalSection = document.createElement('section');
+      medalSection.className = 'mt-5';
+      const medalTitle = document.createElement('h3');
+      medalTitle.className = 'font-black text-sm mb-3';
+      medalTitle.textContent = `Медали и достижения · ${earned.length}`;
+      const medalGrid = document.createElement('div');
+      medalGrid.className = 'grid grid-cols-4 gap-2';
+      if (earned.length) {
+        earned.forEach(a=>{
+          const medal=document.createElement('div');
+          medal.className='theme-card border rounded-xl p-2 text-center min-w-0';
+          const ico=document.createElement('div');ico.className='text-2xl';ico.textContent=a.icon;
+          const nm=document.createElement('div');nm.className='text-[9px] font-bold leading-tight mt-1';nm.textContent=a.title;
+          medal.title=a.desc||a.title;medal.append(ico,nm);medalGrid.append(medal);
+        });
+      } else {
+        const empty=document.createElement('p');empty.className='text-xs theme-text-muted col-span-4';empty.textContent='Пока нет открытых медалей. Первые достижения уже ждут!';medalGrid.append(empty);
+      }
+      medalSection.append(medalTitle,medalGrid);
+      content.append(medalSection);
       const supportItem = document.createElement('div');
       supportItem.className = 'theme-card border rounded-xl p-3 col-span-2';
       const supportValue = document.createElement('p');
