@@ -1586,6 +1586,8 @@
     }
     function addPlayerXP(amount,reason='Учебная активность') {
       const n=Math.max(0,Math.floor(Number(amount)||0)); if(!n)return;
+      const totals=getLifetimeLearningTotals();
+      if(totals.correct<=totals.wrong)return;
       const before=getPlayerLevel(), beforeRank=getPlayerRank().id; playerProgress.xp=(Number(playerProgress.xp)||0)+n; savePlayerGameState();
       const after=getPlayerLevel(), afterRank=getPlayerRank().id; if(after>before) showToast(`Новый уровень ${after}! +${n} XP`);
       scheduleCloudSave();
@@ -1598,9 +1600,11 @@
       PLAYER_ACHIEVEMENTS.forEach(a=>{
         if(!unlockedAchievements.includes(a.id)&&a.test()){
           unlockedAchievements.push(a.id); changed=true;
-          playerProgress.xp=(Number(playerProgress.xp)||0)+a.xp;
+          const xpBefore=Number(playerProgress.xp)||0;
+          addPlayerXP(a.xp,'Достижение');
+          const xpAwarded=(Number(playerProgress.xp)||0)-xpBefore;
           pointsBalance+=a.coins;
-          showToast(`${a.icon} Достижение «${a.title}»! +${a.xp} XP · +${a.coins} 🪙`);
+          showToast(`${a.icon} Достижение «${a.title}»! ${xpAwarded?`+${xpAwarded} XP · `:'XP пока не начислен · '}+${a.coins} 🪙`);
         }
       });
       if(changed){localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();scheduleCloudSave();if(currentAuthUser&&supabaseClient)syncPublicProfile().catch(err=>console.warn('Achievement profile sync:',err.message));}
@@ -1731,19 +1735,88 @@
       const today = localDateKey();
       return { date: today, ...(history[today] || { correct: 0, wrong: 0 }) };
     }
-    function recordAnswer(correct) {
-      if (correct) {
-        pointsBalance += 2;
-        addPlayerXP(4, 'Правильный ответ');
+    function processLearningEconomy(correct, history, today) {
+      // XP is awarded only when both today's and lifetime accuracy are above 50%.
+      const dayStats = history[today] || { correct: 0, wrong: 0 };
+      if (correct && Number(dayStats.correct) > Number(dayStats.wrong)) {
+        addPlayerXP(4, 'Правильный ответ при положительном балансе');
       }
-      localStorage.setItem(POINTS_KEY, String(pointsBalance));
+
+      playerProgress.consecutiveCorrect = Number(playerProgress.consecutiveCorrect) || 0;
+      playerProgress.consecutiveWrong = Number(playerProgress.consecutiveWrong) || 0;
+      playerProgress.streakMilestones = playerProgress.streakMilestones || {};
+      playerProgress.wrongPenaltyMilestones = playerProgress.wrongPenaltyMilestones || {};
+
+      if (correct) {
+        playerProgress.consecutiveCorrect++;
+        playerProgress.consecutiveWrong = 0;
+        playerProgress.wrongPenaltyMilestones = {};
+        const rewards = {
+          20: { coins: 8, title: '20 правильных подряд', emoji: '🔥' },
+          50: { coins: 25, title: '50 правильных подряд', emoji: '⚡' },
+          100: { coins: 60, title: '100 правильных подряд', emoji: '🏆' },
+          200: { coins: 150, title: '200 правильных подряд', emoji: '💎' },
+          500: { coins: 500, title: '500 правильных подряд', emoji: '👑' }
+        };
+        const milestone = playerProgress.consecutiveCorrect;
+        const reward = rewards[milestone];
+        if (reward && !playerProgress.streakMilestones[milestone]) {
+          playerProgress.streakMilestones[milestone] = true;
+          pointsBalance += reward.coins;
+          showToast(`${reward.emoji} ${reward.title}! +${reward.coins} 🪙`);
+        }
+      } else {
+        playerProgress.consecutiveWrong++;
+        playerProgress.consecutiveCorrect = 0;
+        playerProgress.streakMilestones = {};
+        const penalties = {
+          10: { coins: 2, title: 'Небольшая пауза для мозга' },
+          25: { coins: 5, title: 'Пора сменить подход и повторить материал' }
+        };
+        const milestone = playerProgress.consecutiveWrong;
+        const penalty = penalties[milestone];
+        if (penalty && !playerProgress.wrongPenaltyMilestones[milestone]) {
+          playerProgress.wrongPenaltyMilestones[milestone] = true;
+          const deducted = Math.min(pointsBalance, penalty.coins);
+          pointsBalance -= deducted;
+          if (deducted > 0) showToast(`🧠 ${penalty.title}: −${deducted} 🪙. Сделай паузу или повтори знакомые слова.`);
+          else showToast(`🧠 ${penalty.title}. Монеты не списываем, просто попробуй ещё раз!`);
+        }
+      }
+
+      // Small one-time rewards for meaningful study streaks.
+      const studyStreak = getStudyStreak();
+      const studyRewards = {
+        3: { coins: 5, title: '3 дня обучения' },
+        7: { coins: 12, title: '7 дней обучения' },
+        14: { coins: 25, title: '14 дней обучения' },
+        30: { coins: 50, title: '30 дней обучения' }
+      };
+      playerProgress.studyStreakBonusClaims = playerProgress.studyStreakBonusClaims || [];
+      const studyReward = studyRewards[studyStreak];
+      if (studyReward && !playerProgress.studyStreakBonusClaims.includes(studyStreak)) {
+        playerProgress.studyStreakBonusClaims.push(studyStreak);
+        pointsBalance += studyReward.coins;
+        showToast(`📅 ${studyReward.title}! +${studyReward.coins} 🪙`);
+      }
+    }
+
+    function recordAnswer(correct) {
       const today = localDateKey();
       const history = getStatsHistory();
       if (!history[today]) history[today] = { correct: 0, wrong: 0 };
-      if (correct) { history[today].correct++; playerProgress.totalCorrect=(Number(playerProgress.totalCorrect)||0)+1; }
-      else { history[today].wrong++; playerProgress.totalWrong=(Number(playerProgress.totalWrong)||0)+1; }
+      if (correct) {
+        pointsBalance += 2;
+        history[today].correct++;
+        playerProgress.totalCorrect=(Number(playerProgress.totalCorrect)||0)+1;
+      } else {
+        history[today].wrong++;
+        playerProgress.totalWrong=(Number(playerProgress.totalWrong)||0)+1;
+      }
       playerProgress.totalAnswers=(Number(playerProgress.totalAnswers)||0)+1;
       playerProgress.lastStudyDate=today;
+      processLearningEconomy(correct, history, today);
+      localStorage.setItem(POINTS_KEY, String(pointsBalance));
       savePlayerGameState();
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - 179);
@@ -1755,7 +1828,6 @@
       renderDailyStats();
       renderPracticeHub();
       if (!document.getElementById('view-statistics').classList.contains('hidden')) renderStatistics();
-      // Stats, daily totals and earned points are part of the cloud snapshot too.
       scheduleCloudSave();
     }
 
@@ -1814,9 +1886,9 @@
     function renderDailyQuests(){
       const el=document.getElementById('daily-quest-list');if(!el)return;
       const stats=getDailyStats(),tasks=[
-        {name:'Дай 10 правильных ответов',current:stats.correct,target:10,reward:'20 XP · 10 🪙'},
-        {name:'Проведи 20 учебных попыток',current:stats.correct+stats.wrong,target:20,reward:'30 XP · 15 🪙'},
-        {name:'Повтори 5 карточек SRS',current:Number(playerProgress.dailySrsReviews)||0,target:5,reward:'25 XP · 15 🪙'}
+        {name:'Дай 10 правильных ответов',current:stats.correct,target:10,reward:'20 XP · 4 🪙'},
+        {name:'Проведи 20 учебных попыток',current:stats.correct+stats.wrong,target:20,reward:'30 XP · 6 🪙'},
+        {name:'Повтори 5 карточек SRS',current:Number(playerProgress.dailySrsReviews)||0,target:5,reward:'25 XP · 5 🪙'}
       ];
       el.innerHTML=tasks.map((q,i)=>{const done=q.current>=q.target,claimed=(playerProgress.questClaims||{})[localDateKey()]||[];const paid=claimed.includes(i);return `<div class="rounded-xl p-3 bg-black/5 dark:bg-white/5"><div class="flex justify-between gap-2"><div class="text-xs font-bold">${q.name}</div><div class="text-[10px] font-bold">${Math.min(q.current,q.target)}/${q.target}</div></div><div class="h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden mt-2"><div class="h-full rounded-full" style="width:${Math.min(100,q.current/q.target*100)}%;background:var(--accent)"></div></div><div class="flex justify-between items-center mt-2"><span class="text-[10px] theme-text-muted">${q.reward}</span>${done?(paid?'<span class="text-[10px] font-bold theme-accent-text">Получено ✓</span>':`<button onclick="claimDailyQuest(${i})" class="btn-primary rounded-lg px-2 py-1 text-[10px] font-bold">Забрать</button>`):'<span class="text-[10px] theme-text-muted">В процессе</span>'}</div></div>`}).join('');
     }
@@ -1828,8 +1900,12 @@
       if(playerProgress.questClaims[day].includes(index))return;
       playerProgress.questClaims[day].push(index);
       const rewards=[{xp:20,coins:4},{xp:30,coins:6},{xp:25,coins:5}][index];
-      addPlayerXP(rewards.xp,'Ежедневное задание');pointsBalance+=rewards.coins;
-      localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();renderGames();showToast(`Задание выполнено! +${rewards.xp} XP · +${rewards.coins} 🪙`);
+      const xpBefore=Number(playerProgress.xp)||0;
+      addPlayerXP(rewards.xp,'Ежедневное задание');
+      const xpAwarded=(Number(playerProgress.xp)||0)-xpBefore;
+      pointsBalance+=rewards.coins;
+      localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();renderGames();
+      showToast(`Задание выполнено! ${xpAwarded?`+${xpAwarded} XP · `:'XP пока не начислен · '}+${rewards.coins} 🪙`);
     }
     function renderGames(){
       const pointsEl=document.getElementById('games-points');if(pointsEl)pointsEl.innerText=pointsBalance;
