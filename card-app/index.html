@@ -1138,8 +1138,8 @@
         <p class="text-sm theme-text-muted mt-3">Как это будет по-немецки?</p>
       </div>
       <div id="quiz-options" class="grid gap-3"></div>
-      <div id="quiz-feedback" class="hidden fixed left-1/2 -translate-x-1/2 bottom-28 z-[160] max-w-[min(90vw,390px)] rounded-full px-4 py-2 text-xs font-bold shadow-xl text-center pointer-events-none" aria-live="polite"></div>
       <button id="quiz-next-btn" onclick="continueChoiceQuiz()" class="hidden w-full btn-primary mt-5 py-4">Следующее слово</button>
+      <div id="quiz-feedback" class="hidden w-full max-w-full mt-3 rounded-2xl px-4 py-3 text-xs font-bold shadow-lg text-center pointer-events-none" aria-live="polite"></div>
     </section>
     <div class="flex-1 relative flex justify-center items-center perspective-1000 w-full max-w-sm mx-auto" id="card-area">
       <div id="swipe-container" class="w-full h-96 absolute cursor-grab active:cursor-grabbing z-10">
@@ -1429,15 +1429,16 @@
     }
     function renderPracticeHub() {
       renderPracticeDeckPicker();
-      const dueCount = cards.filter(card => Number(card.nextReview || 0) <= Date.now()).length;
-      const weakCount = cards.filter(card => (Number(card.weakCount) || 0) > 0).length;
-      const genderCount = cards.filter(card => isArticleWord(card)).length;
+      const practiceCards = getPracticeSourceCards();
+      const dueCount = practiceCards.filter(card => Number(card.nextReview || 0) <= Date.now()).length;
+      const weakCount = practiceCards.filter(card => (Number(card.weakCount) || 0) > 0).length;
+      const genderCount = practiceCards.filter(card => isArticleWord(card)).length;
       const dueEl = document.getElementById('practice-due-count');
       const weakEl = document.getElementById('practice-weak-count');
       const genderEl = document.getElementById('practice-gender-count');
       const listeningEl = document.getElementById('practice-listening-count');
       const dictationEl = document.getElementById('practice-dictation-count');
-      const listeningCount = cards.filter(card => String(card.front || '').trim() && String(card.back || '').trim()).length;
+      const listeningCount = practiceCards.filter(card => String(card.front || '').trim() && String(card.back || '').trim()).length;
       if (dueEl) dueEl.innerText = `${dueCount} ${dueCount === 1 ? 'слово ждёт' : 'слов ждут'} повтора`;
       if (weakEl) weakEl.innerText = `${weakCount} ${weakCount === 1 ? 'слово' : 'слов'} с ошибками`;
       if (genderEl) genderEl.innerText = `${genderCount} ${genderCount === 1 ? 'слово' : 'слов'} с артиклем`;
@@ -1877,7 +1878,9 @@
       if (!addButton) {
         addButton = document.createElement('button');
         addButton.id = 'deck-add-card-button';
-        addButton.className = 'btn-secondary mx-auto mt-3 mb-1';
+        addButton.className = 'btn-secondary block mx-auto mt-3 mb-1';
+        addButton.style.display = 'flex';
+        addButton.style.width = 'max-content';
         addButton.innerHTML = '<span class="inline-flex items-center justify-center gap-2"><span class="text-lg leading-none">＋</span>Добавить</span>';
         addButton.onclick = openAddCard;
         const title = document.getElementById('deck-title');
@@ -2201,7 +2204,7 @@
     function showAnswerFeedback(correct, message) {
       const feedback = document.getElementById('quiz-feedback');
       if (!feedback) return;
-      feedback.className = `fixed left-1/2 -translate-x-1/2 bottom-28 z-[160] max-w-[min(90vw,390px)] rounded-full px-4 py-2 text-xs font-bold shadow-xl text-center pointer-events-none ${correct ? 'bg-green-600 text-white' : 'bg-rose-600 text-white'}`;
+      feedback.className = `w-full max-w-full mt-3 rounded-2xl px-4 py-3 text-xs font-bold shadow-lg text-center pointer-events-none ${correct ? 'bg-green-600 text-white' : 'bg-rose-600 text-white'}`;
       feedback.textContent = message;
       feedback.classList.remove('hidden');
     }
