@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cards-v60';
+const CACHE_NAME = 'cards-v61';
 const ASSETS = [
   './',
   './index.html',
