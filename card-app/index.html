@@ -2175,7 +2175,7 @@
     }
 
     function hideAllViews() {
-      ['view-home', 'view-quick', 'view-practice', 'view-achievements', 'view-games', 'view-statistics', 'view-social', 'view-mastered', 'view-settings', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+      ['view-home', 'view-quick', 'view-texts', 'view-text-reader', 'view-practice', 'view-achievements', 'view-games', 'view-statistics', 'view-social', 'view-mastered', 'view-settings', 'view-deck', 'view-add', 'view-study', 'view-spell'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
       document.getElementById('nav-actions').innerHTML = '';
     }
 
@@ -2183,13 +2183,14 @@
       hideAllViews(); 
       document.getElementById(`view-${tab}`).classList.remove('hidden');
       
-      ['home', 'quick', 'social', 'practice', 'achievements', 'games', 'statistics', 'mastered', 'settings', 'profile'].forEach(t => {
+      ['home', 'quick', 'texts', 'social', 'practice', 'achievements', 'games', 'statistics', 'mastered', 'settings', 'profile'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if (!btn) return;
         btn.classList.toggle('active-tab', t === tab);
       });
 
       if(tab === 'home') renderDecks();
+      if(tab === 'texts') renderTextsLibrary();
       if(tab === 'quick') { if (quickSelectedDeckIds !== null) quickSelectedDeckIds = quickSelectedDeckIds.filter(id => decks.some(deck => String(deck.id) === id)); updateQuickDeckSelectionLabel(); }
       if(tab === 'practice') renderPracticeHub();
       if(tab === 'mastered') renderMastered();
@@ -2584,14 +2585,159 @@
     }
     function autoTranslateEdit() { autoTranslate('edit-front', 'edit-back'); }
 
+    const TEXT_LIBRARY_KEY = 'hankecards_text_library_v1';
+    let textLibrary = [];
+    let activeReaderTextId = null;
+    let pendingDuplicateCard = null;
+    let activeTextWord = null;
+
+    try { textLibrary = JSON.parse(localStorage.getItem(TEXT_LIBRARY_KEY) || '[]'); } catch (_) { textLibrary = []; }
+    if (!Array.isArray(textLibrary)) textLibrary = [];
+
+    function saveTextLibrary() {
+      localStorage.setItem(TEXT_LIBRARY_KEY, JSON.stringify(textLibrary));
+    }
+    function renderTextsLibrary() {
+      const list = document.getElementById('texts-library-list');
+      if (!list) return;
+      const words = textLibrary.reduce((n, t) => n + (t.words || []).length, 0);
+      document.getElementById('texts-total').textContent = textLibrary.length;
+      document.getElementById('texts-words-total').textContent = words;
+      document.getElementById('texts-library-count').textContent = `${textLibrary.length} текстов`;
+      list.innerHTML = textLibrary.length ? textLibrary.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(t => `
+        <div class="theme-card border rounded-2xl p-4">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">📄</div><div class="min-w-0 flex-1">
+              <button class="font-bold text-left" onclick="openReaderText('${t.id}')">${escapeHtml(t.title)}</button>
+              <p class="text-xs theme-text-muted mt-1">${(t.content||'').trim().split(/\s+/).filter(Boolean).length} слов · ${(t.words||[]).length} слов разобрано</p>
+              <p class="text-xs theme-text-muted mt-2 line-clamp-2">${escapeHtml((t.content||'').slice(0,140))}</p>
+            </div>
+            <button onclick="deleteReaderText('${t.id}')" class="btn-secondary rounded-lg px-2 py-1" aria-label="Удалить текст">✕</button>
+          </div>
+        </div>`).join('') : '<div class="empty-state py-8 text-center"><p class="text-sm theme-text-muted">Пока нет текстов. Вставь немецкий материал выше.</p></div>';
+    }
+    function saveNewText() {
+      const content = document.getElementById('new-text-content').value.trim();
+      if (!content) return showToast('Сначала вставь текст');
+      const title = document.getElementById('new-text-title').value.trim() || content.split(/\n/).find(x=>x.trim())?.slice(0,55) || 'Новый текст';
+      const item = {id:'txt_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),title,content,createdAt:Date.now(),updatedAt:Date.now(),words:[]};
+      textLibrary.unshift(item); saveTextLibrary();
+      document.getElementById('new-text-content').value=''; document.getElementById('new-text-title').value='';
+      renderTextsLibrary(); showToast('Текст сохранён');
+    }
+    function importTextFile(event) {
+      const file=event.target.files?.[0]; if(!file)return;
+      const reader=new FileReader();
+      reader.onload=()=>{document.getElementById('new-text-content').value=String(reader.result||''); if(!document.getElementById('new-text-title').value)document.getElementById('new-text-title').value=file.name.replace(/\.txt$/i,''); showToast('Текст загружен. Нажми «Сохранить текст»');};
+      reader.onerror=()=>showToast('Не удалось прочитать файл');
+      reader.readAsText(file,'UTF-8'); event.target.value='';
+    }
+    function deleteReaderText(id) {
+      if(!confirm('Удалить этот текст и его список слов? Уже созданные карточки останутся в колодах.'))return;
+      textLibrary=textLibrary.filter(t=>t.id!==id); saveTextLibrary(); renderTextsLibrary();
+    }
+    function openReaderText(id) {
+      const item=textLibrary.find(t=>t.id===id); if(!item)return;
+      activeReaderTextId=id; item.updatedAt=Date.now(); saveTextLibrary();
+      hideAllViews(); document.getElementById('view-text-reader').classList.remove('hidden');
+      document.getElementById('reader-title').textContent=item.title;
+      document.getElementById('reader-meta').textContent=`Немецкий текст · ${item.content.trim().split(/\s+/).filter(Boolean).length} слов`;
+      const article=document.getElementById('reader-content');
+      article.innerHTML=item.content.split(/(\s+)/).map(token=>{
+        if(/^\s+$/.test(token))return token;
+        const clean=token.replace(/^[^\p{L}ÄÖÜäöüß-]+|[^\p{L}ÄÖÜäöüß-]+$/gu,'');
+        if(!clean)return escapeHtml(token);
+        return `<span class="reader-word cursor-pointer rounded px-0.5" data-word="${escapeHtml(clean)}" title="Нажми, чтобы перевести">${escapeHtml(token)}</span>`;
+      }).join('');
+      article.onclick=e=>{const el=e.target.closest('.reader-word');if(el)openTextWord(el.dataset.word);};
+      renderReaderWords();
+    }
+    function renderReaderWords() {
+      const item=textLibrary.find(t=>t.id===activeReaderTextId); if(!item)return;
+      const list=document.getElementById('reader-words-list');
+      document.getElementById('reader-word-count').textContent=(item.words||[]).length;
+      list.innerHTML=(item.words||[]).length?item.words.map(w=>`<div class="flex justify-between items-center gap-2 text-sm border-b theme-border pb-2"><div><b>${escapeHtml(w.word)}</b><div class="text-xs theme-text-muted">${escapeHtml(w.translation||'Перевод не сохранён')}</div></div><span class="text-[10px] ${w.cardId?'theme-accent-text':'theme-text-muted'}">${w.cardId?'В колоде':'Переведено'}</span></div>`).join(''):'<p class="text-xs theme-text-muted">Нажимай на незнакомые слова в тексте.</p>';
+    }
+    async function openTextWord(word) {
+      const item=textLibrary.find(t=>t.id===activeReaderTextId); if(!item)return;
+      const normalized=word.toLocaleLowerCase('de');
+      const existing=(item.words||[]).find(w=>w.word.toLocaleLowerCase('de')===normalized);
+      activeTextWord={word,context:findWordSentence(item.content,word),translation:existing?.translation||'',existing};
+      document.getElementById('text-word-original').textContent=word;
+      document.getElementById('text-word-context').textContent=activeTextWord.context;
+      document.getElementById('text-word-translation').textContent='Перевод загружается...';
+      document.getElementById('text-word-edit-translation').value=existing?.translation||'';
+      const select=document.getElementById('text-word-deck');
+      select.innerHTML=decks.map(d=>`<option value="${escapeHtml(String(d.id))}">${escapeHtml(d.name)}</option>`).join('');
+      const dup=findDuplicateCards(word);
+      document.getElementById('text-word-duplicate').classList.toggle('hidden',!dup.length);
+      document.getElementById('text-word-duplicate').textContent=dup.length?`Уже есть в: ${dup.map(x=>x.deckName).join(', ')}. При добавлении можно создать ещё одну карточку.`:'';
+      const modal=document.getElementById('text-word-modal');modal.classList.remove('hidden');modal.classList.add('flex');
+      if(existing?.translation){document.getElementById('text-word-translation').textContent=existing.translation;return;}
+      try{
+        const hasCyr=/[а-яёіїєґ]/i.test(word), target=hasCyr?'de':'ru';
+        const response=await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(word)}`);
+        if(!response.ok)throw new Error('Translation HTTP '+response.status);
+        const data=await response.json();const translated=(data?.[0]||[]).map(x=>x?.[0]||'').join('').trim();
+        if(!translated)throw new Error('Empty translation');
+        activeTextWord.translation=translated;
+        document.getElementById('text-word-translation').textContent=translated;
+        document.getElementById('text-word-edit-translation').value=translated;
+      }catch(e){document.getElementById('text-word-translation').textContent='Не удалось перевести автоматически. Введи перевод вручную.';}
+    }
+    function findWordSentence(text,word) {
+      const parts=String(text).split(/(?<=[.!?])\s+/);
+      return parts.find(s=>s.toLocaleLowerCase('de').includes(word.toLocaleLowerCase('de')))||String(text).slice(0,220);
+    }
+    function closeTextWordModal(){const m=document.getElementById('text-word-modal');m.classList.add('hidden');m.classList.remove('flex');}
+    function findDuplicateCards(front) {
+      const key=normalizeDuplicateWord(front);
+      return cards.filter(c=>normalizeDuplicateWord(c.front)===key).map(c=>({card:c,deckName:decks.find(d=>String(d.id)===String(c.deckId))?.name||'Неизвестная колода'}));
+    }
+    function normalizeDuplicateWord(value){return String(value||'').trim().toLocaleLowerCase('de').replace(/\s+/g,' ');}
+    function openDuplicateCardModal(front,back,description,deckId,onConfirm) {
+      const matches=findDuplicateCards(front);
+      if(!matches.length){onConfirm();return;}
+      pendingDuplicateCard=onConfirm;
+      document.getElementById('duplicate-card-message').textContent=`«${front}» уже встречается в словаре. Найдено совпадений: ${matches.length}.`;
+      document.getElementById('duplicate-card-locations').innerHTML=matches.map(x=>`<div class="rounded-xl p-3 border theme-border"><b>${escapeHtml(x.deckName)}</b><p class="text-xs theme-text-muted">${escapeHtml(x.card.front)} → ${escapeHtml(x.card.back)}</p></div>`).join('');
+      const m=document.getElementById('duplicate-card-modal');m.classList.remove('hidden');m.classList.add('flex');
+    }
+    function closeDuplicateCardModal(){const m=document.getElementById('duplicate-card-modal');m.classList.add('hidden');m.classList.remove('flex');pendingDuplicateCard=null;}
+    function confirmDuplicateCard(){const fn=pendingDuplicateCard;closeDuplicateCardModal();if(fn)fn();}
+    function addTextWordToDeck() {
+      if(!activeTextWord)return;
+      const translation=document.getElementById('text-word-edit-translation').value.trim();
+      const deckId=document.getElementById('text-word-deck').value;
+      if(!translation)return showToast('Добавь перевод');
+      const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;
+      const existing=item.words.find(w=>w.word.toLocaleLowerCase('de')===activeTextWord.word.toLocaleLowerCase('de'));
+      const create=()=>{
+        const card={id:Date.now().toString()+Math.floor(Math.random()*100),deckId,front:activeTextWord.word,back:translation,description:activeTextWord.context,gender:parseGender(activeTextWord.word),srsLevel:0,srsEase:SRS_DEFAULT_EASE,srsIntervalDays:0,srsReps:0,srsLapses:0,nextReview:Date.now()};
+        cards.push(card);saveData();
+        const record={word:activeTextWord.word,translation,context:activeTextWord.context,deckId,cardId:card.id};
+        if(existing)Object.assign(existing,record);else item.words.push(record);
+        saveTextLibrary();closeTextWordModal();renderReaderWords();showToast('Карточка добавлена в колоду');
+      };
+      openDuplicateCardModal(activeTextWord.word,translation,activeTextWord.context,deckId,create);
+    }
+    function showTextVocabulary() {
+      const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;
+      const lines=(item.words||[]).map(w=>`${w.word} – ${w.translation}${w.cardId?' (в колоде)':''}`).join('\n');
+      alert(lines||'Пока нет сохранённых слов.');
+    }
+
     function saveNewCard() {
       const front = document.getElementById('input-front').value.trim(), back = document.getElementById('input-back').value.trim();
       const description = document.getElementById('input-description').value.trim();
       if (!front || !back) return showToast('Заполни поля', '');
-      const gender = parseGender(front);
-      cards.push({ id: Date.now().toString() + Math.floor(Math.random()*100), deckId: currentDeckId, front, back, description, gender, srsLevel: 0, srsEase: SRS_DEFAULT_EASE, srsIntervalDays: 0, srsReps: 0, srsLapses: 0, nextReview: Date.now() });
-      saveData(); document.getElementById('input-front').value = ''; document.getElementById('input-back').value = ''; document.getElementById('input-description').value = '';
-      showToast('Добавлено! '); openDeck(currentDeckId);
+      const create = () => {
+        const gender = parseGender(front);
+        cards.push({ id: Date.now().toString() + Math.floor(Math.random()*100), deckId: currentDeckId, front, back, description, gender, srsLevel: 0, srsEase: SRS_DEFAULT_EASE, srsIntervalDays: 0, srsReps: 0, srsLapses: 0, nextReview: Date.now() });
+        saveData(); document.getElementById('input-front').value = ''; document.getElementById('input-back').value = ''; document.getElementById('input-description').value = '';
+        showToast('Добавлено! '); openDeck(currentDeckId);
+      };
+      openDuplicateCardModal(front,back,description,currentDeckId,create);
     }
 
     function getPracticeSourceCards() {
