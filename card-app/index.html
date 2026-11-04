@@ -527,7 +527,127 @@
 #public-profile-modal .hc-profile-panel[data-profile-design^="card-"] .hc-profile-stat{border-color:rgba(30,41,59,.13)}
 #public-profile-modal .hc-profile-panel[data-profile-design^="card-"] .hc-profile-medal{background:rgba(255,255,255,.35);border-color:rgba(30,41,59,.12)}
 #public-profile-modal .hc-profile-panel[data-profile-design^="card-"] .hc-profile-support{background:rgba(255,255,255,.34);border-color:rgba(30,41,59,.12)}
+
+    /* Stage55: consistent deck action buttons */
+    .action-row { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; align-items:stretch !important; }
+    .action-row > button { width:100%; min-width:0; min-height:54px; padding:10px 8px; display:flex; align-items:center; justify-content:center; gap:7px; text-align:center; white-space:normal; line-height:1.2; overflow-wrap:anywhere; }
+    .action-row > button svg { flex:0 0 17px; }
+    .action-row > button:last-child:nth-child(odd) { grid-column:1 / -1; width:calc(50% - 5px); justify-self:center; }
+    #nav-primary { grid-template-columns:repeat(4,minmax(0,1fr)); }
+    #nav-primary .nav-group-btn { min-width:0; min-height:66px; font-size:11px; }
+    #nav-secondary { min-height:70px; }
+    #nav-secondary-items { justify-content:flex-start; }
+    .nav-home-button { background:var(--card-bg); border:1px solid var(--border-color); min-width:64px; }
+    .reader-word { border-bottom:1px dashed var(--accent); cursor:pointer; }
+    .reader-word:active { background:color-mix(in srgb,var(--accent) 18%,transparent); }
 </style>
+<style id="stage56-reader-navigation-polish">
+.nav-subtab { border: 0 !important; box-shadow: none !important; background: transparent !important; transition: background .18s ease, color .18s ease; }
+.nav-subtab.active-tab { background: var(--accent-soft, rgba(112,92,255,.14)) !important; }
+.nav-home-button { border:0 !important; background:transparent !important; box-shadow:none !important; }
+#nav-secondary-items { scrollbar-width:none; -ms-overflow-style:none; }
+#nav-secondary-items::-webkit-scrollbar { display:none; }
+.reader-word { transition: background .12s ease, color .12s ease; border-radius:5px; }
+.reader-word:hover { background:rgba(120,110,255,.12); }
+.reader-word-marked { background:rgba(255,220,70,.48) !important; color:inherit; box-shadow:inset 0 -2px 0 rgba(220,165,0,.75); }
+</style>
+
+<style id="stage57-theme-aware-controls">
+/* Stage57: all editable controls follow the selected app theme */
+:root {
+  --field-bg: rgba(255,255,255,.72);
+  --field-bg-focus: rgba(255,255,255,.94);
+  --field-border: rgba(93,105,135,.22);
+  --field-placeholder: #8791a7;
+  --field-shadow: inset 0 1px 2px rgba(28,38,65,.045);
+  --panel-text: var(--text-color);
+  --panel-muted: var(--text-muted);
+}
+[data-theme="dark"] {
+  --field-bg: rgba(20,27,45,.88);
+  --field-bg-focus: rgba(27,35,57,.98);
+  --field-border: rgba(169,180,230,.22);
+  --field-placeholder: #8995b2;
+  --field-shadow: inset 0 1px 3px rgba(0,0,0,.22);
+}
+[data-theme="peach"] {
+  --field-bg: rgba(255,250,246,.86);
+  --field-bg-focus: rgba(255,255,255,.98);
+  --field-border: rgba(173,117,96,.25);
+  --field-placeholder: #a8897e;
+  --field-shadow: inset 0 1px 2px rgba(110,66,49,.045);
+}
+body, body * { accent-color: var(--accent); }
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+textarea, select,
+.form-input,
+[contenteditable="true"],
+[role="textbox"] {
+  color: var(--text-color) !important;
+  background-color: var(--field-bg) !important;
+  border-color: var(--field-border) !important;
+  box-shadow: var(--field-shadow);
+  caret-color: var(--accent);
+  color-scheme: inherit;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):focus,
+textarea:focus, select:focus,
+.form-input:focus, [contenteditable="true"]:focus, [role="textbox"]:focus {
+  color: var(--text-color) !important;
+  background-color: var(--field-bg-focus) !important;
+  border-color: var(--accent) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring) !important;
+}
+input::placeholder, textarea::placeholder,
+.form-input::placeholder, [contenteditable="true"]:empty:before {
+  color: var(--field-placeholder) !important;
+  opacity: 1;
+}
+select option, select optgroup {
+  color: var(--text-color);
+  background: var(--surface-solid);
+}
+input:disabled, textarea:disabled, select:disabled {
+  color: var(--text-muted) !important;
+  background: color-mix(in srgb, var(--field-bg) 65%, var(--bg-color)) !important;
+  opacity: .72;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+input[type="range"] { accent-color: var(--accent); }
+.form-label, .form-hint, label { color: var(--panel-muted); }
+.form-panel, .spell-panel { color: var(--panel-text); }
+[data-theme="dark"] .text-slate-900,
+[data-theme="dark"] .text-gray-900,
+[data-theme="dark"] .text-neutral-900,
+[data-theme="dark"] .text-zinc-900,
+[data-theme="dark"] .text-slate-800,
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-neutral-800,
+[data-theme="dark"] .text-zinc-800 { color: var(--text-color) !important; }
+[data-theme="dark"] .text-slate-700,
+[data-theme="dark"] .text-gray-700,
+[data-theme="dark"] .text-neutral-700,
+[data-theme="dark"] .text-zinc-700,
+[data-theme="dark"] .text-slate-600,
+[data-theme="dark"] .text-gray-600,
+[data-theme="dark"] .text-neutral-600,
+[data-theme="dark"] .text-zinc-600 { color: var(--text-muted) !important; }
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-slate-100,
+[data-theme="dark"] .bg-gray-100,
+[data-theme="dark"] .bg-neutral-100,
+[data-theme="dark"] .bg-zinc-100 { background-color: var(--card-bg) !important; }
+[data-theme="peach"] .text-slate-900,
+[data-theme="peach"] .text-gray-900,
+[data-theme="peach"] .text-neutral-900,
+[data-theme="peach"] .text-zinc-900 { color: var(--text-color) !important; }
+[data-theme="peach"] .text-slate-700,
+[data-theme="peach"] .text-gray-700,
+[data-theme="peach"] .text-neutral-700,
+[data-theme="peach"] .text-zinc-700 { color: color-mix(in srgb, var(--text-color) 78%, var(--text-muted)) !important; }
+</style>
+
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
 
@@ -598,6 +718,28 @@
     </div>
   </div>
 
+  <!-- ================= TEXT WORD MODAL ================= -->
+  <div id="text-word-modal" class="hidden fixed inset-0 z-[115] items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="text-word-original">
+    <div class="theme-card border rounded-3xl p-5 w-full max-w-sm shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div class="flex items-start justify-between gap-3">
+        <div><p class="text-xs font-bold theme-accent-text">СЛОВО ИЗ ТЕКСТА</p><h3 id="text-word-original" class="text-2xl font-black mt-1">Wort</h3></div>
+        <button onclick="closeTextWordModal()" class="btn-secondary rounded-xl px-3 py-2" aria-label="Закрыть">✕</button>
+      </div>
+      <p id="text-word-context" class="theme-card border rounded-xl p-3 text-sm leading-relaxed mt-4"></p>
+      <div class="mt-4"><p class="text-xs font-bold theme-text-muted mb-2">ПЕРЕВОД</p><p id="text-word-translation" class="text-lg font-bold mb-2">Перевод загружается...</p>
+        <label for="text-word-edit-translation" class="text-xs theme-text-muted">Можно исправить перевод</label>
+        <input id="text-word-edit-translation" class="w-full theme-input rounded-xl p-3 mt-1" placeholder="Перевод слова">
+      </div>
+      <div id="text-word-duplicate" class="hidden text-xs theme-accent-text rounded-xl p-3 mt-3"></div>
+      <label for="text-word-deck" class="block text-sm font-bold mt-4 mb-2">Добавить в колоду</label>
+      <select id="text-word-deck" class="w-full theme-input rounded-xl p-3"></select>
+      <div class="grid grid-cols-2 gap-2 mt-5">
+        <button onclick="closeTextWordModal()" class="btn-secondary w-full">Закрыть</button>
+        <button onclick="addTextWordToDeck()" class="btn-primary w-full">＋ Добавить</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= DUPLICATE CARD CONFIRMATION ================= -->
   <div id="duplicate-card-modal" class="hidden fixed inset-0 z-[120] items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="duplicate-card-title">
     <div class="theme-card border rounded-3xl p-5 w-full max-w-sm shadow-2xl">
@@ -627,14 +769,15 @@
 
   <!-- ================= SECTION / SUBSECTION NAVIGATION ================= -->
   <div class="app-tabbar fixed bottom-6 left-4 right-4 max-w-xl mx-auto border rounded-3xl p-2 z-40 text-[11px] font-semibold" role="navigation" aria-label="Основная навигация">
-    <div id="nav-primary" class="grid grid-cols-3 gap-2">
-      <button onclick="openNavGroup('learning')" class="nav-group-btn rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-xl">📚</span><span>Обучение</span></button>
-      <button onclick="openNavGroup('interactive')" class="nav-group-btn rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-xl">🎮</span><span>Интерактив</span></button>
-      <button onclick="openNavGroup('social')" class="nav-group-btn rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-xl">👥</span><span>Социальное</span></button>
+    <div id="nav-primary" class="grid grid-cols-4 gap-1.5">
+      <button onclick="openNavGroup('learning')" class="nav-group-btn rounded-2xl py-3 px-1 flex flex-col items-center justify-center gap-1"><span class="text-xl">📚</span><span>Обучение</span></button>
+      <button onclick="openNavGroup('interactive')" class="nav-group-btn rounded-2xl py-3 px-1 flex flex-col items-center justify-center gap-1"><span class="text-xl">🏆</span><span>Путь</span></button>
+      <button onclick="openNavGroup('community')" class="nav-group-btn rounded-2xl py-3 px-1 flex flex-col items-center justify-center gap-1"><span class="text-xl">👥</span><span>Сообщество</span></button>
+      <button onclick="openNavGroup('settings')" class="nav-group-btn rounded-2xl py-3 px-1 flex flex-col items-center justify-center gap-1"><span class="text-xl">⚙️</span><span>Настройки</span></button>
     </div>
     <div id="nav-secondary" class="hidden items-center gap-2">
-      <button onclick="showPrimaryNav()" class="btn-secondary flex-none rounded-xl px-3 py-3" aria-label="Назад к разделам">‹</button>
-      <div id="nav-secondary-items" class="flex items-center gap-2 overflow-x-auto min-w-0 flex-1" style="scrollbar-width:none"></div>
+      <button onclick="showPrimaryNav()" class="nav-home-button flex-none w-10 h-10 rounded-full flex items-center justify-center" aria-label="Назад к разделам" title="Назад к разделам"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <div id="nav-secondary-items" class="flex items-center justify-center gap-1 overflow-x-auto min-w-0 flex-1" style="scrollbar-width:none"></div>
     </div>
   </div>
   <button id="tab-profile" class="hidden" type="button"></button>
@@ -1126,6 +1269,54 @@
     <div id="rewards-shop" class="grid grid-cols-2 gap-3"></div>
     <h3 class="font-black text-lg mt-6 mb-3">Моя коллекция</h3>
     <div id="owned-rewards" class="theme-card border rounded-2xl p-4 text-sm theme-text-muted">Пока ничего не приобретено.</div>
+  </main>
+
+  <!-- ================= VIEW: TEXT LIBRARY ================= -->
+  <main id="view-texts" class="hidden flex-1 flex flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
+    <section class="screen-heading mb-5">
+      <p class="home-eyebrow mb-2">LESEN & LERNEN</p>
+      <h2 class="text-3xl font-black tracking-tight">Тексты</h2>
+      <p class="text-sm theme-text-muted mt-2">Читай немецкие диалоги и сохраняй незнакомые слова в колоды.</p>
+    </section>
+    <section class="theme-card border rounded-3xl p-4 mb-4">
+      <label for="new-text-title" class="block text-sm font-bold mb-2">Название текста</label>
+      <input id="new-text-title" class="w-full theme-input rounded-xl p-3 mb-3" placeholder="Например: Im Restaurant">
+      <label for="new-text-content" class="block text-sm font-bold mb-2">Немецкий текст</label>
+      <textarea id="new-text-content" class="w-full theme-input rounded-xl p-3 min-h-36" rows="6" placeholder="Вставь сюда диалог или немецкий текст..."></textarea>
+      <div class="flex gap-2 mt-3">
+        <button onclick="saveNewText()" class="btn-primary flex-1">＋ Сохранить текст</button>
+        <label class="btn-secondary flex items-center justify-center px-4 rounded-xl cursor-pointer">Импорт TXT<input type="file" accept=".txt,text/plain" class="hidden" onchange="importTextFile(event)"></label>
+      </div>
+    </section>
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="theme-card border rounded-2xl p-4"><p id="texts-total" class="text-2xl font-black theme-accent-text">0</p><p class="text-xs theme-text-muted mt-1">Текстов</p></div>
+      <div class="theme-card border rounded-2xl p-4"><p id="texts-words-total" class="text-2xl font-black">0</p><p class="text-xs theme-text-muted mt-1">Разобранных слов</p></div>
+    </div>
+    <div class="flex items-center justify-between mb-3"><h3 class="text-lg font-black">Моя библиотека</h3><span id="texts-library-count" class="text-xs theme-text-muted">0 текстов</span></div>
+    <div id="texts-library-list" class="space-y-3"></div>
+  </main>
+
+  <!-- ================= VIEW: TEXT READER ================= -->
+  <main id="view-text-reader" class="hidden flex-1 flex flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <button onclick="switchMainTab('texts')" class="btn-secondary rounded-xl px-3 py-2">← Библиотека</button>
+      <button onclick="deleteReaderText(activeReaderTextId)" class="btn-soft rounded-xl px-3 py-2">Удалить</button>
+    </div>
+    <h2 id="reader-title" class="text-2xl font-black mb-1">Текст</h2>
+    <p id="reader-meta" class="text-xs theme-text-muted mb-3">Немецкий текст</p>
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <p id="reader-instruction" class="text-xs theme-text-muted flex-1">Нажми слово для перевода и создания карточки.</p>
+      <button id="reader-mark-mode" onclick="toggleReaderMarkMode()" class="btn-secondary rounded-xl px-3 py-2 text-xs whitespace-nowrap">🖍 Выделять</button>
+    </div>
+    <div id="reader-mark-toolbar" class="hidden theme-card border rounded-2xl p-3 mb-3">
+      <div class="flex items-center justify-between gap-2"><span class="text-xs theme-text-muted"><b id="reader-mark-count">0</b> выделено</span><button onclick="clearReaderMarks()" class="text-xs theme-accent-text font-bold">Очистить</button></div>
+      <p class="text-[11px] theme-text-muted mt-1">Нажимай слова, чтобы отметить их маркером. Нажми на отмеченное слово ещё раз, чтобы открыть перевод.</p>
+    </div>
+    <article id="reader-article" class="theme-card border rounded-3xl p-5 text-base leading-8 whitespace-pre-wrap break-words mb-5"></article>
+    <section class="theme-card border rounded-3xl p-4">
+      <div class="flex justify-between items-center gap-3 mb-3"><h3 class="font-black">Слова из текста</h3><span class="text-xs theme-text-muted"><span id="reader-word-count">0</span> слов</span></div>
+      <div id="reader-words-list" class="space-y-3"></div>
+    </section>
   </main>
 
   <!-- ================= VIEW: DECK DETAILS ================= -->
@@ -2189,10 +2380,12 @@
         {tab:'achievements', label:'Путь', icon:'🏆'},
         {tab:'games', label:'Лавка', icon:'🛍️'}
       ],
-      social: [
+      community: [
         {tab:'social', label:'Друзья', icon:'👥'},
         {tab:'profile', label:'Профиль', icon:'👤', action:'profile'},
-        {tab:'statistics', label:'Статистика', icon:'📊'},
+        {tab:'statistics', label:'Статистика', icon:'📊'}
+      ],
+      settings: [
         {tab:'settings', label:'Настройки', icon:'⚙️'}
       ]
     };
@@ -2203,24 +2396,31 @@
       const primary = document.getElementById('nav-primary');
       const secondary = document.getElementById('nav-secondary');
       const items = document.getElementById('nav-secondary-items');
-      if (!primary || !secondary || !items) return;
+      if (!primary || !secondary || !items || !NAV_GROUPS[group]) return;
       primary.classList.add('hidden');
       secondary.classList.remove('hidden');
       secondary.classList.add('flex');
+      secondary.classList.add('w-full');
       items.innerHTML = NAV_GROUPS[group].map(item => {
         const active = item.tab === activeTab;
         const click = item.action === 'profile' ? 'openAccountModal()' : `switchMainTab('${item.tab}')`;
-        return `<button onclick="${click}" class="flex-none rounded-xl px-3 py-2.5 flex flex-col items-center gap-1 ${active?'active-tab':'theme-card border'}" style="min-width:66px"><span class="text-base">${item.icon}</span><span class="whitespace-nowrap">${item.label}</span></button>`;
+        return `<button onclick="${click}" class="nav-subtab flex-1 min-w-[58px] rounded-2xl px-1 py-2.5 flex flex-col items-center justify-center gap-1 ${active?'active-tab':''}" style="min-height:66px"><span class="text-base">${item.icon}</span><span class="whitespace-nowrap text-[10px]">${item.label}</span></button>`;
       }).join('');
     }
     function showPrimaryNav() {
+      hideAllViews();
+      const home = document.getElementById('view-home');
+      if (home) home.classList.remove('hidden');
+      if (typeof renderDecks === 'function') renderDecks();
       const primary = document.getElementById('nav-primary');
       const secondary = document.getElementById('nav-secondary');
       if (primary) primary.classList.remove('hidden');
       if (secondary) { secondary.classList.add('hidden'); secondary.classList.remove('flex'); }
       activeNavGroup = null;
+      activeMainTab = 'home';
     }
     function openNavGroup(group) {
+      if (group === 'settings') { switchMainTab('settings'); return; }
       activeNavGroup = group;
       const first = NAV_GROUPS[group][0];
       if (first.action === 'profile') {
@@ -2255,7 +2455,7 @@
       'tab-home': 'Колоды', 'tab-quick': 'Быстро', 'tab-practice': 'Практика',
       'tab-social': 'Друзья', 'tab-achievements': 'Путь', 'tab-games': 'Лавка',
       'tab-statistics': 'Статистика', 'tab-mastered': 'Выучено',
-      'tab-settings': 'Настройки', 'tab-profile': 'Профиль'
+      'tab-settings': 'Настройки', 'tab-profile': 'Профиль', 'tab-texts': 'Тексты'
     };
 
     function getTabButtons() {
@@ -2652,9 +2852,10 @@
       const list = document.getElementById('texts-library-list');
       if (!list) return;
       const words = textLibrary.reduce((n, t) => n + (t.words || []).length, 0);
-      document.getElementById('texts-total').textContent = textLibrary.length;
-      document.getElementById('texts-words-total').textContent = words;
-      document.getElementById('texts-library-count').textContent = `${textLibrary.length} текстов`;
+      const totalEl=document.getElementById('texts-total'), wordsEl=document.getElementById('texts-words-total'), countEl=document.getElementById('texts-library-count');
+      if(totalEl) totalEl.textContent=textLibrary.length;
+      if(wordsEl) wordsEl.textContent=words;
+      if(countEl) countEl.textContent=`${textLibrary.length} текстов`;
       list.innerHTML = textLibrary.length ? textLibrary.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(t => `
         <div class="theme-card border rounded-2xl p-4">
           <div class="flex items-start gap-3">
@@ -2662,6 +2863,7 @@
               <button class="font-bold text-left" onclick="openReaderText('${t.id}')">${escapeHtml(t.title)}</button>
               <p class="text-xs theme-text-muted mt-1">${(t.content||'').trim().split(/\s+/).filter(Boolean).length} слов · ${(t.words||[]).length} слов разобрано</p>
               <p class="text-xs theme-text-muted mt-2 line-clamp-2">${escapeHtml((t.content||'').slice(0,140))}</p>
+              <button onclick="openReaderText('${t.id}')" class="btn-primary rounded-xl px-4 py-2 mt-3 text-xs">📖 Читать текст</button>
             </div>
             <button onclick="deleteReaderText('${t.id}')" class="btn-secondary rounded-lg px-2 py-1" aria-label="Удалить текст">✕</button>
           </div>
@@ -2674,7 +2876,7 @@
       const item = {id:'txt_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),title,content,createdAt:Date.now(),updatedAt:Date.now(),words:[]};
       textLibrary.unshift(item); saveTextLibrary();
       document.getElementById('new-text-content').value=''; document.getElementById('new-text-title').value='';
-      renderTextsLibrary(); showToast('Текст сохранён');
+      renderTextsLibrary(); showToast('Текст сохранён. Нажми «Читать текст», чтобы открыть его.');
     }
     function importTextFile(event) {
       const file=event.target.files?.[0]; if(!file)return;
@@ -2687,20 +2889,51 @@
       if(!confirm('Удалить этот текст и его список слов? Уже созданные карточки останутся в колодах.'))return;
       textLibrary=textLibrary.filter(t=>t.id!==id); saveTextLibrary(); renderTextsLibrary();
     }
+    let readerMarkMode = false;
+    function toggleReaderMarkMode(force) {
+      readerMarkMode = typeof force === 'boolean' ? force : !readerMarkMode;
+      const btn=document.getElementById('reader-mark-mode');
+      const toolbar=document.getElementById('reader-mark-toolbar');
+      const instruction=document.getElementById('reader-instruction');
+      if(btn){btn.classList.toggle('active-tab',readerMarkMode);btn.textContent=readerMarkMode?'✓ Маркер включён':'🖍 Выделять';}
+      if(toolbar)toolbar.classList.toggle('hidden',!readerMarkMode);
+      if(instruction)instruction.textContent=readerMarkMode?'Выбирай незнакомые слова маркером. Повторное нажатие откроет перевод.':'Нажми слово для перевода и создания карточки.';
+    }
+    function updateReaderMarks() {
+      const item=textLibrary.find(t=>t.id===activeReaderTextId); if(!item)return;
+      const marks=new Set(item.markedWords||[]);
+      document.querySelectorAll('#reader-article .reader-word').forEach(el=>el.classList.toggle('reader-word-marked',marks.has(el.dataset.word.toLocaleLowerCase('de'))));
+      const count=document.getElementById('reader-mark-count');if(count)count.textContent=marks.size;
+    }
+    function clearReaderMarks() {
+      const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;
+      item.markedWords=[];saveTextLibrary();updateReaderMarks();
+    }
     function openReaderText(id) {
       const item=textLibrary.find(t=>t.id===id); if(!item)return;
       activeReaderTextId=id; item.updatedAt=Date.now(); saveTextLibrary();
       hideAllViews(); document.getElementById('view-text-reader').classList.remove('hidden'); activeMainTab='texts'; activeNavGroup='learning'; renderSecondaryNav('learning','texts');
       document.getElementById('reader-title').textContent=item.title;
       document.getElementById('reader-meta').textContent=`Немецкий текст · ${item.content.trim().split(/\s+/).filter(Boolean).length} слов`;
-      const article=document.getElementById('reader-content');
+      const article=document.getElementById('reader-article');
       article.innerHTML=item.content.split(/(\s+)/).map(token=>{
         if(/^\s+$/.test(token))return token;
         const clean=token.replace(/^[^\p{L}ÄÖÜäöüß-]+|[^\p{L}ÄÖÜäöüß-]+$/gu,'');
         if(!clean)return escapeHtml(token);
         return `<span class="reader-word cursor-pointer rounded px-0.5" data-word="${escapeHtml(clean)}" title="Нажми, чтобы перевести">${escapeHtml(token)}</span>`;
       }).join('');
-      article.onclick=e=>{const el=e.target.closest('.reader-word');if(el)openTextWord(el.dataset.word);};
+      article.onclick=e=>{
+        const el=e.target.closest('.reader-word');if(!el)return;
+        const itemNow=textLibrary.find(t=>t.id===activeReaderTextId);if(!itemNow)return;
+        const key=el.dataset.word.toLocaleLowerCase('de');
+        const marks=new Set(itemNow.markedWords||[]);
+        if(readerMarkMode){
+          if(marks.has(key)) { openTextWord(el.dataset.word); }
+          else { marks.add(key);itemNow.markedWords=[...marks];saveTextLibrary();updateReaderMarks(); }
+        } else openTextWord(el.dataset.word);
+      };
+      toggleReaderMarkMode(false);
+      updateReaderMarks();
       renderReaderWords();
     }
     function renderReaderWords() {
@@ -2720,6 +2953,7 @@
       document.getElementById('text-word-edit-translation').value=existing?.translation||'';
       const select=document.getElementById('text-word-deck');
       select.innerHTML=decks.map(d=>`<option value="${escapeHtml(String(d.id))}">${escapeHtml(d.name)}</option>`).join('');
+      if(!decks.length){select.innerHTML='<option value="">Сначала создай колоду</option>';}
       const dup=findDuplicateCards(word);
       document.getElementById('text-word-duplicate').classList.toggle('hidden',!dup.length);
       document.getElementById('text-word-duplicate').textContent=dup.length?`Уже есть в: ${dup.map(x=>x.deckName).join(', ')}. При добавлении можно создать ещё одну карточку.`:'';
@@ -2741,11 +2975,19 @@
       return parts.find(s=>s.toLocaleLowerCase('de').includes(word.toLocaleLowerCase('de')))||String(text).slice(0,220);
     }
     function closeTextWordModal(){const m=document.getElementById('text-word-modal');m.classList.add('hidden');m.classList.remove('flex');}
+    function normalizeDuplicateWord(value){
+      let v=String(value||'').normalize('NFC').trim().toLocaleLowerCase('de')
+        .replace(/[.,!?;:()[\]{}«»\"']/g,'').replace(/\s+/g,' ');
+      // Treat an optional German article as equivalent for single-word nouns.
+      v=v.replace(/^(der|die|das|ein|eine|einen|einem|einer)\s+/,'');
+      return v;
+    }
     function findDuplicateCards(front) {
       const key=normalizeDuplicateWord(front);
-      return cards.filter(c=>normalizeDuplicateWord(c.front)===key).map(c=>({card:c,deckName:decks.find(d=>String(d.id)===String(c.deckId))?.name||'Неизвестная колода'}));
+      if(!key || !Array.isArray(cards)) return [];
+      return cards.filter(c=>normalizeDuplicateWord(c.front)===key)
+        .map(c=>({card:c,deckName:decks.find(d=>String(d.id)===String(c.deckId))?.name||'Неизвестная колода'}));
     }
-    function normalizeDuplicateWord(value){return String(value||'').normalize('NFC').trim().toLocaleLowerCase('de').replace(/[.,!?;:()[\]{}«»\"']/g,'').replace(/\s+/g,' ');}
     function openDuplicateCardModal(front,back,description,deckId,onConfirm) {
       const matches=findDuplicateCards(front);
       if(!matches.length){onConfirm();return;}
@@ -2753,7 +2995,7 @@
       const message=document.getElementById('duplicate-card-message');
       const locations=document.getElementById('duplicate-card-locations');
       const m=document.getElementById('duplicate-card-modal');
-      if(!message || !locations || !m){ pendingDuplicateCard=null; console.warn('Duplicate-card modal markup is missing'); showToast('Это слово уже есть в колоде'); return; }
+      if(!message || !locations || !m){ pendingDuplicateCard=null; console.error('Duplicate-card modal markup is incomplete'); showToast(`Слово «${front}» уже есть в словаре`); return; }
       message.textContent=`«${front}» уже встречается в словаре. Найдено совпадений: ${matches.length}.`;
       locations.innerHTML=matches.map(x=>`<div class="rounded-xl p-3 border theme-border"><b>${escapeHtml(x.deckName)}</b><p class="text-xs theme-text-muted">${escapeHtml(x.card.front)} → ${escapeHtml(x.card.back)}</p></div>`).join('');
       m.classList.remove('hidden');m.classList.add('flex');
@@ -2765,6 +3007,7 @@
       const translation=document.getElementById('text-word-edit-translation').value.trim();
       const deckId=document.getElementById('text-word-deck').value;
       if(!translation)return showToast('Добавь перевод');
+      if(!deckId || !decks.some(d=>String(d.id)===String(deckId)))return showToast('Сначала создай колоду');
       const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;
       const existing=item.words.find(w=>w.word.toLocaleLowerCase('de')===activeTextWord.word.toLocaleLowerCase('de'));
       const create=()=>{
