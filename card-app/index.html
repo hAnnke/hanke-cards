@@ -648,6 +648,43 @@ input[type="range"] { accent-color: var(--accent); }
 [data-theme="peach"] .text-zinc-700 { color: color-mix(in srgb, var(--text-color) 78%, var(--text-muted)) !important; }
 </style>
 
+
+<style id="stage58-centered-nav-context-menu">
+#nav-secondary { width:100%; }
+#nav-secondary-items { width:100%; flex:1 1 0%; min-width:0; display:flex; align-items:center; justify-content:space-evenly; overflow-x:auto; }
+#nav-secondary-items .nav-subtab { flex:1 1 0%; min-width:0; max-width:none; border:0 !important; outline:0 !important; box-shadow:none !important; background:transparent !important; }
+#nav-secondary-items .nav-subtab.active-tab { background:var(--accent-soft,rgba(112,92,255,.14)) !important; }
+#nav-secondary .nav-home-button { flex:0 0 36px; border:0 !important; box-shadow:none !important; background:transparent !important; }
+.reader-color-choice { height:30px; border-radius:9px; border:2px solid rgba(70,80,110,.18); }
+.reader-color-choice:focus { outline:2px solid var(--accent); outline-offset:2px; }
+.reader-word-marked { background:var(--reader-mark-color, #FDE68A) !important; color:#202536 !important; box-shadow:inset 0 -2px 0 rgba(80,70,30,.22); border-radius:4px; }
+#reader-context-menu { color:var(--text-color); }
+#reader-context-menu button.theme-hover:hover { background:var(--accent-soft); }
+</style>
+
+<style id="stage59-centered-primary-nav-and-cloud-settings">
+#nav-primary:not(.hidden) {
+  display:grid !important;
+  width:100% !important;
+  grid-template-columns:repeat(4,minmax(64px,88px)) !important;
+  justify-content:center !important;
+  justify-items:stretch !important;
+  align-items:center !important;
+  gap:clamp(5px,2vw,12px) !important;
+  margin-inline:auto !important;
+}
+#nav-primary:not(.hidden) .nav-group-btn {
+  width:100%;
+  min-width:0;
+  justify-self:center;
+}
+/* The primary and secondary navigation are mutually exclusive. */
+#nav-primary.hidden { display:none !important; }
+#nav-secondary.hidden { display:none !important; }
+@media (max-width:380px) {
+  #nav-primary { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:3px !important; }
+}
+</style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
 
@@ -709,11 +746,9 @@ input[type="range"] { accent-color: var(--accent); }
           </div>
         </div>
         <div class="space-y-2">
-          <button onclick="syncCloudNow()" class="btn-primary w-full">Синхронизировать сейчас</button>
-          <button onclick="downloadCloudBackup()" class="btn-secondary w-full">Скачать резервную копию</button>
           <button onclick="signOutAccount()" class="btn-soft w-full">Выйти из аккаунта</button>
         </div>
-        <p class="text-[11px] theme-text-muted mt-3">Колоды и прогресс синхронизируются между устройствами. Изменения на этом устройстве отправляются в облако автоматически.</p>
+        <p class="text-[11px] theme-text-muted mt-3">Управление синхронизацией и резервными копиями находится в разделе «Настройки».</p>
       </div>
     </div>
   </div>
@@ -775,9 +810,9 @@ input[type="range"] { accent-color: var(--accent); }
       <button onclick="openNavGroup('community')" class="nav-group-btn rounded-2xl py-3 px-1 flex flex-col items-center justify-center gap-1"><span class="text-xl">👥</span><span>Сообщество</span></button>
       <button onclick="openNavGroup('settings')" class="nav-group-btn rounded-2xl py-3 px-1 flex flex-col items-center justify-center gap-1"><span class="text-xl">⚙️</span><span>Настройки</span></button>
     </div>
-    <div id="nav-secondary" class="hidden items-center gap-2">
-      <button onclick="showPrimaryNav()" class="nav-home-button flex-none w-10 h-10 rounded-full flex items-center justify-center" aria-label="Назад к разделам" title="Назад к разделам"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-      <div id="nav-secondary-items" class="flex items-center justify-center gap-1 overflow-x-auto min-w-0 flex-1" style="scrollbar-width:none"></div>
+    <div id="nav-secondary" class="hidden items-center gap-1 w-full">
+      <button onclick="showPrimaryNav()" class="nav-home-button flex-none w-9 h-9 rounded-full flex items-center justify-center" aria-label="Назад к разделам" title="Назад к разделам"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <div id="nav-secondary-items" class="flex items-center justify-center gap-0 min-w-0 flex-1" style="scrollbar-width:none"></div>
     </div>
   </div>
   <button id="tab-profile" class="hidden" type="button"></button>
@@ -1212,15 +1247,27 @@ input[type="range"] { accent-color: var(--accent); }
       <p class="text-xs theme-text-muted mt-3">В быстром обучении аудирование и задания с озвучиванием будут исключены. Обычные письменные задания останутся доступны.</p>
     </div>
 
-    <h2 class="text-2xl font-black tracking-tight mb-6">Данные</h2>
-    <div class="space-y-4">
-      <button onclick="exportToFile()" class="w-full theme-card border py-4 rounded-2xl font-bold flex justify-center items-center gap-2 active:scale-[0.98]">
-        <span></span> Скачать резервную копию
+    <h2 class="text-2xl font-black tracking-tight mb-3">Синхронизация и данные</h2>
+    <section class="theme-card border rounded-2xl p-4 mb-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">☁️</span>
+        <div class="min-w-0 flex-1">
+          <h3 class="font-bold text-sm">Облачная синхронизация</h3>
+          <p id="settings-sync-status" class="text-xs theme-text-muted mt-1">Проверяем состояние…</p>
+        </div>
+      </div>
+      <p class="text-xs theme-text-muted mb-3">Колоды, карточки, прогресс и библиотека текстов синхронизируются между устройствами при входе в один аккаунт.</p>
+      <button onclick="syncCloudNow()" class="btn-primary w-full">☁️ Синхронизировать сейчас</button>
+      <p id="settings-sync-hint" class="text-[11px] theme-text-muted mt-2">Для облачной синхронизации необходимо войти в аккаунт.</p>
+    </section>
+    <div class="space-y-3">
+      <button onclick="downloadCloudBackup()" class="w-full theme-card border py-4 rounded-2xl font-bold flex justify-center items-center gap-2 active:scale-[0.98]">
+        <span>💾</span> Скачать резервную копию
       </button>
       <div class="relative">
         <input type="file" id="file-import" accept=".json" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="importFromFile(event)">
         <button class="w-full btn-secondary pointer-events-none">
-          <span></span> Загрузить из файла
+          <span>📂</span> Загрузить из файла
         </button>
       </div>
     </div>
@@ -1313,6 +1360,19 @@ input[type="range"] { accent-color: var(--accent); }
       <p class="text-[11px] theme-text-muted mt-1">Нажимай слова, чтобы отметить их маркером. Нажми на отмеченное слово ещё раз, чтобы открыть перевод.</p>
     </div>
     <article id="reader-article" class="theme-card border rounded-3xl p-5 text-base leading-8 whitespace-pre-wrap break-words mb-5"></article>
+    <div id="reader-context-menu" class="hidden fixed z-[120] theme-card border rounded-2xl shadow-2xl p-3 w-64">
+      <div class="flex items-center justify-between gap-2 mb-2"><b class="text-sm">Выделенный фрагмент</b><button onclick="closeReaderContextMenu()" class="text-xs theme-text-muted">✕</button></div>
+      <p id="reader-context-selection" class="text-xs theme-text-muted mb-3 line-clamp-3"></p>
+      <button onclick="translateReaderSelection()" class="w-full text-left rounded-xl px-3 py-2 text-sm font-bold theme-hover">🌐 Перевести и создать карточку</button>
+      <div class="border-t theme-border my-2"></div>
+      <p class="text-[11px] theme-text-muted mb-2">Выделить маркером</p>
+      <div class="grid grid-cols-4 gap-2">
+        <button onclick="highlightReaderSelection('#FDE68A')" class="reader-color-choice" style="background:#FDE68A" aria-label="Жёлтый"></button>
+        <button onclick="highlightReaderSelection('#A7F3D0')" class="reader-color-choice" style="background:#A7F3D0" aria-label="Зелёный"></button>
+        <button onclick="highlightReaderSelection('#BFDBFE')" class="reader-color-choice" style="background:#BFDBFE" aria-label="Голубой"></button>
+        <button onclick="highlightReaderSelection('#FBCFE8')" class="reader-color-choice" style="background:#FBCFE8" aria-label="Розовый"></button>
+      </div>
+    </div>
     <section class="theme-card border rounded-3xl p-4">
       <div class="flex justify-between items-center gap-3 mb-3"><h3 class="font-black">Слова из текста</h3><span class="text-xs theme-text-muted"><span id="reader-word-count">0</span> слов</span></div>
       <div id="reader-words-list" class="space-y-3"></div>
@@ -2404,7 +2464,7 @@ input[type="range"] { accent-color: var(--accent); }
       items.innerHTML = NAV_GROUPS[group].map(item => {
         const active = item.tab === activeTab;
         const click = item.action === 'profile' ? 'openAccountModal()' : `switchMainTab('${item.tab}')`;
-        return `<button onclick="${click}" class="nav-subtab flex-1 min-w-[58px] rounded-2xl px-1 py-2.5 flex flex-col items-center justify-center gap-1 ${active?'active-tab':''}" style="min-height:66px"><span class="text-base">${item.icon}</span><span class="whitespace-nowrap text-[10px]">${item.label}</span></button>`;
+        return `<button onclick="${click}" class="nav-subtab flex-1 min-w-0 rounded-2xl px-0.5 py-2 flex flex-col items-center justify-center gap-1 ${active?'active-tab':''}" style="min-height:66px"><span class="text-base leading-none">${item.icon}</span><span class="text-[9px] leading-tight text-center whitespace-normal">${item.label}</span></button>`;
       }).join('');
     }
     function showPrimaryNav() {
@@ -2431,6 +2491,25 @@ input[type="range"] { accent-color: var(--accent); }
     function groupForTab(tab) {
       return Object.keys(NAV_GROUPS).find(group => NAV_GROUPS[group].some(item => item.tab === tab)) || 'learning';
     }
+    function updateSettingsSyncStatus() {
+      const status = document.getElementById('settings-sync-status');
+      const hint = document.getElementById('settings-sync-hint');
+      if (!status || !hint) return;
+      if (!currentAuthUser) {
+        status.textContent = 'Гостевой режим · облако не подключено';
+        hint.textContent = 'Войди в аккаунт через кнопку профиля, чтобы включить синхронизацию между устройствами.';
+      } else if (!navigator.onLine) {
+        status.textContent = 'Нет подключения к интернету';
+        hint.textContent = 'Изменения сохраняются локально и синхронизируются после восстановления соединения.';
+      } else if (!cloudReady) {
+        status.textContent = 'Подключаем облако…';
+        hint.textContent = 'Подожди завершения загрузки данных аккаунта.';
+      } else {
+        status.textContent = 'Аккаунт подключён · ' + (localStorage.getItem(LAST_CLOUD_SYNC_KEY) ? 'последняя синхронизация: ' + new Date(localStorage.getItem(LAST_CLOUD_SYNC_KEY)).toLocaleString('ru-RU') : 'ожидает первой синхронизации');
+        hint.textContent = 'Автоматическая синхронизация включена. Можно запустить её вручную.';
+      }
+    }
+
     function switchMainTab(tab) {
       if (tab === 'profile') { activeNavGroup = 'social'; renderSecondaryNav('social','profile'); openAccountModal(); return; }
       const view = document.getElementById(`view-${tab}`);
@@ -2449,6 +2528,7 @@ input[type="range"] { accent-color: var(--accent); }
       if(tab === 'games') renderGames();
       if(tab === 'statistics') renderStatistics();
       if(tab === 'social') loadSocialHub();
+      if(tab === 'settings') updateSettingsSyncStatus();
     }
     const TAB_ORDER_KEY = 'hankecards_tab_order_v1';
     const TAB_LABELS = {
@@ -2847,6 +2927,7 @@ input[type="range"] { accent-color: var(--accent); }
 
     function saveTextLibrary() {
       localStorage.setItem(TEXT_LIBRARY_KEY, JSON.stringify(textLibrary));
+      if (typeof scheduleCloudSave === 'function') scheduleCloudSave();
     }
     function renderTextsLibrary() {
       const list = document.getElementById('texts-library-list');
@@ -2899,20 +2980,99 @@ input[type="range"] { accent-color: var(--accent); }
       if(toolbar)toolbar.classList.toggle('hidden',!readerMarkMode);
       if(instruction)instruction.textContent=readerMarkMode?'Выбирай незнакомые слова маркером. Повторное нажатие откроет перевод.':'Нажми слово для перевода и создания карточки.';
     }
+    function getReaderMarkMap(item) {
+      const map=new Map();
+      (item?.markedWords||[]).forEach(mark=>{
+        if(typeof mark==='string') map.set(mark.toLocaleLowerCase('de'),'#FDE68A');
+        else if(mark?.word) map.set(String(mark.word).toLocaleLowerCase('de'),mark.color||'#FDE68A');
+      });
+      return map;
+    }
     function updateReaderMarks() {
       const item=textLibrary.find(t=>t.id===activeReaderTextId); if(!item)return;
-      const marks=new Set(item.markedWords||[]);
-      document.querySelectorAll('#reader-article .reader-word').forEach(el=>el.classList.toggle('reader-word-marked',marks.has(el.dataset.word.toLocaleLowerCase('de'))));
+      const marks=getReaderMarkMap(item);
+      document.querySelectorAll('#reader-article .reader-word').forEach(el=>{
+        const color=marks.get(el.dataset.word.toLocaleLowerCase('de'));
+        el.classList.toggle('reader-word-marked',!!color);
+        if(color)el.style.setProperty('--reader-mark-color',color);else el.style.removeProperty('--reader-mark-color');
+      });
       const count=document.getElementById('reader-mark-count');if(count)count.textContent=marks.size;
     }
     function clearReaderMarks() {
       const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;
       item.markedWords=[];saveTextLibrary();updateReaderMarks();
     }
+    let activeReaderSelection = '';
+    let readerSelectionRange = null;
+    let readerLongPressTimer = null;
+    function getReaderMarkMap(item) {
+      const map=new Map();
+      (item?.markedWords||[]).forEach(mark=>{
+        if(typeof mark==='string')map.set(mark.toLocaleLowerCase('de'),'#FDE68A');
+        else if(mark?.word)map.set(String(mark.word).toLocaleLowerCase('de'),mark.color||'#FDE68A');
+      });
+      return map;
+    }
+    function updateReaderMarks() {
+      const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;
+      const marks=getReaderMarkMap(item);
+      document.querySelectorAll('#reader-article .reader-word').forEach(el=>{
+        const color=marks.get(el.dataset.word.toLocaleLowerCase('de'));
+        el.classList.toggle('reader-word-marked',!!color);
+        if(color)el.style.setProperty('--reader-mark-color',color);else el.style.removeProperty('--reader-mark-color');
+      });
+      const count=document.getElementById('reader-mark-count');if(count)count.textContent=marks.size;
+    }
+    function clearReaderMarks(){const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;item.markedWords=[];saveTextLibrary();updateReaderMarks();}
+    function openReaderContextMenu(text, x, y, range=null) {
+      const clean=String(text||'').trim().replace(/\s+/g,' ').slice(0,500);
+      if(!clean)return;
+      activeReaderSelection=clean;readerSelectionRange=range?range.cloneRange():null;
+      const menu=document.getElementById('reader-context-menu');
+      document.getElementById('reader-context-selection').textContent=clean;
+      menu.classList.remove('hidden');
+      const w=260,h=220;
+      menu.style.left=Math.max(10,Math.min(x,window.innerWidth-w-10))+'px';
+      menu.style.top=Math.max(10,Math.min(y,window.innerHeight-h-10))+'px';
+    }
+    function closeReaderContextMenu(){const menu=document.getElementById('reader-context-menu');if(menu)menu.classList.add('hidden');}
+    function getCurrentReaderSelection() {
+      const sel=window.getSelection();
+      const text=sel?sel.toString().trim():'';
+      if(text && document.getElementById('reader-article')?.contains(sel.anchorNode)) return {text,range:sel.getRangeAt(0).cloneRange()};
+      return null;
+    }
+    function translateReaderSelection() {
+      const text=activeReaderSelection;closeReaderContextMenu();
+      if(text)openTextWord(text);
+      window.getSelection()?.removeAllRanges();
+    }
+    function highlightReaderSelection(color) {
+      const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;
+      let range=readerSelectionRange;
+      if(!range){
+        const sel=window.getSelection();
+        if(sel?.rangeCount)range=sel.getRangeAt(0).cloneRange();
+      }
+      const article=document.getElementById('reader-article');
+      const words=[...article.querySelectorAll('.reader-word')];
+      let selected=words.filter(el=>{
+        try{return range && range.intersectsNode(el);}catch(_){return false;}
+      });
+      if(!selected.length && activeReaderSelection){
+        const key=activeReaderSelection.toLocaleLowerCase('de');
+        selected=words.filter(el=>el.dataset.word.toLocaleLowerCase('de')===key);
+      }
+      const map=getReaderMarkMap(item);
+      selected.forEach(el=>map.set(el.dataset.word.toLocaleLowerCase('de'),color));
+      item.markedWords=[...map.entries()].map(([word,c])=>({word,color:c}));
+      saveTextLibrary();updateReaderMarks();closeReaderContextMenu();window.getSelection()?.removeAllRanges();
+      showToast('Фрагмент выделен маркером');
+    }
     function openReaderText(id) {
-      const item=textLibrary.find(t=>t.id===id); if(!item)return;
-      activeReaderTextId=id; item.updatedAt=Date.now(); saveTextLibrary();
-      hideAllViews(); document.getElementById('view-text-reader').classList.remove('hidden'); activeMainTab='texts'; activeNavGroup='learning'; renderSecondaryNav('learning','texts');
+      const item=textLibrary.find(t=>t.id===id);if(!item)return;
+      activeReaderTextId=id;item.updatedAt=Date.now();saveTextLibrary();
+      hideAllViews();document.getElementById('view-text-reader').classList.remove('hidden');activeMainTab='texts';activeNavGroup='learning';renderSecondaryNav('learning','texts');
       document.getElementById('reader-title').textContent=item.title;
       document.getElementById('reader-meta').textContent=`Немецкий текст · ${item.content.trim().split(/\s+/).filter(Boolean).length} слов`;
       const article=document.getElementById('reader-article');
@@ -2920,21 +3080,32 @@ input[type="range"] { accent-color: var(--accent); }
         if(/^\s+$/.test(token))return token;
         const clean=token.replace(/^[^\p{L}ÄÖÜäöüß-]+|[^\p{L}ÄÖÜäöüß-]+$/gu,'');
         if(!clean)return escapeHtml(token);
-        return `<span class="reader-word cursor-pointer rounded px-0.5" data-word="${escapeHtml(clean)}" title="Нажми, чтобы перевести">${escapeHtml(token)}</span>`;
+        return `<span class="reader-word cursor-pointer rounded px-0.5" data-word="${escapeHtml(clean)}" title="Выдели или зажми для действий">${escapeHtml(token)}</span>`;
       }).join('');
       article.onclick=e=>{
         const el=e.target.closest('.reader-word');if(!el)return;
-        const itemNow=textLibrary.find(t=>t.id===activeReaderTextId);if(!itemNow)return;
-        const key=el.dataset.word.toLocaleLowerCase('de');
-        const marks=new Set(itemNow.markedWords||[]);
-        if(readerMarkMode){
-          if(marks.has(key)) { openTextWord(el.dataset.word); }
-          else { marks.add(key);itemNow.markedWords=[...marks];saveTextLibrary();updateReaderMarks(); }
-        } else openTextWord(el.dataset.word);
+        if(readerMarkMode){activeReaderSelection=el.dataset.word;readerSelectionRange=null;highlightReaderSelection('#FDE68A');}
       };
-      toggleReaderMarkMode(false);
-      updateReaderMarks();
-      renderReaderWords();
+      article.onmouseup=e=>{
+        const x=e.clientX,y=e.clientY;
+        setTimeout(()=>{const sel=getCurrentReaderSelection();if(sel)openReaderContextMenu(sel.text,x,y,sel.range);},0);
+      };
+      article.oncontextmenu=e=>{
+        e.preventDefault();const sel=getCurrentReaderSelection();
+        const word=e.target.closest('.reader-word')?.dataset.word;
+        openReaderContextMenu(sel?.text||word,e.clientX,e.clientY,sel?.range||null);
+      };
+      article.ontouchstart=e=>{
+        const target=e.target.closest('.reader-word');if(!target)return;
+        const touch=e.touches[0];readerLongPressTimer=setTimeout(()=>openReaderContextMenu(target.dataset.word,touch.clientX,touch.clientY,null),520);
+      };
+      article.ontouchend=e=>{
+        clearTimeout(readerLongPressTimer);
+        const touch=e.changedTouches?.[0];
+        setTimeout(()=>{const sel=getCurrentReaderSelection();if(sel && sel.text.length>1)openReaderContextMenu(sel.text,touch?.clientX||150,touch?.clientY||220,sel.range);},80);
+      };
+      article.ontouchmove=()=>{clearTimeout(readerLongPressTimer);};
+      toggleReaderMarkMode(false);updateReaderMarks();renderReaderWords();
     }
     function renderReaderWords() {
       const item=textLibrary.find(t=>t.id===activeReaderTextId); if(!item)return;
@@ -4902,6 +5073,8 @@ input[type="range"] { accent-color: var(--accent); }
       if (icon) icon.textContent = current.icon;
       if (status) status.textContent = detail || current.text;
       if (last) last.textContent = formatSyncDate(localStorage.getItem(LAST_CLOUD_SYNC_KEY));
+      const settingsStatus = document.getElementById('settings-sync-status');
+      if (settingsStatus) updateSettingsSyncStatus();
     }
 
     function renderProfileMetrics() {
@@ -5013,6 +5186,7 @@ input[type="range"] { accent-color: var(--accent); }
         unlockedAchievements,
         playerInventory,
         playerEquipment,
+        textLibrary: Array.isArray(textLibrary) ? textLibrary : [],
         theme: document.body.getAttribute('data-theme') || 'light',
         quietMode,
         settings,
@@ -5085,7 +5259,7 @@ input[type="range"] { accent-color: var(--accent); }
             showToast('Локальные данные отправлены в облако');
           }
         } else {
-          const hasLocalData = decks.length > 0 || cards.length > 0;
+          const hasLocalData = decks.length > 0 || cards.length > 0 || (Array.isArray(textLibrary) && textLibrary.length > 0);
           if (hasLocalData) {
             const uploadLocal = confirm('В облаке пока нет данных. Загрузить текущие колоды и карточки этого устройства в аккаунт?');
             if (uploadLocal) await writeCloudState();
@@ -5095,6 +5269,7 @@ input[type="range"] { accent-color: var(--accent); }
         cloudInitInProgress = false;
         setCloudSyncStatus('synced');
         renderAccountPanel();
+        updateSettingsSyncStatus();
         try { await syncPublicProfile(); } catch (socialError) {
           console.warn('Public profile initialization skipped:', socialError.message);
         }
@@ -5154,6 +5329,7 @@ input[type="range"] { accent-color: var(--accent); }
         await writeCloudState();
         cloudReady = true;
         renderAccountPanel();
+        updateSettingsSyncStatus();
         showToast('Синхронизация завершена');
       } catch (error) {
         setCloudSyncStatus(navigator.onLine ? 'error' : 'offline', error.message || undefined);
