@@ -568,6 +568,19 @@
     #quick-deck-picker-modal .btn-primary { box-shadow:none; }
     #text-word-modal > div { border:1px solid color-mix(in srgb,var(--card-border) 55%,transparent) !important; box-shadow:0 24px 70px rgba(0,0,0,.22) !important; }
     #text-word-article { appearance:none; }
+
+/* Stage 64: polished training count selector and session results */
+#quick-learning-count {
+  appearance:none; -webkit-appearance:none; color:var(--text-color);
+  background-color:var(--card-bg);
+  border:1px solid color-mix(in srgb,var(--card-border) 70%,transparent);
+  border-radius:14px; padding:0 42px 0 14px !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2399a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 14px center;
+}
+#quick-learning-count option { background:var(--surface-solid); color:var(--text-color); }
+#training-results-modal .theme-card { border:1px solid color-mix(in srgb,var(--card-border) 38%,transparent); }
+
 </style>
 <style id="stage56-reader-navigation-polish">
 .nav-subtab { border: 0 !important; box-shadow: none !important; background: transparent !important; transition: background .18s ease, color .18s ease; }
@@ -3607,6 +3620,58 @@ input[type="range"] { accent-color: var(--accent); }
       closeQuickDeckPicker();
     }
 
+    let trainingWrongAnswers = [];
+    function recordTrainingResult(card, correct) {
+      if (!correct && card) {
+        const key=String(card.id ?? card.front);
+        if (!trainingWrongAnswers.some(item=>item.key===key)) trainingWrongAnswers.push({key,front:String(card.front||''),back:String(card.back||'')});
+      }
+    }
+    function closeTrainingResults() {
+      const modal=document.getElementById('training-results-modal');
+      if(modal){modal.classList.add('hidden');modal.classList.remove('flex');}
+      const returnView=practiceReturnView;
+      if(returnView==='home') switchMainTab('home');
+      else if(returnView==='practice') switchMainTab('practice');
+      else if(returnView==='quick') switchMainTab('quick');
+      else openDeck(currentDeckId);
+    }
+    function showTrainingResults() {
+      const total=Math.max(0,Number(quizAnsweredCount)||0), correct=Math.max(0,Number(quizCorrectCount)||0);
+      const wrong=Math.max(0,total-correct), percent=total?Math.round(correct/total*100):0;
+      const messages=percent===100
+        ? [['🏆','Безупречно! Даже Duden сейчас немного нервничает.'],['🚀','Идеально! Немецкий сегодня сам попросил у тебя автограф.'],['🧠','100%! Мозг явно установил Sprach-Update.']]
+        : percent>=80
+        ? [['😎','Очень достойно! Осталось совсем немного до идеала.'],['🔥','Крутая работа! Ошибки уже начинают тебя бояться.'],['💪','Сильно! Ещё немного практики и будет блеск.']]
+        : percent>=60
+        ? [['🙂','Хорошая база, но есть что отполировать.'],['🛠️','Неплохо! Пара тренировок и слова встанут по местам.'],['📈','Движение есть. Продолжаем прокачивать словарь.']]
+        : percent>=40
+        ? [['😅','Немецкий сегодня немного сопротивлялся. Но мы его дожмём.'],['🧩','Пока пазл сложился не весь. Повторение поможет.'],['💡','Ошибки показывают, что именно стоит потренировать.']]
+        : [['😂','Кажется, слова сегодня играли против тебя. Реванш будет!'],['🤝','Бывает! Даже der, die и das иногда спорят между собой.'],['🌱','Сегодня было сложно, зато теперь знаем, что повторять.']];
+      const pick=messages[Math.floor(Math.random()*messages.length)];
+      const el=id=>document.getElementById(id);
+      el('training-results-emoji').innerText=pick[0];
+      el('training-results-percent').innerText=percent+'%';
+      el('training-results-message').innerText=pick[1];
+      el('training-results-subtitle').innerText=`${correct} правильных из ${total} заданий`;
+      el('training-results-correct').innerText=correct;
+      el('training-results-wrong').innerText=wrong;
+      el('training-results-total').innerText=total;
+      const wrap=el('training-results-weak-wrap'), list=el('training-results-weak');
+      list.innerHTML='';
+      if(trainingWrongAnswers.length){
+        wrap.classList.remove('hidden');
+        trainingWrongAnswers.forEach(item=>{
+          const row=document.createElement('div');row.className='rounded-xl p-3 text-sm';
+          row.style.background='var(--card-bg)';
+          const front=document.createElement('div');front.className='font-bold';front.textContent=item.front;
+          const back=document.createElement('div');back.className='text-xs theme-text-muted mt-1';back.textContent=item.back;
+          row.append(front,back);list.appendChild(row);
+        });
+      } else wrap.classList.add('hidden');
+      const modal=el('training-results-modal');modal.classList.remove('hidden');modal.classList.add('flex');
+    }
+
     function startQuickLearning() {
       resetSRSSessionAttempts();
       const selectedDeckIds = new Set(getQuickDeckSelection());
@@ -3715,7 +3780,7 @@ input[type="range"] { accent-color: var(--accent); }
         if(type==='write') prompt.innerText=card.back; else addAudio();
         addInput(type==='write'?'Введи немецкий вариант':'Напиши услышанное',card.front);
       }
-      document.getElementById('study-counter').innerText=`Задание ${quizAnsweredCount+1} из ${initialQueueLength}`;
+      document.getElementById('study-counter').innerText=`Задание ${Math.min(quizAnsweredCount+1,initialQueueLength)} из ${initialQueueLength}`;
       const bar=document.getElementById('study-progress-fill');
       if(bar) bar.style.width=`${initialQueueLength?quizAnsweredCount/initialQueueLength*100:0}%`;
     }
@@ -3736,6 +3801,7 @@ input[type="range"] { accent-color: var(--accent); }
       if(quizAwaitingNext||!currentQuickTask) return;
       quizAwaitingNext=true;
       const card=currentQuickTask.card;
+      recordTrainingResult(card,correct);
       if(correct){quizCorrectCount++;card.weakCount=Math.max(0,(Number(card.weakCount)||0)-1);}
       else card.weakCount=(Number(card.weakCount)||0)+1;
       recordAnswer(correct);
@@ -3744,7 +3810,7 @@ input[type="range"] { accent-color: var(--accent); }
       showAnswerFeedback(correct, correct ? 'Верно! Отличная работа.' : `Правильный ответ: ${card.front} · ${card.back}`);
       studyQueue.shift();
       const answeredTaskType = quickTaskTypes.shift();
-      if (srsRequeue) { studyQueue.push(card); quickTaskTypes.push(answeredTaskType); }
+      /* Quick learning is a fixed-length session: never requeue tasks. */
       document.getElementById('study-counter').innerText=`Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const bar=document.getElementById('study-progress-fill'); if(bar) bar.style.width=`${quizAnsweredCount/initialQueueLength*100}%`;
       const next=document.getElementById('quiz-next-btn'); next.classList.remove('hidden');
@@ -3848,7 +3914,8 @@ input[type="range"] { accent-color: var(--accent); }
       quizAwaitingNext = true;
       const card = currentStudyCard;
       const correctTranslation = String(card.back || '').trim();
-      const correct = selectedTranslation.toLocaleLowerCase() === correctTranslation.toLocaleLowerCase();
+      const correct = selectedTranslation.toLocaleLowerCase() === correctTranslation.toLocaleLowerCase();      recordTrainingResult(card,correct);
+
       [...optionsEl.querySelectorAll('button')].forEach(button => {
         button.disabled = true;
         if (button.dataset.translation.toLocaleLowerCase() === correctTranslation.toLocaleLowerCase()) button.classList.add('quiz-correct');
@@ -3867,7 +3934,7 @@ input[type="range"] { accent-color: var(--accent); }
       saveData();
       quizAnsweredCount++;
       studyQueue.shift();
-      if (srsRequeue) studyQueue.push(card);
+      /* Session length is fixed; SRS state is updated without extending this run. */
       document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const progressFill = document.getElementById('study-progress-fill');
       if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
@@ -3961,7 +4028,8 @@ input[type="range"] { accent-color: var(--accent); }
       const answer = normalizeDictationAnswer(value);
       if (!answer) return showToast('Сначала введи ответ');
       quizAwaitingNext = true;
-      const correct = answer === normalizeDictationAnswer(card.front);
+      const correct = answer === normalizeDictationAnswer(card.front);      recordTrainingResult(card,correct);
+
       const input = optionsEl.querySelector('input');
       if (input) input.disabled = true;
       if (submitButton) submitButton.disabled = true;
@@ -3979,7 +4047,7 @@ input[type="range"] { accent-color: var(--accent); }
       saveData();
       quizAnsweredCount++;
       studyQueue.shift();
-      if (srsRequeue) studyQueue.push(card);
+      /* Session length is fixed; SRS state is updated without extending this run. */
       document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const progressFill = document.getElementById('study-progress-fill');
       if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
@@ -4045,6 +4113,7 @@ input[type="range"] { accent-color: var(--accent); }
       quizAwaitingNext = true;
       const correct = selectedGender === correctGender;
       const card = currentStudyCard;
+      recordTrainingResult(card,correct);
       [...optionsEl.querySelectorAll('button')].forEach(button => {
         button.disabled = true;
         if (button.dataset.gender === correctGender) button.classList.add('quiz-correct');
@@ -4063,7 +4132,7 @@ input[type="range"] { accent-color: var(--accent); }
       saveData();
       quizAnsweredCount++;
       studyQueue.shift();
-      if (srsRequeue) studyQueue.push(card);
+      /* Session length is fixed; SRS state is updated without extending this run. */
       document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const progressFill = document.getElementById('study-progress-fill');
       if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
@@ -4110,6 +4179,7 @@ input[type="range"] { accent-color: var(--accent); }
       quizAwaitingNext = true;
       const correct = selectedId === currentStudyCard.id;
       const correctCard = currentStudyCard;
+      recordTrainingResult(correctCard,correct);
       [...optionsEl.querySelectorAll('button')].forEach(button => {
         button.disabled = true;
         if (button.dataset.cardId === String(correctCard.id)) button.classList.add('quiz-correct');
@@ -4128,7 +4198,7 @@ input[type="range"] { accent-color: var(--accent); }
       saveData();
       quizAnsweredCount++;
       studyQueue.shift();
-      if (srsRequeue) studyQueue.push(correctCard);
+      /* Session length is fixed; SRS state is updated without extending this run. */
       document.getElementById('study-counter').innerText = `Отвечено: ${quizAnsweredCount} из ${initialQueueLength}`;
       const progressFill = document.getElementById('study-progress-fill');
       if (progressFill) progressFill.style.width = `${initialQueueLength ? (quizAnsweredCount / initialQueueLength) * 100 : 0}%`;
@@ -4166,7 +4236,7 @@ input[type="range"] { accent-color: var(--accent); }
         const wasQuiz = quizMode;
         const wasPractice = practiceMode;
         const returnView = practiceReturnView;
-        const resultText = quickLearningMode ? `Быстрое обучение завершено: просмотрено ${initialQueueLength} карточек.` : (wasQuiz ? `Тест завершён: ${quizCorrectCount} из ${quizAnsweredCount} правильно (${quizAnsweredCount ? Math.round(quizCorrectCount / quizAnsweredCount * 100) : 0}%).` : 'Практика завершена!');
+        const resultText = 'Тренировка завершена';
         practiceMode = false;
         quizMode = false;
         quizType = 'choice';
@@ -4175,12 +4245,8 @@ input[type="range"] { accent-color: var(--accent); }
         document.getElementById('quiz-panel').classList.remove('flex');
         document.getElementById('card-area').classList.remove('hidden');
         document.querySelector('.study-answer-actions').classList.remove('hidden');
-        if (wasPractice || returnView === 'practice' || returnView === 'quick') {
-          if (wasPractice || returnView === 'quick') showToast(resultText);
-          if (returnView === 'home') switchMainTab('home');
-          else if (returnView === 'practice') switchMainTab('practice');
-          else if (returnView === 'quick') switchMainTab('quick');
-          else openDeck(currentDeckId);
+        if (wasPractice || returnView === 'practice' || returnView === 'quick' || wasQuiz) {
+          showTrainingResults();
         } else {
           openDeck(currentDeckId);
         }
@@ -4350,12 +4416,16 @@ input[type="range"] { accent-color: var(--accent); }
     let spellQueue = [], currentSpellCard = null;
     function startSpellingMode() {
       resetSRSSessionAttempts();
+      trainingWrongAnswers = [];
+      quizCorrectCount = 0; quizAnsweredCount = 0;
+      practiceReturnView = 'deck';
       spellQueue = cards.filter(c => c.deckId === currentDeckId).sort(() => Math.random() - 0.5);
+      initialQueueLength = spellQueue.length;
       if (spellQueue.length === 0) return showToast('Нет слов для тренировки');
       hideAllViews(); document.getElementById('view-spell').classList.remove('hidden'); loadNextSpell();
     }
     function loadNextSpell() {
-      if(spellQueue.length === 0) { showToast('Письмо окончено! '); return openDeck(currentDeckId); }
+      if(spellQueue.length === 0) { showTrainingResults(); return; }
       currentSpellCard = spellQueue[0]; document.getElementById('spell-counter').innerText = spellQueue.length;
       document.getElementById('spell-prompt').innerText = currentSpellCard.back; document.getElementById('spell-input').value = ''; document.getElementById('spell-input').focus();
     }
@@ -4367,6 +4437,8 @@ input[type="range"] { accent-color: var(--accent); }
       const input = normalizeSpelling(document.getElementById('spell-input').value);
       const expected = normalizeSpelling(currentSpellCard.front);
       if (input && input === expected) {
+        quizCorrectCount++; quizAnsweredCount++;
+        recordTrainingResult(currentSpellCard,true);
         recordAnswer(true);
         applyHybridSRSReview(currentSpellCard, true, 'nativeToDe', 'spelling');
         currentSpellCard.weakCount = Math.max(0, (Number(currentSpellCard.weakCount) || 0) - 1);
@@ -4375,13 +4447,15 @@ input[type="range"] { accent-color: var(--accent); }
         spellQueue.shift();
         loadNextSpell();
       } else {
+        quizAnsweredCount++;
+        recordTrainingResult(currentSpellCard,false);
         recordAnswer(false);
         const srsRequeue = applyHybridSRSReview(currentSpellCard, false, 'nativeToDe', 'spelling');
         currentSpellCard.weakCount = (Number(currentSpellCard.weakCount) || 0) + 1;
         saveData();
         showToast(`Правильный ответ: ${currentSpellCard.front}`);
         const failedCard = spellQueue.shift();
-        if (srsRequeue) spellQueue.push(failedCard);
+        /* Spelling run is finite; missed words are listed in the result summary. */
         loadNextSpell();
       }
     }
@@ -5788,6 +5862,32 @@ input[type="range"] { accent-color: var(--accent); }
     </div>
   </div>
 
+
+
+<div id="training-results-modal" class="hidden fixed inset-0 z-[120] items-center justify-center p-4" style="background:rgba(4,8,20,.72);backdrop-filter:blur(10px)" onclick="if(event.target===this)closeTrainingResults()">
+  <section class="w-full max-w-md rounded-3xl p-5 max-h-[88vh] overflow-y-auto" style="background:var(--surface-solid);border:1px solid color-mix(in srgb,var(--card-border) 55%,transparent);box-shadow:0 28px 90px rgba(0,0,0,.38)" role="dialog" aria-modal="true" aria-labelledby="training-results-title">
+    <div class="flex items-start justify-between gap-3">
+      <div><p class="text-xs font-black tracking-widest theme-accent-text uppercase">Тренировка завершена</p><h2 id="training-results-title" class="text-2xl font-black mt-1">Результаты</h2></div>
+      <button type="button" onclick="closeTrainingResults()" class="w-9 h-9 rounded-full theme-card flex items-center justify-center" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="rounded-2xl p-4 mt-4 text-center" style="background:color-mix(in srgb,var(--accent) 10%,var(--card-bg))">
+      <div id="training-results-emoji" class="text-3xl">🏆</div>
+      <div id="training-results-percent" class="text-4xl font-black mt-1">0%</div>
+      <p id="training-results-message" class="font-bold mt-1"></p>
+      <p id="training-results-subtitle" class="text-xs theme-text-muted mt-1"></p>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mt-3">
+      <div class="theme-card rounded-2xl p-3 text-center"><div id="training-results-correct" class="text-xl font-black text-green-500">0</div><div class="text-[10px] theme-text-muted">Правильно</div></div>
+      <div class="theme-card rounded-2xl p-3 text-center"><div id="training-results-wrong" class="text-xl font-black text-rose-500">0</div><div class="text-[10px] theme-text-muted">Ошибки</div></div>
+      <div class="theme-card rounded-2xl p-3 text-center"><div id="training-results-total" class="text-xl font-black">0</div><div class="text-[10px] theme-text-muted">Всего</div></div>
+    </div>
+    <div id="training-results-weak-wrap" class="mt-4 hidden">
+      <h3 class="font-black text-sm mb-2">📚 Стоит повторить</h3>
+      <div id="training-results-weak" class="flex flex-col gap-2"></div>
+    </div>
+    <button type="button" onclick="closeTrainingResults()" class="btn-primary w-full mt-5 py-3">Продолжить</button>
+  </section>
+</div>
 
 </body>
 </html>
