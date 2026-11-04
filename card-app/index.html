@@ -1348,7 +1348,7 @@ input[type="range"] { accent-color: var(--accent); }
         </button>
       </div>
     </div>
-    <p class="text-[10px] theme-text-muted text-center mt-8 mb-2 opacity-45 tracking-wide">HankeCards v2.0.2</p>
+    <p class="text-[10px] theme-text-muted text-center mt-8 mb-2 opacity-45 tracking-wide">HankeCards v2.0.3</p>
   </main>
 
 
@@ -1943,6 +1943,39 @@ input[type="range"] { accent-color: var(--accent); }
       PLAYER_ACHIEVEMENTS.push(a);
     });
 
+    const STAGE66_ACHIEVEMENTS = [
+      {id:'cards_250',title:'Большая библиотека',desc:'Собери 250 карточек.',icon:'🏛️',category:'collection',target:250,metric:()=>cards.length,xp:550,coins:150,rarity:'Эпическое'},
+      {id:'answers_5000',title:'Пять тысяч шагов',desc:'Дай 5 000 ответов в тренировках.',icon:'🚄',category:'learning',target:5000,metric:()=>getLifetimeLearningTotals().total,xp:700,coins:180,rarity:'Эпическое'},
+      {id:'streak_90',title:'Квартал без остановки',desc:'Занимайся 90 дней подряд.',icon:'🗓️',category:'consistency',target:90,metric:()=>getStudyStreak(),xp:900,coins:250,rarity:'Легендарное'},
+      {id:'master_500',title:'Мастер слов',desc:'Освой 500 карточек в обоих направлениях.',icon:'🧠',category:'mastery',target:500,metric:()=>cards.filter(isHybridCardMastered).length,xp:1800,coins:500,rarity:'Легендарное'},
+      {id:'decks_20',title:'Архивариус',desc:'Создай 20 колод.',icon:'🗄️',category:'collection',target:20,metric:()=>decks.length,xp:400,coins:110,rarity:'Эпическое'},
+      {id:'inventory_20',title:'Куратор коллекции',desc:'Собери 20 предметов на складе.',icon:'💠',category:'collection',target:20,metric:()=>playerInventory.length,xp:650,coins:180,rarity:'Легендарное'},
+      {id:'articles_50',title:'Повелитель артиклей',desc:'Добавь 50 карточек-существительных с указанным артиклем.',icon:'📰',category:'mastery',target:50,metric:()=>cards.filter(c=>['der','die','das'].includes(String(c.gender||parseGender(c.front)||'').toLowerCase())).length,xp:250,coins:70,rarity:'Редкое'},
+      {id:'texts_20',title:'Хронист',desc:'Сохрани 20 текстов в библиотеке.',icon:'📚',category:'explorer',target:20,metric:()=>textLibrary.length,xp:400,coins:110,rarity:'Эпическое'},
+      {id:'text_words_50',title:'Собиратель цитат',desc:'Добавь в библиотеку тексты, содержащие в сумме 50 слов для изучения.',icon:'🔖',category:'explorer',target:50,metric:()=>textLibrary.reduce((sum,t)=>sum+(Array.isArray(t.words)?t.words.length:0),0),xp:180,coins:50,rarity:'Редкое'},
+      {id:'accuracy_98',title:'Почти безупречно',desc:'Достигни точности 98% минимум на 500 ответах.',icon:'🎯',category:'mastery',target:98,metric:()=>{const t=getLifetimeLearningTotals();return t.total>=500?Math.round(t.correct/t.total*100):0;},test:()=>{const t=getLifetimeLearningTotals();return t.total>=500&&t.correct/t.total>=.98;},xp:800,coins:220,rarity:'Легендарное'}
+    ];
+    STAGE66_ACHIEVEMENTS.forEach(a=>{a.test=a.test||(()=>Number(a.metric())>=a.target);PLAYER_ACHIEVEMENTS.push(a);});
+
+    const STAGE67_ACHIEVEMENTS = [
+      {id:'answers_10000',title:'Десять тысяч раз',desc:'Дай 10 000 ответов в тренировках.',icon:'🔟',category:'learning',target:10000,metric:()=>getLifetimeLearningTotals().total,xp:1100,coins:300,rarity:'Легендарное'},
+      {id:'streak_120',title:'Полгода? Почти!',desc:'Занимайся 120 дней подряд.',icon:'📅',category:'consistency',target:120,metric:()=>getStudyStreak(),xp:1200,coins:350,rarity:'Легендарное'},
+      {id:'streak_180',title:'Железный календарь',desc:'Занимайся 180 дней подряд.',icon:'🧱',category:'consistency',target:180,metric:()=>getStudyStreak(),xp:1800,coins:500,rarity:'Легендарное'},
+      {id:'master_1000',title:'Живой Duden',desc:'Освой 1 000 карточек в обоих направлениях.',icon:'📖',category:'mastery',target:1000,metric:()=>cards.filter(isHybridCardMastered).length,xp:2500,coins:700,rarity:'Легендарное'},
+      {id:'cards_500',title:'Словарный склад',desc:'Собери 500 карточек.',icon:'🏗️',category:'collection',target:500,metric:()=>cards.length,xp:1000,coins:280,rarity:'Легендарное'},
+      {id:'decks_30',title:'Начальник библиотеки',desc:'Создай 30 колод.',icon:'🗃️',category:'collection',target:30,metric:()=>decks.length,xp:650,coins:180,rarity:'Эпическое'},
+      {id:'texts_50',title:'Редактор Bahnhof',desc:'Сохрани 50 текстов в библиотеке.',icon:'📰',category:'explorer',target:50,metric:()=>textLibrary.length,xp:800,coins:220,rarity:'Легендарное'},
+      {id:'daily_correct_100',title:'Сегодня я не ухожу',desc:'Дай 100 правильных ответов за один день.',icon:'🌞',category:'learning',target:100,metric:()=>Number(getDailyStats().correct)||0,xp:450,coins:120,rarity:'Эпическое'},
+      {id:'correct_streak_50',title:'Пятьдесят оттенков правильного',desc:'Дай 50 правильных ответов подряд.',icon:'🎯',category:'mastery',target:50,metric:()=>Number(playerProgress.consecutiveCorrect)||0,xp:500,coins:140,rarity:'Эпическое'},
+      {id:'wrong_streak_25',title:'Упрямство уровня легенды',desc:'Допусти 25 ошибок подряд. Иногда даже ошибки заслуживают медаль.',icon:'🤡',category:'learning',target:25,metric:()=>Number(playerProgress.consecutiveWrong)||0,xp:250,coins:40,rarity:'Редкое'},
+      {id:'coins_lost_25',title:'Щедрый спонсор системы',desc:'Потеряй суммарно 25 монет из-за штрафов за ошибки.',icon:'💸',category:'explorer',target:25,metric:()=>Number(playerProgress.totalCoinsLost)||0,xp:300,coins:25,rarity:'Эпическое'},
+      {id:'coins_lost_100',title:'Финансовая катастрофа',desc:'Потеряй суммарно 100 монет из-за штрафов. Экономист плачет, но медаль твоя.',icon:'🧯',category:'explorer',target:100,metric:()=>Number(playerProgress.totalCoinsLost)||0,xp:700,coins:75,rarity:'Легендарное'},
+      {id:'coins_spent_1000',title:'Шопоголик Bahnhof',desc:'Потрать суммарно 1 000 монет в Лавке и на награды.',icon:'🛍️',category:'collection',target:1000,metric:()=>Number(playerProgress.totalCoinsSpent)||0,xp:400,coins:100,rarity:'Эпическое'},
+      {id:'balance_zero',title:'На мели, зато красиво',desc:'Окажись ровно с 0 монет на балансе. Финансовая свобода наоборот.',icon:'🪙',category:'explorer',target:1,metric:()=>Number(pointsBalance)===0?1:0,xp:180,coins:10,rarity:'Редкое'},
+      {id:'comeback_wrong_10',title:'Я не сдамся',desc:'После серии из 10 ошибок подряд ответь правильно и продолжи обучение.',icon:'🐣',category:'mastery',target:1,metric:()=>Number(playerProgress.comebackAfterWrong)||0,xp:250,coins:70,rarity:'Редкое'}
+    ];
+    STAGE67_ACHIEVEMENTS.forEach(a=>{a.test=a.test||(()=>Number(a.metric())>=a.target);PLAYER_ACHIEVEMENTS.push(a);});
+
     const COSMETIC_ITEMS = [
       {id:'frame-classic',name:'Classic',type:'frame',price:0,rarity:'Базовая',desc:'Спокойная классическая рамка.',style:'linear-gradient(135deg,#94a3b8,#64748b)',glow:'0 0 0 3px rgba(148,163,184,.22)'},
       {id:'frame-cyan',name:'Cyber Neon',type:'frame',price:150,rarity:'Обычная',desc:'Холодное голубое неоновое свечение.',style:'linear-gradient(135deg,#67e8f9,#0891b2,#164e63)',glow:'0 0 12px 3px rgba(6,182,212,.42)'},
@@ -2193,6 +2226,9 @@ input[type="range"] { accent-color: var(--accent); }
       playerProgress.wrongPenaltyMilestones = playerProgress.wrongPenaltyMilestones || {};
 
       if (correct) {
+        if ((Number(playerProgress.consecutiveWrong)||0) >= 10) {
+          playerProgress.comebackAfterWrong = (Number(playerProgress.comebackAfterWrong)||0) + 1;
+        }
         playerProgress.consecutiveCorrect++;
         playerProgress.consecutiveWrong = 0;
         playerProgress.wrongPenaltyMilestones = {};
@@ -2224,6 +2260,7 @@ input[type="range"] { accent-color: var(--accent); }
           playerProgress.wrongPenaltyMilestones[milestone] = true;
           const deducted = Math.min(pointsBalance, penalty.coins);
           pointsBalance -= deducted;
+          playerProgress.totalCoinsLost = (Number(playerProgress.totalCoinsLost)||0) + deducted;
           if (deducted > 0) showToast(`🧠 ${penalty.title}: −${deducted} 🪙. Сделай паузу или повтори знакомые слова.`);
           else showToast(`🧠 ${penalty.title}. Монеты не списываем, просто попробуй ещё раз!`);
         }
@@ -2333,6 +2370,16 @@ input[type="range"] { accent-color: var(--accent); }
       };
       return metrics[a.id]||[0,1];
     }
+
+    function getAchievementRarityStyle(rarity) {
+      const styles = {
+        'Обычное': {border:'rgba(148,163,184,.30)',bg:'rgba(148,163,184,.055)',icon:'rgba(148,163,184,.13)',text:'#94a3b8',glow:'none'},
+        'Редкое': {border:'rgba(96,165,250,.38)',bg:'rgba(96,165,250,.065)',icon:'rgba(96,165,250,.15)',text:'#60a5fa',glow:'0 5px 18px rgba(96,165,250,.045)'},
+        'Эпическое': {border:'rgba(167,139,250,.42)',bg:'rgba(167,139,250,.075)',icon:'rgba(167,139,250,.17)',text:'#a78bfa',glow:'0 5px 20px rgba(167,139,250,.06)'},
+        'Легендарное': {border:'rgba(245,190,90,.48)',bg:'rgba(245,190,90,.085)',icon:'rgba(245,190,90,.19)',text:'#d6a64e',glow:'0 5px 22px rgba(245,190,90,.075)'}
+      };
+      return styles[rarity]||styles['Обычное'];
+    }
     function renderAchievementsList() {
       evaluatePlayerAchievements();
       const list=document.getElementById('achievements-list'),filters=document.getElementById('achievement-category-filters');
@@ -2344,7 +2391,8 @@ input[type="range"] { accent-color: var(--accent); }
       const items=PLAYER_ACHIEVEMENTS.filter(a=>activeAchievementCategory==='all'||a.category===activeAchievementCategory);
       if(list)list.innerHTML=items.map(a=>{
         const done=unlockedAchievements.includes(a.id),[current,target]=getAchievementProgress(a),progress=done?100:Math.min(100,Math.round(current/target*100));
-        return `<article class="theme-card border rounded-2xl p-4 ${done?'':'opacity-95'}"><div class="flex items-start gap-3"><div class="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-2xl" style="background:${done?'color-mix(in srgb,var(--accent) 16%,transparent)':'rgba(120,120,120,.10)'}">${done?a.icon:(a.secret?'❔':'🔒')}</div><div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><h3 class="font-black text-sm">${done?a.title:(a.secret?'Секретное достижение':a.title)}</h3><span class="text-[10px] font-bold ${done?'theme-accent-text':'theme-text-muted'}">${done?'Получено ✓':`${Math.min(current,target)}/${target}`}</span></div><p class="text-xs theme-text-muted mt-1">${done?a.desc:(a.secret?'Условия пока неизвестны':a.desc)}</p><div class="text-[10px] theme-text-muted mt-2">${a.rarity} · Награда: +${a.xp} XP и +${a.coins} 🪙</div></div></div><div class="h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden mt-3"><div class="h-full rounded-full" style="width:${progress}%;background:var(--accent)"></div></div></article>`;
+        const tier=getAchievementRarityStyle(a.rarity);
+        return `<article class="theme-card rounded-2xl p-4 ${done?'':'opacity-95'}" style="border:1px solid ${tier.border};background:linear-gradient(135deg,${tier.bg},transparent 78%);box-shadow:${tier.glow}"><div class="flex items-start gap-3"><div class="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-2xl" style="background:${tier.icon}">${done?a.icon:(a.secret?'❔':'🔒')}</div><div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><h3 class="font-black text-sm">${done?a.title:(a.secret?'Секретное достижение':a.title)}</h3><span class="text-[10px] font-bold ${done?'theme-accent-text':'theme-text-muted'}">${done?'Получено ✓':`${Math.min(current,target)}/${target}`}</span></div><p class="text-xs theme-text-muted mt-1">${done?a.desc:(a.secret?'Условия пока неизвестны':a.desc)}</p><div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] mt-2"><span class="font-bold" style="color:${tier.text}">${a.rarity}</span><span class="theme-text-muted">· Награда: +${a.xp} XP и +${a.coins} 🪙</span></div></div></div><div class="h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden mt-3"><div class="h-full rounded-full" style="width:${progress}%;background:${tier.text};opacity:.82"></div></div></article>`;
       }).join('');
     }
     function setAchievementCategory(category){activeAchievementCategory=ACHIEVEMENT_CATEGORIES.some(x=>x.id===category)?category:'all';renderAchievementsList();}
@@ -2353,14 +2401,15 @@ input[type="range"] { accent-color: var(--accent); }
       const grid=document.getElementById('medals-grid'),count=document.getElementById('medals-count'),detail=document.getElementById('medal-detail');
       const unlocked=PLAYER_ACHIEVEMENTS.filter(a=>unlockedAchievements.includes(a.id));
       if(count)count.textContent=`${unlocked.length}/${PLAYER_ACHIEVEMENTS.length}`;
-      if(grid)grid.innerHTML=PLAYER_ACHIEVEMENTS.map(a=>{const done=unlockedAchievements.includes(a.id);return `<button onclick="showMedalDetail('${a.id}')" class="rounded-2xl border p-3 flex flex-col items-center gap-1 text-center ${done?'':'opacity-40 grayscale'}" style="border-color:var(--card-border)"><span class="text-3xl">${done?a.icon:'🔒'}</span><span class="text-[10px] font-bold leading-tight">${done?a.title:'Не получена'}</span></button>`}).join('');
+      if(grid)grid.innerHTML=PLAYER_ACHIEVEMENTS.map(a=>{const done=unlockedAchievements.includes(a.id),tier=getAchievementRarityStyle(a.rarity);return `<button onclick="showMedalDetail('${a.id}')" class="rounded-2xl p-3 flex flex-col items-center gap-1 text-center ${done?'':'opacity-45 grayscale'}" style="border:1px solid ${tier.border};background:linear-gradient(145deg,${tier.bg},transparent 85%)"><span class="text-3xl">${done?a.icon:'🔒'}</span><span class="text-[10px] font-bold leading-tight">${done?a.title:'Не получена'}</span><span class="text-[9px] font-bold" style="color:${tier.text}">${a.rarity}</span></button>`}).join('');
       if(detail)detail.classList.add('hidden');
     }
     function showMedalDetail(id) {
       const a=PLAYER_ACHIEVEMENTS.find(x=>x.id===id);if(!a)return;
       const done=unlockedAchievements.includes(id),detail=document.getElementById('medal-detail');
       detail.classList.remove('hidden');
-      detail.innerHTML=`<div class="flex items-center gap-3"><div class="text-4xl">${done?a.icon:'🔒'}</div><div><h3 class="font-black">${done?a.title:'Медаль пока закрыта'}</h3><p class="text-xs theme-text-muted">${a.rarity}</p></div></div><p class="text-sm mt-3">${done?a.desc:'Выполни условие достижения, чтобы получить эту медаль.'}</p><p class="text-xs theme-text-muted mt-3">Награда: +${a.xp} XP и +${a.coins} 🪙</p>`;
+      const tier=getAchievementRarityStyle(a.rarity);
+      detail.innerHTML=`<div class="flex items-center gap-3"><div class="text-4xl w-14 h-14 rounded-2xl flex items-center justify-center" style="background:${tier.icon}">${done?a.icon:'🔒'}</div><div><h3 class="font-black">${done?a.title:'Медаль пока закрыта'}</h3><p class="text-xs font-bold mt-1" style="color:${tier.text}">${a.rarity}</p></div></div><p class="text-sm mt-3">${done?a.desc:'Выполни условие достижения, чтобы получить эту медаль.'}</p><p class="text-xs theme-text-muted mt-3">Награда: +${a.xp} XP и +${a.coins} 🪙</p>`;
       detail.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
     function renderWarehouse() {
@@ -2466,7 +2515,7 @@ input[type="range"] { accent-color: var(--accent); }
     function buyCosmetic(id){
       const item=COSMETIC_ITEMS.find(x=>x.id===id);if(!item||playerInventory.includes(id))return;
       if(pointsBalance<item.price)return showToast('Пока не хватает монет');
-      pointsBalance-=item.price;playerInventory.push(id);localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();renderGames();showToast(`В коллекции: ${item.name}`);
+      pointsBalance-=item.price;playerProgress.totalCoinsSpent=(Number(playerProgress.totalCoinsSpent)||0)+item.price;playerInventory.push(id);localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();renderGames();showToast(`В коллекции: ${item.name}`);
       scheduleCloudSave();
     }
     function equipCosmetic(id){
@@ -2480,6 +2529,8 @@ input[type="range"] { accent-color: var(--accent); }
       if (!item || ownedRewards.includes(rewardId)) return;
       if (pointsBalance < item.cost) return showToast('Пока не хватает очков');
       pointsBalance -= item.cost;
+      playerProgress.totalCoinsSpent = (Number(playerProgress.totalCoinsSpent)||0) + item.cost;
+      savePlayerGameState();
       ownedRewards.push(rewardId);
       localStorage.setItem(POINTS_KEY, String(pointsBalance));
       localStorage.setItem(REWARDS_KEY, JSON.stringify(ownedRewards));
