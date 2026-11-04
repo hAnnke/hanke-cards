@@ -1348,6 +1348,7 @@ input[type="range"] { accent-color: var(--accent); }
         </button>
       </div>
     </div>
+    <p class="text-[10px] theme-text-muted text-center mt-8 mb-2 opacity-45 tracking-wide">HankeCards v2.0.2</p>
   </main>
 
 
@@ -1410,7 +1411,10 @@ input[type="range"] { accent-color: var(--accent); }
     <section class="theme-card border rounded-3xl p-5 mb-5">
       <div class="text-xs theme-text-muted uppercase tracking-wider font-bold">Твой кошелёк</div>
       <div class="text-3xl font-black mt-2"><span id="games-points">0</span> 🪙</div>
-      <div class="text-xs theme-text-muted mt-1">+5 монет за правильный ответ. Ошибки не приносят монеты.</div>
+      <div class="flex items-center gap-2 mt-2">
+        <span class="text-xs theme-text-muted">Как получить и потратить монеты</span>
+        <button type="button" onclick="openCoinInfo()" class="w-6 h-6 rounded-full flex items-center justify-center theme-card text-xs theme-text-muted" aria-label="Информация о монетах" title="Как работают монеты">ⓘ</button>
+      </div>
     </section>
     <section class="theme-card border rounded-3xl p-4 mb-5">
       <div class="font-black">Задания на сегодня</div><div class="text-xs theme-text-muted mt-1 mb-3">Небольшие цели, которые поддерживают регулярность.</div>
@@ -2401,6 +2405,15 @@ input[type="range"] { accent-color: var(--accent); }
       localStorage.setItem(POINTS_KEY,String(pointsBalance));savePlayerGameState();renderGames();
       showToast(`Задание выполнено! ${xpAwarded?`+${xpAwarded} XP · `:'XP пока не начислен · '}+${rewards.coins} 🪙`);
     }
+    function openCoinInfo() {
+      const modal=document.getElementById('coin-info-modal');
+      if(modal){modal.classList.remove('hidden');modal.classList.add('flex');}
+    }
+    function closeCoinInfo() {
+      const modal=document.getElementById('coin-info-modal');
+      if(modal){modal.classList.add('hidden');modal.classList.remove('flex');}
+    }
+
     function renderGames(){
       const pointsEl=document.getElementById('games-points');if(pointsEl)pointsEl.innerText=pointsBalance;
       const filter=currentShopFilter(),shop=document.getElementById('rewards-shop');
@@ -2645,8 +2658,8 @@ input[type="range"] { accent-color: var(--accent); }
         {tab:'achievements', label:'Путь', icon:'🏆'},
         {tab:'achievements-list', label:'Достижения', icon:'🎯'},
         {tab:'medals', label:'Медали', icon:'🏅'},
-        {tab:'warehouse', label:'Склад', icon:'📦'},
-        {tab:'games', label:'Лавка', icon:'🛍️'}
+        {tab:'games', label:'Лавка', icon:'🛍️'},
+        {tab:'warehouse', label:'Склад', icon:'📦'}
       ],
       community: [
         {tab:'social', label:'Друзья', icon:'👥'},
@@ -5888,6 +5901,35 @@ input[type="range"] { accent-color: var(--accent); }
     <button type="button" onclick="closeTrainingResults()" class="btn-primary w-full mt-5 py-3">Продолжить</button>
   </section>
 </div>
+
+
+
+  <!-- ================= COIN ECONOMY INFO ================= -->
+  <div id="coin-info-modal" class="hidden fixed inset-0 z-[125] items-center justify-center p-4" style="background:rgba(4,8,20,.68);backdrop-filter:blur(8px)" onclick="if(event.target===this)closeCoinInfo()">
+    <section class="w-full max-w-sm rounded-3xl p-5" style="background:var(--surface-solid);border:1px solid color-mix(in srgb,var(--card-border) 55%,transparent);box-shadow:0 24px 70px rgba(0,0,0,.32)" role="dialog" aria-modal="true" aria-labelledby="coin-info-title">
+      <div class="flex items-center justify-between gap-3">
+        <h3 id="coin-info-title" class="text-lg font-black">🪙 Как работают монеты</h3>
+        <button type="button" onclick="closeCoinInfo()" class="w-8 h-8 rounded-full theme-card" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="mt-4 space-y-3 text-sm">
+        <div class="rounded-2xl p-3" style="background:color-mix(in srgb,#22c55e 9%,var(--card-bg))">
+          <div class="font-bold text-green-500 mb-1">Получаешь монеты</div>
+          <p>+2 за каждый правильный ответ.</p>
+          <p class="mt-1">Бонусы за серии правильных ответов: от +8 до +500.</p>
+          <p class="mt-1">Бонусы за учебные серии: 3, 7, 14 и 30 дней.</p>
+          <p class="mt-1">Награды за достижения и ежедневные задания.</p>
+        </div>
+        <div class="rounded-2xl p-3" style="background:color-mix(in srgb,#f59e0b 9%,var(--card-bg))">
+          <div class="font-bold text-amber-500 mb-1">Можешь потерять монеты</div>
+          <p>После 10 ошибок подряд: −2 монеты.</p>
+          <p class="mt-1">После 25 ошибок подряд: −5 монет.</p>
+          <p class="mt-1">Монеты не уходят в минус.</p>
+        </div>
+        <p class="text-xs theme-text-muted">Покупка предметов в Лавке также списывает их стоимость с баланса.</p>
+      </div>
+      <button type="button" onclick="closeCoinInfo()" class="btn-primary w-full mt-5 py-3">Понятно</button>
+    </section>
+  </div>
 
 </body>
 </html>
