@@ -21,7 +21,7 @@
   <style>
     /* =========================================================
        HANKECARDS 2.0 · STAGE 1
-       Liquid Minimal design systm
+       Liquid Minimal design system
        Существующая логика приложения и схема хранения не меняются.
        ========================================================= */
     :root {
@@ -204,7 +204,7 @@
     .deck-symbol { width:44px; height:44px; flex:0 0 44px; display:grid; place-items:center; border-radius:16px; color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); border:1px solid color-mix(in srgb, var(--accent) 18%, transparent); }
     .deck-open { width:30px; height:30px; display:grid; place-items:center; color:var(--text-muted); border-radius:10px; }
     .empty-state { border:1px dashed color-mix(in srgb, var(--text-muted) 35%, transparent); border-radius:26px; padding:30px 22px; text-align:center; background:color-mix(in srgb, var(--card-bg) 60%, transparent); }
-    .action-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .action-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; align-items:stretch; }\n    .action-row > button { min-width:0; min-height:48px; padding:10px 12px; display:flex; align-items:center; justify-content:center; gap:8px; text-align:center; white-space:normal; line-height:1.25; }\n    .action-row > button svg { flex:0 0 17px; }\n    .action-row > button:last-child:nth-child(odd) { grid-column:1 / -1; width:calc(50% - 5px); justify-self:center; }\n    #view-practice .practice-tile { min-height:128px; height:100%; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; padding:16px; }\n    #view-practice > .grid { grid-auto-rows:1fr; align-items:stretch; }\n    #view-deck .theme-card.rounded-3xl { padding:20px; }\n    #view-deck #deck-title { overflow-wrap:anywhere; }
     .app-tabbar button { color:var(--text-muted); }
     .app-tabbar button.active-tab { color:var(--accent); background:color-mix(in srgb, var(--accent) 13%, transparent); }
     .app-tabbar button.active-tab svg { opacity:1; }
@@ -687,10 +687,11 @@
         <div class="flex-1"><h3 class="font-bold text-base">Быстрое обучение</h3><p class="text-xs theme-text-muted mt-1">Смешанная тренировка: карточки, тесты, письмо и аудирование.</p></div>
       </div>
       <div class="mb-3">
-        <label for="quick-learning-deck" class="block text-xs theme-text-muted font-semibold mb-2">Колода для тренировки</label>
-        <select id="quick-learning-deck" class="form-input w-full" style="min-height:46px;padding:0 12px">
-          <option value="all">Все колоды</option>
-        </select>
+        <label class="block text-xs theme-text-muted font-semibold mb-2">Колоды для тренировки</label>
+        <button type="button" onclick="openQuickDeckPicker()" class="form-input w-full flex items-center justify-between gap-3 text-left" style="min-height:48px;padding:0 12px">
+          <span id="quick-deck-selection-label">Все колоды</span><span class="theme-text-muted">⌄</span>
+        </button>
+        <p class="text-[11px] theme-text-muted mt-2">Можно выбрать одну, несколько или сразу все колоды.</p>
       </div>
       <div class="flex items-center gap-3">
         <label for="quick-learning-count" class="text-xs theme-text-muted font-semibold">Количество заданий</label>
@@ -707,6 +708,23 @@
       <p class="text-xs theme-text-muted leading-relaxed mt-3">Приложение случайно смешивает карточки, тесты и письменные задания. Когда тихий режим выключен, в тренировку также добавляются упражнения с аудио. Одно и то же слово может встретиться несколько раз, если слов в колодах меньше выбранного количества заданий.</p>
     </details>
   </main>
+
+  <div id="quick-deck-picker-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background:rgba(0,0,0,.62)" onclick="if(event.target===this)closeQuickDeckPicker()">
+    <div class="theme-card border rounded-3xl w-full max-w-md max-h-[82vh] flex flex-col shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="quick-deck-picker-title">
+      <div class="p-5 border-b theme-border flex items-center justify-between gap-3">
+        <div><h3 id="quick-deck-picker-title" class="text-lg font-black">Выбор колод</h3><p class="text-xs theme-text-muted mt-1">Отметь колоды, из которых брать слова</p></div>
+        <button type="button" onclick="closeQuickDeckPicker()" class="text-2xl theme-text-muted" aria-label="Закрыть">×</button>
+      </div>
+      <div class="p-4 flex gap-2">
+        <button type="button" onclick="selectAllQuickDecks()" class="btn-secondary flex-1 text-sm">Выбрать все</button>
+        <button type="button" onclick="clearQuickDecks()" class="btn-secondary flex-1 text-sm">Снять все</button>
+      </div>
+      <div id="quick-deck-picker-list" class="px-4 pb-3 overflow-y-auto flex-1 space-y-2"></div>
+      <div class="p-4 border-t theme-border">
+        <button type="button" onclick="applyQuickDeckSelection()" class="btn-primary w-full">Готово</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ================= VIEW: PRACTICE & PROGRESS ================= -->
   <main id="view-practice" class="hidden flex-1 flex flex-col px-6 pt-4 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
@@ -1468,6 +1486,7 @@
     let practiceScope = 'deck';
     let quizMode = false, quizCorrectCount = 0, quizAnsweredCount = 0, quizAwaitingNext = false;
     let quickLearningMode = false, quickTasks = [], quickTaskTypes = [], currentQuickTask = null;
+    let quickSelectedDeckIds = null; // null means all decks
     let quizType = 'choice';
 
     const DAILY_STATS_KEY = 'hankecards_daily_stats_v1';
@@ -1934,12 +1953,49 @@
       [['frames','frame'],['skins','skin'],['nickname','nickname'],['profileCard','profileCard']].forEach(([k,v])=>{const b=document.getElementById('shop-filter-'+k);if(b)b.className=(filter===v?'btn-primary':'btn-secondary')+' px-4 py-2 rounded-xl text-xs font-bold';});
       if(shop)shop.innerHTML=COSMETIC_ITEMS.filter(x=>x.type===filter).map(item=>{
         const owned=playerInventory.includes(item.id),equipped=playerEquipment.frame===item.id||playerEquipment.skin===item.id||playerEquipment.nicknameStyle===item.id||playerEquipment.profileCard===item.id,canBuy=pointsBalance>=item.price;
-        return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)">${item.type==='skin'?`<div class="w-[82%] rounded-xl p-3 text-left border" style="background:${item.style};box-shadow:${item.glow};border-color:rgba(148,163,184,.28);color:${['skin-cloud','skin-rose','skin-sage','skin-lavender-light'].includes(item.id)?'#334155':'#f8fafc'}"><div class="text-[9px] opacity-70">DEUTSCH</div><div class="font-black text-lg">Apfel</div><div class="text-[10px] opacity-75">яблоко</div></div>`:item.type==='nickname'?`<div class="text-xl font-black" style="${item.textStyle}">Lerner</div>`:item.type==='profileCard'?`<div class="w-full mx-2 rounded-xl p-3 text-left" style="background:${item.cardBg};border:1px solid ${item.cardBorder};box-shadow:${item.cardShadow};color:${['card-pink-dream','card-lavender','card-ocean','card-sunset'].includes(item.id)?'#263044':'#fff'}"><div class="text-[9px] opacity-75">PLAYER CARD</div><div class="font-black text-sm">Lerner</div><div class="text-[9px] opacity-80">Level 12 · 2 450 XP</div></div>`:`<div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div>`}</div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div>${equipped?'<div class="text-xs font-bold theme-accent-text">Используется ✓</div>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold">${canBuy?'Купить':'Не хватает монет'}</button>`}</div>`;
+        return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)">${item.type==='skin'?`<div class="w-[82%] rounded-xl p-3 text-left border" style="background:${item.style};box-shadow:${item.glow};border-color:rgba(148,163,184,.28);color:${['skin-cloud','skin-rose','skin-sage','skin-lavender-light'].includes(item.id)?'#334155':'#f8fafc'}"><div class="text-[9px] opacity-70">DEUTSCH</div><div class="font-black text-lg">Apfel</div><div class="text-[10px] opacity-75">яблоко</div></div>`:item.type==='nickname'?`<div class="text-xl font-black" style="${item.textStyle}">Lerner</div>`:item.type==='profileCard'?`<div class="w-full mx-2 rounded-xl p-3 text-left" style="background:${item.cardBg};border:1px solid ${item.cardBorder};box-shadow:${item.cardShadow};color:${['card-pink-dream','card-lavender','card-ocean','card-sunset'].includes(item.id)?'#263044':'#fff'}"><div class="text-[9px] opacity-75">PLAYER CARD</div><div class="font-black text-sm">Lerner</div><div class="text-[9px] opacity-80">Level 12 · 2 450 XP</div></div>`:`<div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div>`}</div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div><div class="flex items-center gap-2 mt-auto">${equipped?'<span class="text-xs font-bold theme-accent-text flex-1">Используется ✓</span>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold flex-1">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold flex-1">${canBuy?'Купить':'Не хватает монет'}</button>`}<button type="button" onclick="previewCosmetic('${item.id}')" class="btn-secondary rounded-xl w-10 h-10 shrink-0 flex items-center justify-center text-base" title="Предпросмотр" aria-label="Предпросмотр ${item.name}">👁</button></div></div>`;
       }).join('');
       const ownedEl=document.getElementById('owned-rewards');
       if(ownedEl){const owned=COSMETIC_ITEMS.filter(x=>playerInventory.includes(x.id));ownedEl.innerHTML=owned.length?owned.map(x=>`<div class="flex items-center justify-between py-2 border-b last:border-0" style="border-color:rgba(120,120,120,.15)"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black" style="${x.type==='nickname'?x.textStyle:frameStyle(x)}">${x.type==='nickname'?'Aa':''}</span><div><div class="font-bold">${x.name}</div><div class="text-[10px] theme-text-muted">${x.rarity}</div></div></div><span class="text-xs">${playerEquipment.frame===x.id||playerEquipment.skin===x.id||playerEquipment.nicknameStyle===x.id||playerEquipment.profileCard===x.id?'Используется':'В коллекции'}</span></div>`).join(''):'Пока ничего не приобретено.';}
       renderDailyQuests();
     }
+    function previewCosmetic(id) {
+      const item=COSMETIC_ITEMS.find(x=>x.id===id);
+      if(!item)return;
+      const modal=document.getElementById('cosmetic-preview-modal');
+      const content=document.getElementById('cosmetic-preview-content');
+      document.getElementById('cosmetic-preview-title').innerText=item.name;
+      const frame=item.type==='frame'?item:getEquippedFrame();
+      const nickname=item.type==='nickname'?item.id:playerEquipment.nicknameStyle;
+      const profile=item.type==='profileCard'?item:(COSMETIC_ITEMS.find(x=>x.id===playerEquipment.profileCard&&x.type==='profileCard')||COSMETIC_ITEMS.find(x=>x.id==='card-basic'));
+      const achievement=PLAYER_ACHIEVEMENTS.find(a=>a.id===playerEquipment.avatarAchievement&&unlockedAchievements.includes(a.id));
+      const avatar=achievement?.icon||getRankAvatarIcon(getPlayerRank().id);
+      const name=currentAuthUser?.user_metadata?.username||currentAuthUser?.user_metadata?.name||currentAuthUser?.email?.split('@')[0]||'Lerner';
+      if(item.type==='skin'){
+        const light=['skin-cloud','skin-rose','skin-sage','skin-lavender-light'].includes(item.id);
+        content.innerHTML=`<div class="rounded-3xl p-5 border" style="background:${item.style};box-shadow:${item.glow};color:${light?'#334155':'#f8fafc'}"><div class="text-xs font-bold opacity-70 mb-3">ПРИМЕР УЧЕБНОЙ КАРТОЧКИ</div><div class="rounded-2xl p-5 border" style="background:${item.style};border-color:rgba(148,163,184,.35)"><div class="text-xs opacity-70">DEUTSCH</div><div class="text-3xl font-black mt-2">Apfel</div><div class="text-base opacity-80 mt-2">яблоко</div><div class="text-xs opacity-60 mt-4">der Apfel · существительное</div></div></div>`;
+      } else {
+        const light=['card-pink-dream','card-lavender','card-ocean','card-sunset'].includes(profile?.id);
+        const textColor=light?'#263044':'#f8fafc';
+        content.innerHTML=`<div class="rounded-3xl p-5" style="background:${profile?.cardBg||'linear-gradient(145deg,#273244,#1b2533)'};border:1px solid ${profile?.cardBorder||'rgba(148,163,184,.25)'};box-shadow:${profile?.cardShadow||'none'};color:${textColor}">
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-full p-1 shrink-0" id="preview-avatar-frame" style="${frameStyle(frame)}"><div class="w-full h-full rounded-full bg-black/10 flex items-center justify-center text-3xl">${avatar}</div></div>
+            <div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-widest opacity-70">ПРОФИЛЬ ИГРОКА</div><div id="cosmetic-preview-name" class="text-xl font-black break-words">${escapeHtml(name)}</div><div class="text-xs mt-1 opacity-80">${getPlayerRank().title}</div><div class="text-sm font-bold mt-2">Уровень ${getLevelProgress().level}</div></div>
+          </div>
+          <div class="flex justify-between text-xs font-bold mt-5"><span>${(Number(playerProgress.xp)||0).toLocaleString('ru-RU')} XP</span><span>${pointsBalance.toLocaleString('ru-RU')} 🪙</span></div>
+          <div class="h-2 rounded-full bg-black/10 mt-2"><div class="h-full rounded-full" style="width:${getLevelProgress().percent}%;background:linear-gradient(90deg,#8b5cf6,#ec4899)"></div></div>
+          <div class="grid grid-cols-3 gap-2 mt-4 text-center text-xs"><div class="rounded-xl p-2 bg-black/5"><b>${cards.filter(isHybridCardMastered).length}</b><div class="opacity-70">Освоено</div></div><div class="rounded-xl p-2 bg-black/5"><b>${getStudyStreak()} 🔥</b><div class="opacity-70">Серия</div></div><div class="rounded-xl p-2 bg-black/5"><b>${unlockedAchievements.length}</b><div class="opacity-70">Медали</div></div></div>
+        </div>`;
+        const nameEl=document.getElementById('cosmetic-preview-name');
+        if(nameEl)applyNicknameStyle(nameEl,nickname);
+      }
+      modal.classList.remove('hidden');modal.classList.add('flex');
+    }
+    function closeCosmeticPreview(){
+      const modal=document.getElementById('cosmetic-preview-modal');
+      if(modal){modal.classList.add('hidden');modal.classList.remove('flex');}
+    }
+
     function buyCosmetic(id){
       const item=COSMETIC_ITEMS.find(x=>x.id===id);if(!item||playerInventory.includes(id))return;
       if(pointsBalance<item.price)return showToast('Пока не хватает монет');
@@ -2134,6 +2190,7 @@
       });
 
       if(tab === 'home') renderDecks();
+      if(tab === 'quick') { if (quickSelectedDeckIds !== null) quickSelectedDeckIds = quickSelectedDeckIds.filter(id => decks.some(deck => String(deck.id) === id)); updateQuickDeckSelectionLabel(); }
       if(tab === 'practice') renderPracticeHub();
       if(tab === 'mastered') renderMastered();
       if(tab === 'achievements') renderAchievements();
@@ -2660,31 +2717,75 @@
       }[char]));
     }
 
-    function renderQuickDeckOptions() {
-      const select = document.getElementById('quick-learning-deck');
-      if (!select) return;
-      const previous = select.value || 'all';
-      select.innerHTML = '<option value="all">Все колоды</option>' + decks.map(deck =>
-        `<option value="${String(deck.id).replace(/"/g, '&quot;')}">${escapeHtml(deck.name || 'Без названия')}</option>`
-      ).join('');
-      select.value = decks.some(deck => String(deck.id) === previous) ? previous : 'all';
+    function getQuickDeckSelection() {
+      if (quickSelectedDeckIds === null) return decks.map(deck => String(deck.id));
+      return quickSelectedDeckIds.filter(id => decks.some(deck => String(deck.id) === id));
+    }
+
+    function renderQuickDeckPicker() {
+      const list = document.getElementById('quick-deck-picker-list');
+      if (!list) return;
+      const selected = new Set(getQuickDeckSelection());
+      list.innerHTML = decks.map(deck => {
+        const id = String(deck.id);
+        const count = cards.filter(card => String(card.deckId) === id && String(card.front || '').trim() && String(card.back || '').trim()).length;
+        return `<label class="flex items-center gap-3 p-3 rounded-2xl border theme-border cursor-pointer">
+          <input type="checkbox" class="quick-deck-checkbox w-5 h-5 accent-current" value="${escapeHtml(id)}" ${selected.has(id) ? 'checked' : ''}>
+          <span class="min-w-0 flex-1"><span class="block font-semibold text-sm">${escapeHtml(deck.name || 'Без названия')}</span><span class="block text-xs theme-text-muted mt-0.5">${count} карточек</span></span>
+        </label>`;
+      }).join('') || '<p class="text-sm theme-text-muted text-center py-6">Колоды не найдены. Сначала создай колоду.</p>';
+    }
+
+    function updateQuickDeckSelectionLabel() {
+      const label = document.getElementById('quick-deck-selection-label');
+      if (!label) return;
+      const selected = getQuickDeckSelection();
+      if (selected.length === decks.length) label.textContent = 'Все колоды';
+      else if (!selected.length) label.textContent = 'Колоды не выбраны';
+      else label.textContent = `Выбрано колод: ${selected.length}`;
+    }
+
+    function openQuickDeckPicker() {
+      renderQuickDeckPicker();
+      const modal = document.getElementById('quick-deck-picker-modal');
+      if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    }
+
+    function closeQuickDeckPicker() {
+      const modal = document.getElementById('quick-deck-picker-modal');
+      if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    }
+
+    function selectAllQuickDecks() {
+      document.querySelectorAll('#quick-deck-picker-list .quick-deck-checkbox').forEach(input => input.checked = true);
+    }
+
+    function clearQuickDecks() {
+      document.querySelectorAll('#quick-deck-picker-list .quick-deck-checkbox').forEach(input => input.checked = false);
+    }
+
+    function applyQuickDeckSelection() {
+      const selected = [...document.querySelectorAll('#quick-deck-picker-list .quick-deck-checkbox:checked')].map(input => input.value);
+      quickSelectedDeckIds = selected.length === decks.length ? null : selected;
+      updateQuickDeckSelectionLabel();
+      closeQuickDeckPicker();
     }
 
     function startQuickLearning() {
       resetSRSSessionAttempts();
-      renderQuickDeckOptions();
-      const selectedDeck = document.getElementById('quick-learning-deck')?.value || 'all';
+      const selectedDeckIds = new Set(getQuickDeckSelection());
+      if (!selectedDeckIds.size) return showToast('Выбери хотя бы одну колоду');
       const source = cards.filter(card =>
         String(card.front || '').trim() && String(card.back || '').trim() &&
-        (selectedDeck === 'all' || String(card.deckId) === selectedDeck)
+        selectedDeckIds.has(String(card.deckId))
       );
-      if (!source.length) return showToast(selectedDeck === 'all' ? 'Сначала добавь хотя бы одну карточку' : 'В выбранной колоде пока нет карточек');
+      if (!source.length) return showToast('В выбранных колодах пока нет карточек');
       const count = Math.max(10, Math.min(50, Number(document.getElementById('quick-learning-count')?.value) || 20));
-      const types = quietMode ? ['flip', 'choice', 'write'] : ['flip', 'choice', 'write', 'listen-choice', 'listen-write'];
+      const taskTypes = quietMode ? ['flip', 'choice', 'write'] : ['flip', 'choice', 'write', 'listen-choice', 'listen-write'];
       quickTasks = [];
       for (let i = 0; i < count; i++) {
         const card = source[Math.floor(Math.random() * source.length)];
-        let type = types[i % types.length];
+        let type = taskTypes[i % taskTypes.length];
         if (source.length < 2 && (type === 'choice' || type === 'listen-choice')) type = type === 'choice' ? 'write' : 'listen-write';
         quickTasks.push({card, type});
       }
@@ -2696,11 +2797,11 @@
       practiceMode = 'quiz';
       practiceScope = 'all';
       practiceReturnView = 'quick';
-      quizType = 'quick';
+      quizType = 'choice';
       quizCorrectCount = 0;
       quizAnsweredCount = 0;
       quizAwaitingNext = false;
-      initialQueueLength = count;
+      initialQueueLength = quickTasks.length;
       hideAllViews();
       document.getElementById('view-study').classList.remove('hidden');
       document.getElementById('study-mode-label').innerText = '⚡ Быстрое обучение';
@@ -3229,7 +3330,7 @@
         const wasQuiz = quizMode;
         const wasPractice = practiceMode;
         const returnView = practiceReturnView;
-        const resultText = wasQuiz ? `Тест завершён: ${quizCorrectCount} из ${quizAnsweredCount} правильно (${quizAnsweredCount ? Math.round(quizCorrectCount / quizAnsweredCount * 100) : 0}%).` : 'Практика завершена!';
+        const resultText = quickLearningMode ? `Быстрое обучение завершено: просмотрено ${initialQueueLength} карточек.` : (wasQuiz ? `Тест завершён: ${quizCorrectCount} из ${quizAnsweredCount} правильно (${quizAnsweredCount ? Math.round(quizCorrectCount / quizAnsweredCount * 100) : 0}%).` : 'Практика завершена!');
         practiceMode = false;
         quizMode = false;
         quizType = 'choice';
@@ -3239,7 +3340,7 @@
         document.getElementById('card-area').classList.remove('hidden');
         document.querySelector('.study-answer-actions').classList.remove('hidden');
         if (wasPractice || returnView === 'practice' || returnView === 'quick') {
-          if (wasPractice) showToast(resultText);
+          if (wasPractice || returnView === 'quick') showToast(resultText);
           if (returnView === 'home') switchMainTab('home');
           else if (returnView === 'practice') switchMainTab('practice');
           else if (returnView === 'quick') switchMainTab('quick');
@@ -3250,26 +3351,33 @@
         return;
       }
       currentStudyCard = studyQueue[0]; isFlipped = false; isProcessingAnswer = false;
-      if (quickLearningMode) {
+      const quickTaskType = quickLearningMode ? (quickTaskTypes[0] || 'flip') : null;
+      if (quickLearningMode && quickTaskType === 'flip') {
+        document.getElementById('quiz-panel').classList.add('hidden');
+        document.getElementById('quiz-panel').classList.remove('flex');
+        document.getElementById('card-area').classList.remove('hidden');
+        document.querySelector('.study-answer-actions').classList.add('hidden');
+        document.getElementById('study-mode-label').innerText = '⚡ Быстрое обучение · карточки';
+      } else if (quickLearningMode) {
         document.getElementById('quiz-panel').classList.remove('hidden');
         document.getElementById('quiz-panel').classList.add('flex');
         document.getElementById('card-area').classList.add('hidden');
         document.querySelector('.study-answer-actions').classList.add('hidden');
-        renderQuickQuestion();
-        return;
+        document.getElementById('study-mode-label').innerText = '⚡ Быстрое обучение';
       }
-      if (quizMode) {
+      if (quizMode && !(quickLearningMode && quickTaskType === 'flip')) {
         document.getElementById('quiz-panel').classList.remove('hidden');
         document.getElementById('quiz-panel').classList.add('flex');
         document.getElementById('card-area').classList.add('hidden');
         document.querySelector('.study-answer-actions').classList.add('hidden');
-        renderChoiceQuestion();
+        if (quickLearningMode) renderQuickQuestion();
+        else renderChoiceQuestion();
         return;
       }
       document.getElementById('quiz-panel').classList.add('hidden');
       document.getElementById('quiz-panel').classList.remove('flex');
       document.getElementById('card-area').classList.remove('hidden');
-      document.querySelector('.study-answer-actions').classList.remove('hidden');
+      document.querySelector('.study-answer-actions').classList.toggle('hidden', !!quickLearningMode);
       document.getElementById('study-again-btn').disabled = false;
       document.getElementById('study-known-btn').disabled = false;
       const flipCont = document.getElementById('flip-container'), swipeCont = document.getElementById('swipe-container');
@@ -3282,6 +3390,9 @@
       }
       document.getElementById('study-front').innerText = currentStudyCard.front; 
       document.getElementById('study-back').innerText = currentStudyCard.back;
+      if (quickLearningMode) {
+        document.getElementById('study-counter').innerText = `Карточка ${initialQueueLength - studyQueue.length + 1} из ${initialQueueLength} · свайпни в любую сторону`;
+      }
       const descriptionEl = document.getElementById('study-description');
       if (descriptionEl) {
         const description = String(currentStudyCard.description || '').trim();
@@ -3316,11 +3427,20 @@
       const cardIndex = cards.findIndex(c => c.id === currentStudyCard.id);
       if (cardIndex < 0) return;
       isProcessingAnswer = true;
+      if (quickLearningMode) {
+        studyQueue.shift();
+        quickTaskTypes.shift();
+        const swipeCont = document.getElementById('swipe-container');
+        swipeCont.style.transition = 'transform 0.3s ease, opacity 0.3s';
+        swipeCont.style.transform = `translateX(${direction === 'right' ? 300 : -300}px) rotate(${direction === 'right' ? 18 : -18}deg)`;
+        swipeCont.style.opacity = '0';
+        setTimeout(() => { swipeCont.style.transition = ''; loadNextCard(); }, 260);
+        return;
+      }
       document.getElementById('study-again-btn').disabled = true;
       document.getElementById('study-known-btn').disabled = true;
       if (practiceMode) {
         const answeredCard = cards[cardIndex];
-        const srsRequeue = applyHybridSRSReview(answeredCard, direction === 'right', 'deToNative', practiceMode === 'weak' ? 'weak-practice' : 'free-practice');
         if (direction === 'right') {
           recordAnswer(true);
           if (practiceMode === 'weak') answeredCard.weakCount = Math.max(0, (Number(answeredCard.weakCount) || 0) - 1);
@@ -3329,8 +3449,7 @@
           recordAnswer(false);
           if (practiceMode === 'weak') answeredCard.weakCount = Math.max(1, Number(answeredCard.weakCount) || 0);
           studyQueue.shift();
-          if (srsRequeue) studyQueue.push(answeredCard);
-          showToast(srsRequeue ? 'Это слово ещё вернётся' : 'Слово сохранено для следующего повторения');
+          showToast('Слово пропущено. Интервал повторения не изменён');
         }
         saveData();
       } else {
@@ -4815,6 +4934,18 @@
     renderAchievements();
     renderGames();
   </script>
+  <div id="cosmetic-preview-modal" class="fixed inset-0 z-[260] hidden items-center justify-center bg-black/65 backdrop-blur-md p-4" onclick="if(event.target===this)closeCosmeticPreview()">
+    <div class="theme-card border rounded-3xl w-full max-w-md max-h-[88dvh] overflow-y-auto p-5 shadow-2xl">
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <div><p class="home-eyebrow">SHOP PREVIEW</p><h3 id="cosmetic-preview-title" class="text-xl font-black mt-1">Предпросмотр</h3></div>
+        <button type="button" onclick="closeCosmeticPreview()" class="btn-secondary rounded-xl px-3 py-2" aria-label="Закрыть">✕</button>
+      </div>
+      <p class="text-xs theme-text-muted mb-4">Так будет выглядеть твой профиль для других пользователей после покупки и применения предмета.</p>
+      <div id="cosmetic-preview-content"></div>
+      <button type="button" onclick="closeCosmeticPreview()" class="btn-primary w-full mt-4">Понятно</button>
+    </div>
+  </div>
+
+
 </body>
 </html>
-
