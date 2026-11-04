@@ -686,6 +686,12 @@
         <div class="practice-tile-icon"><span class="text-xl">⚡</span></div>
         <div class="flex-1"><h3 class="font-bold text-base">Быстрое обучение</h3><p class="text-xs theme-text-muted mt-1">Смешанная тренировка: карточки, тесты, письмо и аудирование.</p></div>
       </div>
+      <div class="mb-3">
+        <label for="quick-learning-deck" class="block text-xs theme-text-muted font-semibold mb-2">Колода для тренировки</label>
+        <select id="quick-learning-deck" class="form-input w-full" style="min-height:46px;padding:0 12px">
+          <option value="all">Все колоды</option>
+        </select>
+      </div>
       <div class="flex items-center gap-3">
         <label for="quick-learning-count" class="text-xs theme-text-muted font-semibold">Количество заданий</label>
         <select id="quick-learning-count" class="form-input flex-1" style="min-height:46px;padding:0 12px">
@@ -1318,6 +1324,9 @@
       if (!card) return false;
       const now = Date.now();
       const srs = ensureHybridSRS(card);
+      // Correct answers before the scheduled review time still count in general activity,
+      // but cannot advance SRS or its two-direction mastery counters.
+      if (correct && Number(card.nextReview || 0) > now) return false;
       if(!playerProgress.dailySrsDate||playerProgress.dailySrsDate!==localDateKey()){playerProgress.dailySrsDate=localDateKey();playerProgress.dailySrsReviews=0;}
       playerProgress.dailySrsReviews=(Number(playerProgress.dailySrsReviews)||0)+1;
       const directionKey = ['deToNative', 'nativeToDe', 'grammar'].includes(direction) ? direction : 'deToNative';
@@ -1646,18 +1655,30 @@
       const mastered=cards.filter(isHybridCardMastered).length, streak=getStudyStreak();
       const selectedAchievement=PLAYER_ACHIEVEMENTS.find(a=>a.id===playerEquipment.avatarAchievement&&unlockedAchievements.includes(a.id));
       const ownAvatarIcon=selectedAchievement?.icon||getRankAvatarIcon(rank.id);
-      const cardHtml=`<div class="rounded-3xl p-5 border theme-card mb-5">
+      const profileDesign=COSMETIC_ITEMS.find(x=>x.id===playerEquipment.profileCard&&x.type==='profileCard')||COSMETIC_ITEMS.find(x=>x.id==='card-basic');
+      const profileName=currentAuthUser?.user_metadata?.username||currentAuthUser?.user_metadata?.name||currentAuthUser?.email?.split('@')[0]||'Lerner';
+      const profileTextColor=['card-pink-dream','card-lavender','card-ocean','card-sunset'].includes(profileDesign?.id)?'#263044':'#f8fafc';
+      const profileStyle=`background:${profileDesign?.cardBg||'linear-gradient(145deg,#273244,#1b2533)'};border:1px solid ${profileDesign?.cardBorder||'rgba(148,163,184,.25)'};box-shadow:${profileDesign?.cardShadow||'none'};color:${profileTextColor};`;
+      const cardHtml=`<div class="rounded-3xl p-5 mb-5" data-own-profile-card="${profileDesign?.id||'card-basic'}" style="${profileStyle}">
         <div class="flex items-center gap-4">
           <div class="w-20 h-20 rounded-full p-[4px] shrink-0" style="${frameStyle(frame)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-3xl">${ownAvatarIcon}</div></div>
-          <div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-[.2em] theme-text-muted font-black">ТВОЙ ПУТЬ</div><div class="text-xl font-black leading-tight">${rank.title}</div><div class="text-xs theme-text-muted mt-1">${rank.subtitle}</div><div class="text-sm font-bold mt-2">Уровень ${level.level}</div></div>
+          <div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-[.2em]" style="opacity:.72;font-weight:900">ТВОЙ ПРОФИЛЬ</div><div class="text-xl font-black leading-tight" data-own-profile-name>${escapeHtml(profileName)}</div><div class="text-xs mt-1" style="opacity:.8">${rank.title}</div><div class="text-xs theme-text-muted mt-1">${rank.subtitle}</div><div class="text-sm font-bold mt-2">Уровень ${level.level}</div></div>
         </div>
         <div class="mt-4 flex justify-between text-xs font-bold"><span>${xp.toLocaleString('ru-RU')} XP</span><span>${level.current.toLocaleString('ru-RU')} / ${level.needed.toLocaleString('ru-RU')} XP</span></div>
         <div class="h-2.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden mt-2"><div class="h-full rounded-full" style="width:${level.percent}%;background:linear-gradient(90deg,#8b5cf6,#ec4899)"></div></div>
         <div class="grid grid-cols-3 gap-2 mt-4"><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${mastered}</div><div class="text-[10px] theme-text-muted">Освоено слов</div></div><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${streak} 🔥</div><div class="text-[10px] theme-text-muted">Дней подряд</div></div><div class="rounded-2xl p-3 bg-black/5 dark:bg-white/5 text-center"><div class="text-lg font-black">${pointsBalance} 🪙</div><div class="text-[10px] theme-text-muted">Монеты</div></div></div>
         <div class="mt-4 flex flex-wrap gap-2"><span class="text-xs px-3 py-1.5 rounded-full border" style="border-color:rgba(139,92,246,.45)">🏅 ${unlockedAchievements.length} медалей</span><span class="text-xs px-3 py-1.5 rounded-full border">🎨 ${playerInventory.filter(id=>id.startsWith('frame-')).length} рамок</span><span class="text-xs px-3 py-1.5 rounded-full border">🏆 ${PLAYER_RANKS[PLAYER_RANKS.length-1].xp.toLocaleString('ru-RU')} XP до легенды</span></div><div class="mt-4 flex items-center gap-3 flex-wrap"><span class="text-xs font-bold">Аватарка:</span><button type="button" onclick="openAvatarPicker()" class="btn-secondary text-xs rounded-xl px-3 py-2 font-bold">🏅 Выбрать значок</button><span class="text-[10px] theme-text-muted">Сейчас: ${selectedAchievement?selectedAchievement.icon+' '+selectedAchievement.title:'значок ранга'}</span></div>
       </div>`;
-      if(el)el.innerHTML=cardHtml;
-      if(accountEl)accountEl.innerHTML=cardHtml.replace('mb-5','mb-0');
+      if(el) {
+        el.innerHTML=cardHtml;
+        const name=el.querySelector('[data-own-profile-name]');
+        if(name) applyNicknameStyle(name,playerEquipment.nicknameStyle);
+      }
+      if(accountEl) {
+        accountEl.innerHTML=cardHtml.replace('mb-5','mb-0');
+        const name=accountEl.querySelector('[data-own-profile-name]');
+        if(name) applyNicknameStyle(name,playerEquipment.nicknameStyle);
+      }
     }
 
 
@@ -1916,7 +1937,7 @@
         return `<div class="theme-card border rounded-2xl p-3 flex flex-col gap-2"><div class="h-24 rounded-2xl flex items-center justify-center" style="background:radial-gradient(circle,rgba(255,255,255,.08),transparent 65%)">${item.type==='skin'?`<div class="w-[82%] rounded-xl p-3 text-left border" style="background:${item.style};box-shadow:${item.glow};border-color:rgba(148,163,184,.28);color:${['skin-cloud','skin-rose','skin-sage','skin-lavender-light'].includes(item.id)?'#334155':'#f8fafc'}"><div class="text-[9px] opacity-70">DEUTSCH</div><div class="font-black text-lg">Apfel</div><div class="text-[10px] opacity-75">яблоко</div></div>`:item.type==='nickname'?`<div class="text-xl font-black" style="${item.textStyle}">Lerner</div>`:item.type==='profileCard'?`<div class="w-full mx-2 rounded-xl p-3 text-left" style="background:${item.cardBg};border:1px solid ${item.cardBorder};box-shadow:${item.cardShadow};color:${['card-pink-dream','card-lavender','card-ocean','card-sunset'].includes(item.id)?'#263044':'#fff'}"><div class="text-[9px] opacity-75">PLAYER CARD</div><div class="font-black text-sm">Lerner</div><div class="text-[9px] opacity-80">Level 12 · 2 450 XP</div></div>`:`<div class="w-16 h-16 rounded-full p-[4px]" style="${frameStyle(item)}"><div class="w-full h-full rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-2xl">👤</div></div>`}</div><div class="font-black text-sm">${item.name}</div><div class="text-[10px] theme-text-muted">${item.rarity} · ${item.desc}</div><div class="font-black text-sm">${item.price===0?'Бесплатно':item.price.toLocaleString('ru-RU')+' 🪙'}</div>${equipped?'<div class="text-xs font-bold theme-accent-text">Используется ✓</div>':owned?`<button onclick="equipCosmetic('${item.id}')" class="btn-secondary rounded-xl px-3 py-2 text-xs font-bold">Надеть</button>`:`<button ${!canBuy?'disabled':''} onclick="buyCosmetic('${item.id}')" class="${canBuy?'btn-primary':'btn-secondary opacity-50'} rounded-xl px-3 py-2 text-xs font-bold">${canBuy?'Купить':'Не хватает монет'}</button>`}</div>`;
       }).join('');
       const ownedEl=document.getElementById('owned-rewards');
-      if(ownedEl){const owned=COSMETIC_ITEMS.filter(x=>playerInventory.includes(x.id));ownedEl.innerHTML=owned.length?owned.map(x=>`<div class="flex items-center justify-between py-2 border-b last:border-0" style="border-color:rgba(120,120,120,.15)"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black" style="${x.type==='nickname'?x.textStyle:frameStyle(x)}">${x.type==='nickname'?'Aa':''}</span><div><div class="font-bold">${x.name}</div><div class="text-[10px] theme-text-muted">${x.rarity}</div></div></div><span class="text-xs">${playerEquipment.frame===x.id||playerEquipment.skin===x.id||playerEquipment.nicknameStyle===x.id?'Надето':'В коллекции'}</span></div>`).join(''):'Пока ничего не приобретено.';}
+      if(ownedEl){const owned=COSMETIC_ITEMS.filter(x=>playerInventory.includes(x.id));ownedEl.innerHTML=owned.length?owned.map(x=>`<div class="flex items-center justify-between py-2 border-b last:border-0" style="border-color:rgba(120,120,120,.15)"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black" style="${x.type==='nickname'?x.textStyle:frameStyle(x)}">${x.type==='nickname'?'Aa':''}</span><div><div class="font-bold">${x.name}</div><div class="text-[10px] theme-text-muted">${x.rarity}</div></div></div><span class="text-xs">${playerEquipment.frame===x.id||playerEquipment.skin===x.id||playerEquipment.nicknameStyle===x.id||playerEquipment.profileCard===x.id?'Используется':'В коллекции'}</span></div>`).join(''):'Пока ничего не приобретено.';}
       renderDailyQuests();
     }
     function buyCosmetic(id){
@@ -2478,22 +2499,31 @@
 
     async function autoTranslate(frontId, backId) {
       const inputFront = document.getElementById(frontId), inputBack = document.getElementById(backId);
-      let text = inputFront.value.trim(); if (!text) return showToast('Напиши слово!', ''); showToast('Перевожу...', '⏳');
+      const text = inputFront?.value.trim();
+      if (!text) return showToast('Напиши слово!');
+      showToast('Перевожу через Google Translate...', '⏳');
       try {
-        const isRussian = /[а-яА-ЯёЁ]/.test(text), langPair = isRussian ? 'ru|de' : 'de|ru';
-        const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
-        const transData = await transRes.json();
-        if (transData.responseData?.translatedText) {
-          const translated = transData.responseData.translatedText;
-          if (isRussian) { 
-            inputBack.value = text; 
-            inputFront.value = translated; 
-          } else { 
-            inputBack.value = translated; 
-          }
-          showToast('Переведено!', '');
-        } else { showToast('Не найдено ', ''); }
-      } catch (e) { showToast('Ошибка сети API', ''); }
+        const hasCyrillic = /[а-яА-ЯёЁіІїЇєЄґҐ]/.test(text);
+        const target = hasCyrillic ? 'de' : 'ru';
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const translated = Array.isArray(data?.[0])
+          ? data[0].map(part => Array.isArray(part) ? part[0] : '').filter(Boolean).join('').trim()
+          : '';
+        if (!translated) throw new Error('Пустой перевод');
+        if (hasCyrillic) {
+          if (inputBack) inputBack.value = text;
+          if (inputFront) inputFront.value = translated;
+        } else if (inputBack) {
+          inputBack.value = translated;
+        }
+        showToast('Переведено через Google Translate ✓');
+      } catch (error) {
+        console.warn('Translation failed:', error);
+        showToast('Не удалось перевести. Попробуй DeepL или Google Translate вручную.');
+      }
     }
     function autoTranslateEdit() { autoTranslate('edit-front', 'edit-back'); }
 
@@ -2624,10 +2654,31 @@
     }
 
 
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[char]));
+    }
+
+    function renderQuickDeckOptions() {
+      const select = document.getElementById('quick-learning-deck');
+      if (!select) return;
+      const previous = select.value || 'all';
+      select.innerHTML = '<option value="all">Все колоды</option>' + decks.map(deck =>
+        `<option value="${String(deck.id).replace(/"/g, '&quot;')}">${escapeHtml(deck.name || 'Без названия')}</option>`
+      ).join('');
+      select.value = decks.some(deck => String(deck.id) === previous) ? previous : 'all';
+    }
+
     function startQuickLearning() {
       resetSRSSessionAttempts();
-      const source = cards.filter(card => String(card.front || '').trim() && String(card.back || '').trim());
-      if (!source.length) return showToast('Сначала добавь хотя бы одну карточку');
+      renderQuickDeckOptions();
+      const selectedDeck = document.getElementById('quick-learning-deck')?.value || 'all';
+      const source = cards.filter(card =>
+        String(card.front || '').trim() && String(card.back || '').trim() &&
+        (selectedDeck === 'all' || String(card.deckId) === selectedDeck)
+      );
+      if (!source.length) return showToast(selectedDeck === 'all' ? 'Сначала добавь хотя бы одну карточку' : 'В выбранной колоде пока нет карточек');
       const count = Math.max(10, Math.min(50, Number(document.getElementById('quick-learning-count')?.value) || 20));
       const types = quietMode ? ['flip', 'choice', 'write'] : ['flip', 'choice', 'write', 'listen-choice', 'listen-write'];
       quickTasks = [];
