@@ -685,6 +685,48 @@ input[type="range"] { accent-color: var(--accent); }
   #nav-primary { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:3px !important; }
 }
 </style>
+
+<style id="stage61-scrollable-subnav-and-local-unmark">
+#nav-secondary { display:flex; align-items:center; min-width:0; overflow:hidden; }
+#nav-secondary-items {
+  display:flex !important;
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  width:0 !important;
+  justify-content:flex-start !important;
+  align-items:center !important;
+  gap:6px !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  padding:0 2px 2px !important;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none !important;
+}
+#nav-secondary-items::-webkit-scrollbar { display:none !important; }
+#nav-secondary-items .nav-subtab {
+  flex:0 0 76px !important;
+  width:76px !important;
+  min-width:76px !important;
+  max-width:76px !important;
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  background:transparent !important;
+}
+#nav-secondary-items .nav-subtab.active-tab {
+  background:var(--accent-soft,rgba(112,92,255,.14)) !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+#nav-secondary-items .nav-subtab:focus,
+#nav-secondary-items .nav-subtab:focus-visible {
+  outline:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+#nav-secondary .nav-home-button { flex:0 0 36px !important; }
+</style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col select-none" data-theme="dark">
 
@@ -1217,24 +1259,6 @@ input[type="range"] { accent-color: var(--accent); }
       </div>
     </div>
 
-    <section class="theme-card border rounded-2xl p-4 mb-8">
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
-          <h3 class="font-bold text-sm">Порядок вкладок</h3>
-          <p class="text-xs theme-text-muted mt-1">Настрой, в каком порядке отображаются вкладки в нижнем меню.</p>
-        </div>
-        <button onclick="toggleTabOrderEditor()" id="tab-order-open-btn" class="btn-secondary text-xs px-3 py-2 shrink-0">Настроить</button>
-      </div>
-      <div id="tab-order-editor" class="hidden mt-4">
-        <div id="tab-order-list" class="space-y-2"></div>
-        <div class="flex gap-2 mt-4">
-          <button onclick="saveTabOrderFromSettings()" class="btn-primary flex-1">Сохранить</button>
-          <button onclick="resetTabOrder()" class="btn-secondary px-4">Сбросить</button>
-        </div>
-        <p class="text-[11px] theme-text-muted mt-3">Используй стрелки вверх и вниз, чтобы перемещать вкладки.</p>
-      </div>
-    </section>
-
     <h2 class="text-2xl font-black tracking-tight mb-4">Обучение</h2>
     <div class="theme-card border rounded-2xl p-4 mb-8">
       <label for="quiet-mode-toggle" class="flex items-start justify-between gap-4 cursor-pointer">
@@ -1365,6 +1389,7 @@ input[type="range"] { accent-color: var(--accent); }
       <p id="reader-context-selection" class="text-xs theme-text-muted mb-3 line-clamp-3"></p>
       <button onclick="translateReaderSelection()" class="w-full text-left rounded-xl px-3 py-2 text-sm font-bold theme-hover">🌐 Перевести и создать карточку</button>
       <div class="border-t theme-border my-2"></div>
+      <button onclick="removeReaderSelectionHighlight()" class="w-full text-left rounded-xl px-3 py-2 text-sm font-semibold theme-hover mb-2">🧽 Снять маркер с выделенного</button>
       <p class="text-[11px] theme-text-muted mb-2">Выделить маркером</p>
       <div class="grid grid-cols-4 gap-2">
         <button onclick="highlightReaderSelection('#FDE68A')" class="reader-color-choice" style="background:#FDE68A" aria-label="Жёлтый"></button>
@@ -2464,7 +2489,7 @@ input[type="range"] { accent-color: var(--accent); }
       items.innerHTML = NAV_GROUPS[group].map(item => {
         const active = item.tab === activeTab;
         const click = item.action === 'profile' ? 'openAccountModal()' : `switchMainTab('${item.tab}')`;
-        return `<button onclick="${click}" class="nav-subtab flex-1 min-w-0 rounded-2xl px-0.5 py-2 flex flex-col items-center justify-center gap-1 ${active?'active-tab':''}" style="min-height:66px"><span class="text-base leading-none">${item.icon}</span><span class="text-[9px] leading-tight text-center whitespace-normal">${item.label}</span></button>`;
+        return `<button onclick="${click}" class="nav-subtab flex-none w-[76px] rounded-2xl px-1 py-2 flex flex-col items-center justify-center gap-1 ${active?'active-tab':''}" style="min-height:66px"><span class="text-base leading-none">${item.icon}</span><span class="text-[10px] leading-tight text-center whitespace-nowrap">${item.label}</span></button>`;
       }).join('');
     }
     function showPrimaryNav() {
@@ -3069,6 +3094,23 @@ input[type="range"] { accent-color: var(--accent); }
       saveTextLibrary();updateReaderMarks();closeReaderContextMenu();window.getSelection()?.removeAllRanges();
       showToast('Фрагмент выделен маркером');
     }
+    function removeReaderSelectionHighlight() {
+      const item=textLibrary.find(t=>t.id===activeReaderTextId);if(!item)return;
+      const range=readerSelectionRange;
+      const article=document.getElementById('reader-article');
+      const words=[...article.querySelectorAll('.reader-word')];
+      let selected=words.filter(el=>{try{return range && range.intersectsNode(el);}catch(_){return false;}});
+      if(!selected.length && activeReaderSelection){
+        const key=activeReaderSelection.toLocaleLowerCase('de');
+        selected=words.filter(el=>el.dataset.word.toLocaleLowerCase('de')===key);
+      }
+      const map=getReaderMarkMap(item);
+      selected.forEach(el=>map.delete(el.dataset.word.toLocaleLowerCase('de')));
+      item.markedWords=[...map.entries()].map(([word,color])=>({word,color}));
+      saveTextLibrary();updateReaderMarks();closeReaderContextMenu();window.getSelection()?.removeAllRanges();
+      showToast(selected.length?'Маркер снят с выделенного фрагмента':'Выделенные слова не найдены');
+    }
+
     function openReaderText(id) {
       const item=textLibrary.find(t=>t.id===id);if(!item)return;
       activeReaderTextId=id;item.updatedAt=Date.now();saveTextLibrary();
