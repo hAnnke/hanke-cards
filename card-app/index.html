@@ -598,6 +598,23 @@
     </div>
   </div>
 
+  <!-- ================= DUPLICATE CARD CONFIRMATION ================= -->
+  <div id="duplicate-card-modal" class="hidden fixed inset-0 z-[120] items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="duplicate-card-title">
+    <div class="theme-card border rounded-3xl p-5 w-full max-w-sm shadow-2xl">
+      <div class="flex items-start justify-between gap-3">
+        <div><p class="text-xs font-bold theme-accent-text">ПРОВЕРКА СЛОВАРЯ</p><h3 id="duplicate-card-title" class="text-xl font-black mt-1">Слово уже есть</h3></div>
+        <button onclick="closeDuplicateCardModal()" class="btn-secondary rounded-xl px-3 py-2" aria-label="Закрыть">✕</button>
+      </div>
+      <p id="duplicate-card-message" class="text-sm theme-text-muted mt-3"></p>
+      <div id="duplicate-card-locations" class="space-y-2 max-h-48 overflow-y-auto mt-3"></div>
+      <p class="text-xs theme-text-muted mt-3">Можно отменить добавление или всё равно создать ещё одну карточку.</p>
+      <div class="grid grid-cols-2 gap-2 mt-5">
+        <button onclick="closeDuplicateCardModal()" class="btn-secondary w-full">Отмена</button>
+        <button onclick="confirmDuplicateCard()" class="btn-primary w-full">Добавить всё равно</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= TOAST ================= -->
   <div id="toast" class="app-toast fixed bottom-28 left-1/2 -translate-x-1/2 theme-card border text-inherit px-6 py-3 rounded-full shadow-2xl z-[100] toast-enter pointer-events-none flex items-center gap-2 whitespace-nowrap">
     <span id="toast-icon" class="w-2 h-2 rounded-full bg-current opacity-70"></span>
@@ -608,39 +625,20 @@
   <button id="tabbar-scroll-left" class="tabbar-scroll-control tabbar-scroll-left" type="button" aria-label="Прокрутить вкладки влево" title="Влево">‹</button>
   <button id="tabbar-scroll-right" class="tabbar-scroll-control tabbar-scroll-right" type="button" aria-label="Прокрутить вкладки вправо" title="Вправо">›</button>
 
-  <!-- ================= FLOATING GLASS BOTTOM TABS ================= -->
-  <div class="app-tabbar fixed bottom-6 left-4 right-4 max-w-xl mx-auto border rounded-3xl flex justify-start overflow-x-auto p-2 z-40 text-[10px] font-semibold" role="navigation" aria-label="Основная навигация" tabindex="0">
-    <button onclick="switchMainTab('home')" id="tab-home" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">📚</span><span class="nav-label">Колоды</span>
-    </button>
-    <button onclick="switchMainTab('quick')" id="tab-quick" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">⚡</span><span class="nav-label">Быстро</span>
-    </button>
-    <button onclick="switchMainTab('practice')" id="tab-practice" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">📝</span><span class="nav-label">Практика</span>
-    </button>
-    <button onclick="switchMainTab('social')" id="tab-social" class="hidden flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">👥</span><span class="nav-label">Друзья</span>
-    </button>
-    <button onclick="switchMainTab('achievements')" id="tab-achievements" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">🏆</span><span class="nav-label">Путь</span>
-    </button>
-    <button onclick="switchMainTab('games')" id="tab-games" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">🎮</span><span class="nav-label">Лавка</span>
-    </button>
-    <button onclick="switchMainTab('statistics')" id="tab-statistics" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">📊</span><span class="nav-label">Статистика</span>
-    </button>
-    <button onclick="switchMainTab('mastered')" id="tab-mastered" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">⭐</span><span class="nav-label">Выучено</span>
-    </button>
-    <button onclick="switchMainTab('settings')" id="tab-settings" class="flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">⚙️</span><span class="nav-label">Настройки</span>
-    </button>
-    <button onclick="openAccountModal()" id="tab-profile" class="hidden flex-none w-[68px] py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all">
-      <span class="nav-emoji" aria-hidden="true">👤</span><span class="nav-label">Профиль</span>
-    </button>
+  <!-- ================= SECTION / SUBSECTION NAVIGATION ================= -->
+  <div class="app-tabbar fixed bottom-6 left-4 right-4 max-w-xl mx-auto border rounded-3xl p-2 z-40 text-[11px] font-semibold" role="navigation" aria-label="Основная навигация">
+    <div id="nav-primary" class="grid grid-cols-3 gap-2">
+      <button onclick="openNavGroup('learning')" class="nav-group-btn rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-xl">📚</span><span>Обучение</span></button>
+      <button onclick="openNavGroup('interactive')" class="nav-group-btn rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-xl">🎮</span><span>Интерактив</span></button>
+      <button onclick="openNavGroup('social')" class="nav-group-btn rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-xl">👥</span><span>Социальное</span></button>
+    </div>
+    <div id="nav-secondary" class="hidden items-center gap-2">
+      <button onclick="showPrimaryNav()" class="btn-secondary flex-none rounded-xl px-3 py-3" aria-label="Назад к разделам">‹</button>
+      <div id="nav-secondary-items" class="flex items-center gap-2 overflow-x-auto min-w-0 flex-1" style="scrollbar-width:none"></div>
+    </div>
   </div>
+  <button id="tab-profile" class="hidden" type="button"></button>
+  <button id="tab-social" class="hidden" type="button"></button>
 
   <!-- ================= VIEW: DECKS (HOME) ================= -->
   <main id="view-home" class="flex-1 flex flex-col px-6 pt-3 pb-32 overflow-y-auto w-full max-w-md mx-auto relative">
@@ -2179,16 +2177,69 @@
       document.getElementById('nav-actions').innerHTML = '';
     }
 
-    function switchMainTab(tab) {
-      hideAllViews(); 
-      document.getElementById(`view-${tab}`).classList.remove('hidden');
-      
-      ['home', 'quick', 'texts', 'social', 'practice', 'achievements', 'games', 'statistics', 'mastered', 'settings', 'profile'].forEach(t => {
-        const btn = document.getElementById(`tab-${t}`);
-        if (!btn) return;
-        btn.classList.toggle('active-tab', t === tab);
-      });
+    const NAV_GROUPS = {
+      learning: [
+        {tab:'home', label:'Колоды', icon:'📚'},
+        {tab:'quick', label:'Быстро', icon:'⚡'},
+        {tab:'practice', label:'Практика', icon:'📝'},
+        {tab:'texts', label:'Тексты', icon:'📄'},
+        {tab:'mastered', label:'Выучено', icon:'⭐'}
+      ],
+      interactive: [
+        {tab:'achievements', label:'Путь', icon:'🏆'},
+        {tab:'games', label:'Лавка', icon:'🛍️'}
+      ],
+      social: [
+        {tab:'social', label:'Друзья', icon:'👥'},
+        {tab:'profile', label:'Профиль', icon:'👤', action:'profile'},
+        {tab:'statistics', label:'Статистика', icon:'📊'},
+        {tab:'settings', label:'Настройки', icon:'⚙️'}
+      ]
+    };
+    let activeNavGroup = 'learning';
+    let activeMainTab = 'home';
 
+    function renderSecondaryNav(group, activeTab) {
+      const primary = document.getElementById('nav-primary');
+      const secondary = document.getElementById('nav-secondary');
+      const items = document.getElementById('nav-secondary-items');
+      if (!primary || !secondary || !items) return;
+      primary.classList.add('hidden');
+      secondary.classList.remove('hidden');
+      secondary.classList.add('flex');
+      items.innerHTML = NAV_GROUPS[group].map(item => {
+        const active = item.tab === activeTab;
+        const click = item.action === 'profile' ? 'openAccountModal()' : `switchMainTab('${item.tab}')`;
+        return `<button onclick="${click}" class="flex-none rounded-xl px-3 py-2.5 flex flex-col items-center gap-1 ${active?'active-tab':'theme-card border'}" style="min-width:66px"><span class="text-base">${item.icon}</span><span class="whitespace-nowrap">${item.label}</span></button>`;
+      }).join('');
+    }
+    function showPrimaryNav() {
+      const primary = document.getElementById('nav-primary');
+      const secondary = document.getElementById('nav-secondary');
+      if (primary) primary.classList.remove('hidden');
+      if (secondary) { secondary.classList.add('hidden'); secondary.classList.remove('flex'); }
+      activeNavGroup = null;
+    }
+    function openNavGroup(group) {
+      activeNavGroup = group;
+      const first = NAV_GROUPS[group][0];
+      if (first.action === 'profile') {
+        renderSecondaryNav(group, 'profile');
+        openAccountModal();
+      } else switchMainTab(first.tab);
+    }
+    function groupForTab(tab) {
+      return Object.keys(NAV_GROUPS).find(group => NAV_GROUPS[group].some(item => item.tab === tab)) || 'learning';
+    }
+    function switchMainTab(tab) {
+      if (tab === 'profile') { activeNavGroup = 'social'; renderSecondaryNav('social','profile'); openAccountModal(); return; }
+      const view = document.getElementById(`view-${tab}`);
+      if (!view) return;
+      activeMainTab = tab;
+      activeNavGroup = groupForTab(tab);
+      hideAllViews();
+      view.classList.remove('hidden');
+      renderSecondaryNav(activeNavGroup, tab);
       if(tab === 'home') renderDecks();
       if(tab === 'texts') renderTextsLibrary();
       if(tab === 'quick') { if (quickSelectedDeckIds !== null) quickSelectedDeckIds = quickSelectedDeckIds.filter(id => decks.some(deck => String(deck.id) === id)); updateQuickDeckSelectionLabel(); }
@@ -2639,7 +2690,7 @@
     function openReaderText(id) {
       const item=textLibrary.find(t=>t.id===id); if(!item)return;
       activeReaderTextId=id; item.updatedAt=Date.now(); saveTextLibrary();
-      hideAllViews(); document.getElementById('view-text-reader').classList.remove('hidden');
+      hideAllViews(); document.getElementById('view-text-reader').classList.remove('hidden'); activeMainTab='texts'; activeNavGroup='learning'; renderSecondaryNav('learning','texts');
       document.getElementById('reader-title').textContent=item.title;
       document.getElementById('reader-meta').textContent=`Немецкий текст · ${item.content.trim().split(/\s+/).filter(Boolean).length} слов`;
       const article=document.getElementById('reader-content');
@@ -2694,14 +2745,18 @@
       const key=normalizeDuplicateWord(front);
       return cards.filter(c=>normalizeDuplicateWord(c.front)===key).map(c=>({card:c,deckName:decks.find(d=>String(d.id)===String(c.deckId))?.name||'Неизвестная колода'}));
     }
-    function normalizeDuplicateWord(value){return String(value||'').trim().toLocaleLowerCase('de').replace(/\s+/g,' ');}
+    function normalizeDuplicateWord(value){return String(value||'').normalize('NFC').trim().toLocaleLowerCase('de').replace(/[.,!?;:()[\]{}«»\"']/g,'').replace(/\s+/g,' ');}
     function openDuplicateCardModal(front,back,description,deckId,onConfirm) {
       const matches=findDuplicateCards(front);
       if(!matches.length){onConfirm();return;}
       pendingDuplicateCard=onConfirm;
-      document.getElementById('duplicate-card-message').textContent=`«${front}» уже встречается в словаре. Найдено совпадений: ${matches.length}.`;
-      document.getElementById('duplicate-card-locations').innerHTML=matches.map(x=>`<div class="rounded-xl p-3 border theme-border"><b>${escapeHtml(x.deckName)}</b><p class="text-xs theme-text-muted">${escapeHtml(x.card.front)} → ${escapeHtml(x.card.back)}</p></div>`).join('');
-      const m=document.getElementById('duplicate-card-modal');m.classList.remove('hidden');m.classList.add('flex');
+      const message=document.getElementById('duplicate-card-message');
+      const locations=document.getElementById('duplicate-card-locations');
+      const m=document.getElementById('duplicate-card-modal');
+      if(!message || !locations || !m){ pendingDuplicateCard=null; console.warn('Duplicate-card modal markup is missing'); showToast('Это слово уже есть в колоде'); return; }
+      message.textContent=`«${front}» уже встречается в словаре. Найдено совпадений: ${matches.length}.`;
+      locations.innerHTML=matches.map(x=>`<div class="rounded-xl p-3 border theme-border"><b>${escapeHtml(x.deckName)}</b><p class="text-xs theme-text-muted">${escapeHtml(x.card.front)} → ${escapeHtml(x.card.back)}</p></div>`).join('');
+      m.classList.remove('hidden');m.classList.add('flex');
     }
     function closeDuplicateCardModal(){const m=document.getElementById('duplicate-card-modal');m.classList.add('hidden');m.classList.remove('flex');pendingDuplicateCard=null;}
     function confirmDuplicateCard(){const fn=pendingDuplicateCard;closeDuplicateCardModal();if(fn)fn();}
@@ -5076,6 +5131,7 @@
     const quietModeToggle = document.getElementById('quiet-mode-toggle');
     if (quietModeToggle) quietModeToggle.checked = quietMode;
     switchMainTab('home');
+    showPrimaryNav();
     renderDailyStats();
     renderAchievements();
     renderGames();
